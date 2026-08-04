@@ -100,7 +100,7 @@ function Logo({ light = false }) {
   );
 }
 
-function Header() {
+function Header({ onOpenDemo }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -124,9 +124,9 @@ function Header() {
       </nav>
       <div className="header-actions">
         <a className="login-link" href="/app">Sign in</a>
-        <a className="button button--header" href="/app">
+        <button className="button button--header" onClick={onOpenDemo}>
           Take a free test <Icon name="arrow" size={16}/>
-        </a>
+        </button>
         <button className="menu-button" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}>
           <Icon name={menuOpen ? 'close' : 'menu'} size={22}/>
         </button>
@@ -135,7 +135,7 @@ function Header() {
         <a href="#how" onClick={close}>How it works <Icon name="arrow"/></a>
         <a href="#paths" onClick={close}>Skill paths <Icon name="arrow"/></a>
         <a href="#insights" onClick={close}>Insights <Icon name="arrow"/></a>
-        <a className="mobile-cta" href="/app">Take a free test <Icon name="arrow"/></a>
+        <button onClick={() => { close(); onOpenDemo(); }}>Take a free test <Icon name="arrow"/></button>
       </div>
     </header>
   );
@@ -195,7 +195,7 @@ function HeroTestWindow({ selectedTrack = 'frontend', compact = false }) {
   );
 }
 
-function Hero() {
+function Hero({ onOpenDemo }) {
   return (
     <section className="hero" id="top">
       <div className="hero-media" aria-hidden="true">
@@ -208,11 +208,11 @@ function Hero() {
         </svg>
       </div>
       <div className="hero-content">
-        <div className="eyebrow-pill"> Built for your next technical round</div>
+        <div className="eyebrow-pill">Built for your next technical round</div>
         <h1><span>Sharpen the skills</span><span>that get you hired.</span></h1>
         <p>Timed, role-specific tests for software engineers—with clear feedback that turns every weak spot into your next strength.</p>
         <div className="hero-actions">
-          <a className="button button--primary button--large" href="/app">Take a free test <Icon name="arrow" size={18}/></a>
+          <button className="button button--primary button--large" onClick={onOpenDemo}>Take a free test <Icon name="arrow" size={18}/></button>
           <a className="button button--ghost button--large" href="#paths"><Icon name="play" size={16}/> Explore skill paths</a>
         </div>
         <div className="hero-footnote"><span><Icon name="check" size={14}/> No credit card</span><span><Icon name="check" size={14}/> Instant results</span><span><Icon name="check" size={14}/> 10 minutes to start</span></div>
@@ -375,7 +375,7 @@ function PathsVisual({ active, setActive }) {
   );
 }
 
-function PathsSection() {
+function PathsSection({ onOpenDemo }) {
   const [active, setActive] = useState('frontend');
   return (
     <section className="paths-section section" id="paths">
@@ -393,7 +393,7 @@ function PathsSection() {
           <div><strong>18</strong><span>focused paths across<br/>the software stack</span></div>
           <div><strong>4</strong><span>levels from core<br/>to staff-level judgment</span></div>
           <div className="path-callout"><p><b>New this week</b><br/>Production debugging: logs, traces, and the shortest path to root cause.</p></div>
-          <a className="button button--lime button--large" href="/app">Find your starting point <Icon name="arrow"/></a>
+          <button className="button button--lime button--large" onClick={onOpenDemo}>Find your starting point <Icon name="arrow"/></button>
         </div>
       </div>
       <svg className="paths-morph-line" viewBox="0 0 1440 190" preserveAspectRatio="none" aria-hidden="true"><path><animate attributeName="d" dur="10s" repeatCount="indefinite" values="M-20 145C225 10 345 205 600 88s352-35 495 25 233 27 375-40;M-20 105C190 205 384-8 616 104s330 83 482 3 235-27 372 23;M-20 145C225 10 345 205 600 88s352-35 495 25 233 27 375-40"/></path></svg>
@@ -419,7 +419,7 @@ function ProofSection() {
   );
 }
 
-function ClosingSection() {
+function ClosingSection({ onOpenDemo }) {
   return (
     <section className="closing-section">
       <img src="/assets/seeker-hills.webp" alt="A small house on a green hillside beneath blue mountains"/>
@@ -429,14 +429,14 @@ function ClosingSection() {
         <span className="section-kicker section-kicker--light">Ready when you are</span>
         <h2>Your next round<br/>starts here.</h2>
         <p>Ten focused minutes today can change how you show up when it counts.</p>
-        <a className="button button--white button--large" href="/app">Take a free test <Icon name="arrow"/></a>
+        <button className="button button--white button--large" onClick={onOpenDemo}>Take a free test <Icon name="arrow"/></button>
         <span className="closing-note">No credit card · Pick a path in under a minute</span>
       </div>
     </section>
   );
 }
 
-function Footer() {
+function Footer({ onOpenDemo }) {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   function submit(e){e.preventDefault(); if(email.trim()){setSent(true); setEmail(''); setTimeout(()=>setSent(false),3500);}}
@@ -444,7 +444,7 @@ function Footer() {
     <footer className="site-footer" id="footer">
       <div className="footer-top">
         <div className="footer-brand"><a className="brand" href="#top"><Logo light/></a><p>Focused practice for software engineers who want to be ready, not just familiar.</p></div>
-        <div className="footer-links"><div><span>PRODUCT</span><a href="#how">How it works</a><a href="#paths">Skill paths</a><a href="/app">Sample test</a></div><div><span>COMPANY</span><a href="#top">About</a><a href="#insights">Insights</a><a href="mailto:hello@seeker.dev">Contact</a></div><div><span>FOLLOW</span><a href="#footer">X / Twitter</a><a href="#footer">LinkedIn</a><a href="#footer">GitHub</a></div></div>
+        <div className="footer-links"><div><span>PRODUCT</span><a href="#how">How it works</a><a href="#paths">Skill paths</a><button onClick={onOpenDemo}>Sample test</button></div><div><span>COMPANY</span><a href="#top">About</a><a href="#insights">Insights</a><a href="mailto:hello@seeker.dev">Contact</a></div><div><span>FOLLOW</span><a href="#footer">X / Twitter</a><a href="#footer">LinkedIn</a><a href="#footer">GitHub</a></div></div>
         <div className="footer-news"><span>THE WEEKLY REP</span><p>One sharp engineering question, every Tuesday.</p><form onSubmit={submit}><label><Icon name="mail" size={17}/><input aria-label="Email address" type="email" required placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)}/></label><button aria-label="Subscribe"><Icon name="arrow"/></button></form>{sent&&<small className="form-success"><Icon name="check" size={14}/> You're on the list.</small>}</div>
       </div>
       <div className="footer-bottom"><span>© 2026 Seeker Labs</span><div><a href="#footer">Privacy</a><a href="#footer">Terms</a><a href="#footer">Accessibility</a></div><span className="footer-status"><i/> All systems focused</span></div>
@@ -452,7 +452,37 @@ function Footer() {
   );
 }
 
+function DemoModal({ open, onClose }) {
+  const [selected, setSelected] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [seconds, setSeconds] = useState(600);
+  useEffect(() => {
+    if (!open) return;
+    setSelected(null); setSubmitted(false); setSeconds(600);
+    const id = setInterval(()=>setSeconds(s=>Math.max(0,s-1)),1000);
+    const key = (e) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', key);
+    document.body.classList.add('modal-open');
+    return () => {clearInterval(id); document.removeEventListener('keydown',key); document.body.classList.remove('modal-open');};
+  }, [open, onClose]);
+  if (!open) return null;
+  const options = ['O(1) reads and O(n) writes', 'O(log n) reads and O(log n) writes', 'O(n) reads and O(1) writes', 'O(n log n) reads and O(1) writes'];
+  const correct = 2;
+  return (
+    <div className="modal-backdrop" role="presentation" onMouseDown={(e)=>e.target===e.currentTarget&&onClose()}>
+      <div className="demo-modal" role="dialog" aria-modal="true" aria-labelledby="demo-title">
+        <div className="demo-top"><a className="brand"><Logo/></a><span className="demo-progress">SAMPLE TEST <i><b/></i> 1 / 3</span><span className="demo-timer"><Icon name="clock" size={16}/>{Math.floor(seconds/60)}:{String(seconds%60).padStart(2,'0')}</span><button className="modal-close" onClick={onClose} aria-label="Close sample test"><Icon name="close"/></button></div>
+        <div className="demo-body">
+          <div className="demo-question"><span className="demo-kicker">DATA STRUCTURES · MID-LEVEL</span><h3 id="demo-title">Choose the right trade-off</h3><p>You maintain an append-only event list. Writes are frequent; reading the full list happens once per day. Which structure best matches the access pattern?</p><div className="demo-code"><span><i>01</i>events.<b>append</b>(next_event)</span><span><i>02</i><em>// once nightly</em></span><span><i>03</i>for event in events:</span><span><i>04</i>&nbsp;&nbsp;rebuild_projection(event)</span></div></div>
+          <div className="demo-options"><span>SELECT ONE ANSWER</span>{options.map((option,i)=><button key={option} disabled={submitted} onClick={()=>setSelected(i)} className={`${selected===i?'selected':''} ${submitted&&i===correct?'correct':''} ${submitted&&selected===i&&i!==correct?'wrong':''}`}><i>{String.fromCharCode(65+i)}</i><p>{option}</p>{submitted&&i===correct&&<Icon name="check"/>}</button>)}{submitted&&<div className="answer-explanation"><p><b>{selected===correct?'Exactly right.':'Good attempt—the answer is C.'}</b> An append-only list keeps writes O(1); the infrequent full scan is an acceptable O(n).</p></div>}<button className="demo-submit" disabled={selected===null} onClick={()=>submitted?onClose():setSubmitted(true)}>{submitted?'Finish sample':'Submit answer'}<Icon name="arrow"/></button></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const [demoOpen, setDemoOpen] = useState(false);
   useEffect(() => {
     const els = document.querySelectorAll('[data-reveal]');
     const observer = new IntersectionObserver((entries)=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');observer.unobserve(entry.target);}}),{threshold:.12,rootMargin:'0px 0px -40px'});
@@ -461,16 +491,17 @@ function App() {
   }, []);
   return (
     <>
-      <Header/>
+      <Header onOpenDemo={()=>setDemoOpen(true)}/>
       <main>
-        <Hero/>
+        <Hero onOpenDemo={()=>setDemoOpen(true)}/>
         <HowSection/>
         <FeedbackSection/>
-        <PathsSection/>
+        <PathsSection onOpenDemo={()=>setDemoOpen(true)}/>
         <ProofSection/>
-        <ClosingSection/>
+        <ClosingSection onOpenDemo={()=>setDemoOpen(true)}/>
       </main>
-      <Footer/>
+      <Footer onOpenDemo={()=>setDemoOpen(true)}/>
+      <DemoModal open={demoOpen} onClose={()=>setDemoOpen(false)}/>
     </>
   );
 }
