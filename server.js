@@ -41,11 +41,13 @@ async function main() {
   app.use('/api/admin', adminRouter);
   app.use('/api', candidateRouter);
 
-  // Static frontend (single self-contained bundle)
-  app.use(express.static(path.join(__dirname, '.'), { index: 'index.html' }));
+  // Landing page (built Vite app) at the root
+  const landingDist = path.join(__dirname, 'landing', 'dist');
+  app.use(express.static(landingDist));
+  app.get('/', (req, res) => res.sendFile(path.join(landingDist, 'index.html')));
 
-  // SPA-ish fallback for the root
-  app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+  // App (single self-contained bundle) at /app
+  app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
   app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
