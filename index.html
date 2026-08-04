@@ -1,0 +1,3543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>Orion — Engineering Assessment Suite</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230a84ff'/%3E%3Ccircle cx='7.5' cy='7.5' r='2.6' fill='%23fff'/%3E%3Ccircle cx='12' cy='12' r='2.6' fill='%23fff'/%3E%3Ccircle cx='16.5' cy='16.5' r='2.6' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Orion — Engineering Assessment Suite
+   Design system: TSES-DASHBOARD (Tailwind) tokens + Geist font
+   ============================================================ */
+
+:root {
+  /* TSES gray palette */
+  --gray-50:  #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-900: #111827;
+
+  /* Accent (TSES blue-600) */
+  --blue-50:  #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --teal-600: #0d9488;
+
+  /* Semantic aliases used across the app */
+  --bg: #f9fafb;
+  --surface: #ffffff;
+  --surface-2: #f9fafb;
+  --surface-3: #f3f4f6;
+  --text: #111827;
+  --text-2: #4b5563;
+  --text-3: #9ca3af;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: #eff6ff;
+  --accent-ring: rgba(37, 99, 235, 0.22);
+
+  --green: #22c55e;   --green-soft: #f0fdf4;  --green-text: #15803d;
+  --blue:  #2563eb;   --blue-soft:  #eff6ff;  --blue-text:  #1d4ed8;
+  --purple:#9333ea;   --purple-soft:#f5f3ff;  --purple-text:#7e22ce;
+  --red:   #ef4444;   --red-500: #ef4444;     --red-soft:  #fef2f2;   --red-text:  #dc2626;
+  --orange:#f59e0b;   --orange-soft:#fffbeb;  --orange-text:#d97706;
+
+  --hairline: #e5e7eb;
+  --hairline-soft: #f3f4f6;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.05), 0 24px 60px rgba(0, 0, 0, 0.14);
+
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+
+  --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font);
+  background: #fff;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent-ring); }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: none; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+svg.ic { display: block; flex: none; }
+
+/* ────────────────────────── Responsive helpers ────────────── */
+
+.hide-desktop { display: flex; }
+.hide-mobile { display: none; }
+
+/* ────────────────────────── App shell ─────────────────────── */
+
+.shell { min-height: 100vh; background: var(--gray-50); }
+
+.sidebar {
+  position: fixed; top: 0; left: 0; height: 100vh; z-index: 40; width: 256px;
+  background: #fff; display: flex; flex-direction: column;
+  transform: translateX(-100%); transition: transform 0.2s ease-in-out;
+}
+.sidebar.open { transform: translateX(0); }
+@media (min-width: 768px) { .sidebar { transform: none; } }
+
+.sidebar-inner { display: flex; flex-direction: column; height: 100%; }
+.sidebar-head { padding: 24px 24px 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+.sidebar-foot { padding: 16px; border-top: 1px solid var(--hairline-soft); }
+
+.nav-item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 8px 12px; border-radius: 8px; text-align: left;
+  font-size: 14px; font-weight: 500; color: var(--gray-700);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.nav-item:hover { background: var(--gray-200); }
+.nav-item.active { background: var(--blue-100); color: var(--blue-600); }
+.nav-item .nav-label { flex: 1; min-width: 0; }
+.nav-item .nav-count {
+  font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+  padding: 1px 8px; border-radius: var(--r-pill); background: var(--gray-100); color: var(--gray-500);
+}
+.nav-item.active .nav-count { background: var(--blue-50); color: var(--blue-600); }
+
+.sidebar-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--gray-400); margin: 0 0 8px;
+}
+
+.sidebar-overlay {
+  position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.4);
+  display: none;
+}
+.sidebar-overlay.show { display: block; }
+@media (min-width: 768px) { .sidebar-overlay.show { display: none; } }
+
+.app-main { min-width: 0; }
+@media (min-width: 768px) { .app-main { margin-left: 256px; } }
+
+/* ────────────────────────── Header ────────────────────────── */
+
+.topbar {
+  position: fixed; top: 0; right: 0; left: 0; z-index: 20; height: 64px;
+  background: #fff; border-bottom: 1px solid var(--gray-200);
+}
+@media (min-width: 768px) { .topbar { left: 256px; } }
+
+.topbar-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px; padding: 0 24px; gap: 16px;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.topbar-right { display: flex; align-items: center; gap: 12px; flex: none; }
+
+.search {
+  flex: 1; max-width: 560px; display: flex; align-items: center;
+  background: #fff; border: 1px solid var(--gray-100); border-radius: 16px;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.search:focus-within { border-color: transparent; box-shadow: 0 0 0 2px var(--blue-600); }
+.search input {
+  flex: 1; min-width: 0; background: transparent; border: 0; outline: none;
+  padding: 10px 4px 10px 16px; font-size: 14px; color: var(--gray-900);
+}
+.search input::placeholder { color: var(--gray-400); }
+.search .ic { margin-right: 12px; color: var(--gray-400); }
+
+.bell-wrap { position: relative; }
+.bell-badge {
+  position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px;
+  padding: 0 4px; border-radius: var(--r-pill); background: var(--red-500, #ef4444);
+  color: #fff; font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.user-menu-wrap { position: relative; }
+.user-chip {
+  display: flex; align-items: center; gap: 10px; padding: 8px;
+  border-radius: 8px; transition: background 0.15s ease;
+}
+.user-chip:hover { background: var(--gray-100); }
+.user-avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex: none;
+  background: var(--gray-300); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 600;
+}
+.user-info { text-align: left; min-width: 0; }
+.user-name { display: block; font-size: 14px; font-weight: 500; color: var(--gray-900); }
+.user-role { display: block; font-size: 12px; color: var(--gray-500); }
+.user-menu {
+  position: absolute; right: 0; top: calc(100% + 8px); width: 200px; z-index: 50;
+  background: #fff; border: 1px solid var(--gray-200); border-radius: 8px;
+  box-shadow: var(--shadow-lg); padding: 6px; display: none;
+}
+.user-menu.open { display: block; animation: riseIn 0.16s ease; }
+.user-menu-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 10px; border-radius: 6px; font-size: 14px; color: var(--gray-700);
+  text-align: left; transition: background 0.12s ease;
+}
+.user-menu-item:hover { background: var(--gray-100); }
+.user-menu-item.danger { color: var(--red-text); }
+.user-menu-item.danger:hover { background: var(--red-soft); }
+
+/* ────────────────────────── Content ───────────────────────── */
+
+.content { min-height: 100vh; background: var(--gray-50); padding-top: 64px; }
+.container { width: 100%; padding: 32px; }
+.container.narrow { max-width: 860px; margin: 0 auto; }
+
+/* ────────────────────────── Page head ─────────────────────── */
+
+.page-head {
+  margin: 0 0 28px; display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.page-title { font-size: 24px; font-weight: 500; color: var(--gray-900); line-height: 1.3; }
+.page-desc { color: var(--gray-600); font-weight: 300; font-size: 15px; margin-top: 6px; max-width: 640px; }
+.page-actions { display: flex; gap: 10px; align-items: center; }
+
+/* ────────────────────────── Cards ─────────────────────────── */
+
+.card {
+  background: var(--surface); border-radius: 8px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200);
+}
+.card + .card { margin-top: 16px; }
+.card-pad { padding: 20px 24px; }
+.card-head { padding: 20px 24px 0; }
+.card-title { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.card-desc { font-size: 13px; color: var(--text-2); margin-top: 3px; }
+
+.section-label {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--gray-500); margin: 0 0 10px;
+}
+
+/* ────────────────────────── Buttons ───────────────────────── */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 8px 24px; border-radius: 8px;
+  font-size: 14px; font-weight: 500; line-height: 1.3; white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+  user-select: none;
+}
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary { background: var(--blue-600); color: #fff; }
+.btn-primary:hover { background: var(--blue-700); }
+.btn-secondary { background: #fff; border: 1px solid var(--gray-300); color: var(--gray-700); }
+.btn-secondary:hover { background: var(--gray-50); }
+.btn-ghost { background: transparent; color: var(--blue-600); }
+.btn-ghost:hover { background: var(--blue-50); }
+.btn-danger { background: var(--red-soft); color: var(--red-text); }
+.btn-danger:hover { background: #fbdcdb; }
+.btn-danger-solid { background: #dc2626; color: #fff; }
+.btn-danger-solid:hover { background: #b91c1c; }
+
+.btn-sm { padding: 6px 14px; font-size: 13px; }
+.btn-lg { padding: 10px 28px; font-size: 15px; }
+
+.btn-icon {
+  width: 38px; height: 38px; padding: 0; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--gray-600); transition: background 0.15s ease, color 0.15s ease;
+}
+.btn-icon:hover { background: var(--gray-100); color: var(--gray-900); }
+.btn-icon.danger:hover { background: var(--red-soft); color: var(--red-text); }
+
+/* ────────────────────────── Forms ─────────────────────────── */
+
+.field { margin-bottom: 18px; }
+.field-label { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13.5px; font-weight: 500; margin-bottom: 6px; }
+.field-help { font-size: 12.5px; color: var(--text-3); font-weight: 400; }
+.field-hint { font-size: 12.5px; color: var(--text-3); margin-top: 5px; }
+
+.input, textarea.input, select.input {
+  width: 100%; padding: 9px 13px;
+  background: #fff; border: 1px solid var(--gray-300);
+  border-radius: 8px; font-size: 14px; color: var(--gray-900);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input::placeholder { color: var(--gray-400); }
+.input:hover { border-color: var(--gray-400); }
+.input:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+.mono { font-family: var(--mono); }
+textarea.input { resize: vertical; min-height: 84px; line-height: 1.5; }
+select.input {
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px;
+}
+select.input:focus { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+
+/* Stepper */
+.stepper { display: inline-flex; align-items: center; gap: 2px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: var(--r-pill); padding: 3px; }
+.stepper button {
+  width: 30px; height: 30px; border-radius: var(--r-pill);
+  display: grid; place-items: center; color: var(--accent); font-weight: 700; font-size: 16px;
+  transition: background 0.15s ease;
+}
+.stepper button:hover { background: var(--accent-soft); }
+.stepper button:disabled { color: var(--text-3); opacity: 0.45; cursor: not-allowed; background: none; }
+.stepper .stepper-val { min-width: 56px; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 14.5px; }
+
+/* iOS-style switch */
+.switch { position: relative; display: inline-block; width: 44px; height: 27px; flex: none; }
+.switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 2; }
+.switch .track {
+  position: absolute; inset: 0; border-radius: var(--r-pill);
+  background: var(--gray-300); transition: background 0.2s ease;
+}
+.switch .thumb {
+  position: absolute; top: 2px; left: 2px; width: 23px; height: 23px; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s cubic-bezier(0.3, 0.9, 0.4, 1);
+}
+.switch input:checked + .track { background: var(--green); }
+.switch input:checked + .track + .thumb { transform: translateX(17px); }
+.switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Setting row (label left, control right) */
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 13px 0;
+}
+.setting-row + .setting-row { border-top: 1px solid var(--hairline-soft); }
+.setting-label { font-size: 14.5px; font-weight: 500; }
+.setting-sub { font-size: 12.5px; color: var(--text-3); margin-top: 1px; }
+
+/* ────────────────────────── Segmented control ─────────────── */
+
+.seg {
+  position: relative; display: inline-flex; padding: 3px;
+  background: var(--gray-100); border-radius: var(--r-pill);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+.seg-item {
+  position: relative; z-index: 1;
+  padding: 5px 16px; border-radius: var(--r-pill);
+  font-size: 13px; font-weight: 500; color: var(--text-2);
+  transition: color 0.18s ease; white-space: nowrap;
+}
+.seg-item:hover { color: var(--text); }
+.seg-item.active { color: var(--text); }
+.seg-thumb {
+  position: absolute; top: 3px; left: 3px; height: calc(100% - 6px);
+  background: #fff; border-radius: var(--r-pill);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.22s cubic-bezier(0.3, 0.9, 0.4, 1), width 0.22s cubic-bezier(0.3, 0.9, 0.4, 1);
+}
+
+/* ────────────────────────── Chips / badges ────────────────── */
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px; border-radius: var(--r-pill);
+  border: 1px solid var(--hairline); background: #fff;
+  font-size: 13px; font-weight: 500; color: var(--text-2);
+  transition: all 0.15s ease; user-select: none;
+}
+.chip:hover { border-color: var(--gray-400); color: var(--text); }
+.chip .chip-count { font-size: 11.5px; font-weight: 600; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.chip .ic:last-of-type { opacity: 0; transform: scale(0.6); transition: all 0.15s ease; }
+.chip.active {
+  background: var(--accent-soft); border-color: var(--accent-ring);
+  color: var(--accent);
+}
+.chip.active .chip-count { color: var(--accent); }
+.chip.active .ic:last-of-type { opacity: 1; transform: scale(1); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: var(--r-pill);
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em; white-space: nowrap;
+}
+.badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.85; }
+
+.b-beginner   { background: var(--green-soft);  color: var(--green-text); }
+.b-intermediate { background: var(--blue-soft); color: var(--blue-text); }
+.b-advanced   { background: var(--purple-soft); color: var(--purple-text); }
+.b-mcq  { background: var(--gray-100); color: var(--gray-700); }
+.b-fill { background: var(--gray-100); color: var(--gray-700); }
+.b-draft { background: var(--gray-100); color: var(--gray-700); }
+.b-published { background: var(--green-soft); color: var(--green-text); }
+.b-pass { background: var(--green-soft); color: var(--green-text); }
+.b-fail { background: var(--red-soft); color: var(--red-text); }
+
+/* ────────────────────────── Dashboard ─────────────────────── */
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+.stat-card {
+  background: var(--gray-50); border-radius: 8px; padding: 24px;
+  display: flex; align-items: center; gap: 16px; border: 4px solid #fff;
+}
+.stat-icon {
+  flex: none; width: 48px; height: 48px; border-radius: 6px;
+  background: var(--gray-100); color: var(--gray-600);
+  display: flex; align-items: center; justify-content: center;
+}
+.stat-body { flex: 1; min-width: 0; }
+.stat-label { color: var(--gray-600); margin-bottom: 4px; font-size: 14px; }
+.stat-value-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.stat-value { font-size: 20px; font-weight: 400; color: var(--gray-900); font-variant-numeric: tabular-nums; line-height: 1.3; }
+.stat-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--gray-500); white-space: nowrap; }
+
+.coverage-row {
+  display: flex; align-items: center; gap: 14px; padding: 11px 0;
+}
+.coverage-row + .coverage-row { border-top: 1px solid var(--hairline-soft); }
+.coverage-icon {
+  width: 34px; height: 34px; border-radius: 8px; flex: none;
+  background: var(--gray-100); color: var(--gray-600);
+  display: flex; align-items: center; justify-content: center;
+}
+.coverage-name { font-size: 14px; font-weight: 500; }
+.coverage-sub { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.coverage-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--gray-100); overflow: hidden; min-width: 60px; }
+.coverage-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.4s ease; }
+.coverage-total { font-size: 13px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
+
+.diff-split { display: inline-flex; gap: 2px; }
+.diff-split i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
+.diff-split .d-b { background: var(--green); }
+.diff-split .d-i { background: var(--blue); }
+.diff-split .d-a { background: var(--purple); }
+
+/* ────────────────────────── Lists / tables ────────────────── */
+
+.row-item { display: flex; align-items: center; gap: 16px; padding: 16px 24px; }
+.row-item + .row-item { border-top: 1px solid var(--hairline-soft); }
+.row-main { flex: 1; min-width: 0; }
+.row-title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 5px; font-size: 12.5px; color: var(--text-3); }
+.row-meta .meta-sep { opacity: 0.5; }
+.row-actions { display: flex; align-items: center; gap: 4px; flex: none; }
+
+.table-wrap { overflow-x: auto; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th {
+  text-align: left; font-size: 12px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--gray-500); padding: 12px 24px; border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
+}
+.tbl td { padding: 16px 24px; border-bottom: 1px solid var(--hairline-soft); vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tbody tr { transition: background 0.12s ease; }
+.tbl tbody tr:hover { background: var(--gray-50); }
+.tbl .num { font-variant-numeric: tabular-nums; }
+
+/* ────────────────────────── Search / toolbar ──────────────── */
+
+.toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.search-box {
+  position: relative; flex: 1; min-width: 220px;
+  background: #fff; border: 1px solid var(--gray-100); border-radius: 16px;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.search-box:focus-within { border-color: transparent; box-shadow: 0 0 0 2px var(--blue-600); }
+.search-box .ic { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-400); pointer-events: none; }
+.search-box input { padding-left: 40px; border: 0; background: transparent; }
+.search-box input:focus { box-shadow: none; }
+.search-box input:hover { border-color: transparent; }
+
+/* ────────────────────────── Modal ─────────────────────────── */
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: grid; place-items: center; padding: 24px;
+  animation: fadeIn 0.18s ease;
+}
+.modal {
+  background: #fff; border-radius: 16px;
+  box-shadow: var(--shadow-lg); border: 1px solid var(--gray-200); width: 100%; max-width: 560px;
+  max-height: min(86vh, 720px); display: flex; flex-direction: column;
+  animation: riseIn 0.22s cubic-bezier(0.3, 0.9, 0.4, 1);
+}
+.modal.wide { max-width: 700px; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px 4px; }
+.modal-title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.modal-body { padding: 16px 24px 20px; overflow-y: auto; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px 20px; border-top: 1px solid var(--hairline-soft); }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes riseIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+/* ────────────────────────── Toast ─────────────────────────── */
+
+.toast-wrap { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 80; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.toast {
+  display: flex; align-items: center; gap: 9px;
+  background: rgba(17, 24, 39, 0.92); color: #fff;
+  padding: 10px 18px; border-radius: var(--r-pill); font-size: 13.5px; font-weight: 500;
+  box-shadow: var(--shadow-lg); backdrop-filter: blur(10px);
+  animation: riseIn 0.22s ease;
+}
+.toast .ic { color: #93c5fd; }
+.toast.error .ic { color: #fca5a5; }
+.toast.success .ic { color: #86efac; }
+
+/* ────────────────────────── Empty states ──────────────────── */
+
+.empty { text-align: center; padding: 54px 24px; }
+.empty-icon {
+  width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 12px;
+  background: var(--gray-100); color: var(--gray-400); display: grid; place-items: center;
+}
+.empty-title { font-size: 16px; font-weight: 600; }
+.empty-sub { font-size: 13.5px; color: var(--text-2); margin-top: 4px; max-width: 380px; margin-inline: auto; }
+
+/* ═══════════════════════ CANDIDATE ═══════════════════════ */
+
+/* Test cards */
+.test-card { display: flex; flex-direction: column; gap: 14px; padding: 20px 24px; transition: box-shadow 0.16s ease; }
+.test-card:hover { box-shadow: var(--shadow-md); }
+.test-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.test-card-title { font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
+.test-card-desc { font-size: 14px; color: var(--text-2); margin-top: 5px; line-height: 1.5; }
+.test-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-3); }
+.meta-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: var(--r-pill); background: var(--gray-100);
+  font-weight: 500; font-variant-numeric: tabular-nums;
+}
+.meta-pill .ic { color: var(--text-3); }
+.test-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; border-top: 1px solid var(--hairline-soft); }
+.test-card-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Timer */
+.timer {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 14px; border-radius: var(--r-pill);
+  background: #fff; border: 1px solid var(--gray-200);
+  font-family: var(--mono); font-size: 14px; font-weight: 600;
+  font-variant-numeric: tabular-nums; color: var(--text);
+  transition: all 0.2s ease;
+}
+.timer .ic { color: var(--text-3); }
+.timer.warn { border-color: rgba(217, 119, 6, 0.4); background: var(--orange-soft); color: var(--orange-text); }
+.timer.warn .ic { color: var(--orange-text); }
+.timer.danger { border-color: rgba(220, 38, 38, 0.4); background: var(--red-soft); color: var(--red-text); animation: pulse 1s ease infinite; }
+.timer.danger .ic { color: var(--red-text); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.72; } }
+
+/* Progress */
+.progress { height: 5px; background: var(--gray-100); border-radius: 3px; overflow: hidden; flex: 1; max-width: 340px; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s ease; }
+
+/* Runner layout */
+.runner { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+
+.q-card { padding: 24px 28px; }
+.q-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.q-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.q-index { font-size: 12.5px; font-weight: 600; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.q-text { font-size: 17.5px; font-weight: 600; line-height: 1.55; letter-spacing: -0.01em; margin-bottom: 22px; }
+
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left; padding: 12px 16px;
+  background: #fff; border: 2px solid var(--gray-100);
+  border-radius: 8px; font-size: 14.5px; line-height: 1.45;
+  transition: all 0.15s ease;
+}
+.opt:hover { border-color: var(--gray-300); }
+.opt .opt-key {
+  flex: none; width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid var(--gray-200); display: grid; place-items: center;
+  font-size: 11.5px; font-weight: 600; color: var(--text-3);
+  transition: all 0.15s ease;
+}
+.opt.selected { border-color: var(--accent); background: var(--accent-soft); }
+.opt.selected .opt-key { background: var(--accent); border-color: var(--accent); color: #fff; }
+.opt.correct { border-color: rgba(34, 197, 94, 0.55); background: var(--green-soft); }
+.opt.correct .opt-key { background: var(--green); border-color: var(--green); color: #fff; }
+.opt.wrong { border-color: rgba(239, 68, 68, 0.55); background: var(--red-soft); }
+.opt.wrong .opt-key { background: var(--red); border-color: var(--red); color: #fff; }
+
+.fill-input {
+  width: 100%; padding: 13px 15px; font-size: 15px;
+  border: 1.5px solid var(--gray-200); border-radius: 8px;
+  background: #fff; transition: all 0.15s ease;
+  font-family: var(--mono);
+}
+.fill-input:hover { border-color: var(--gray-300); }
+.fill-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+.fill-input.correct { border-color: rgba(34, 197, 94, 0.6); background: var(--green-soft); color: var(--green-text); }
+.fill-input.wrong { border-color: rgba(239, 68, 68, 0.6); background: var(--red-soft); color: var(--red-text); }
+
+.q-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; gap: 10px; }
+.q-nav .spacer { flex: 1; }
+
+.flag-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 13px; border-radius: var(--r-pill);
+  font-size: 12.5px; font-weight: 500; color: var(--text-3);
+  transition: all 0.15s ease;
+}
+.flag-btn:hover { background: var(--gray-100); color: var(--text-2); }
+.flag-btn.flagged { background: var(--orange-soft); color: var(--orange-text); }
+
+/* Sidebar palette */
+.side-card { padding: 18px 20px; position: sticky; top: 80px; }
+.side-title { font-size: 12.5px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+.palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.palette-item {
+  position: relative; height: 34px; border-radius: 8px;
+  background: var(--gray-100); color: var(--text-2);
+  font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums;
+  display: grid; place-items: center; transition: all 0.13s ease;
+}
+.palette-item:hover { background: var(--gray-200); transform: translateY(-1px); }
+.palette-item.answered { background: var(--accent); color: #fff; }
+.palette-item.current { box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px var(--accent); }
+.palette-item.flagged::after {
+  content: ""; position: absolute; top: -3px; right: -3px; width: 9px; height: 9px;
+  background: var(--orange); border-radius: 50%; border: 2px solid #fff;
+}
+.legend { display: flex; flex-direction: column; gap: 7px; margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--hairline-soft); }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+.legend-swatch { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+.ls-answered { background: var(--accent); }
+.ls-current { background: #fff; box-shadow: 0 0 0 2px var(--accent); }
+.ls-flagged { background: var(--orange); }
+.ls-unanswered { background: var(--gray-100); border: 1px solid var(--hairline); }
+
+/* Results */
+.result-hero { text-align: center; padding: 36px 24px 30px; }
+.ring-wrap { position: relative; width: 168px; height: 168px; margin: 0 auto 18px; }
+.ring-wrap svg { transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--gray-100); stroke-width: 11; }
+.ring-fg { fill: none; stroke: var(--accent); stroke-width: 11; stroke-linecap: round; transition: stroke-dashoffset 0.9s cubic-bezier(0.3, 0.9, 0.4, 1); }
+.ring-label { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.ring-value { font-size: 38px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+.ring-sub { font-size: 12px; color: var(--text-3); margin-top: 4px; font-weight: 500; }
+.result-verdict { display: inline-flex; align-items: center; gap: 7px; padding: 6px 16px; border-radius: var(--r-pill); font-size: 13.5px; font-weight: 600; }
+.result-stats { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+.result-stat { padding: 10px 18px; background: var(--gray-50); border-radius: 8px; }
+.result-stat-val { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.result-stat-lbl { font-size: 11.5px; color: var(--text-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+.proctor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; padding: 2px; }
+.danger-text { color: var(--red-text); }
+
+.breakdown-row { display: flex; align-items: center; gap: 13px; padding: 10px 0; }
+.breakdown-row + .breakdown-row { border-top: 1px solid var(--hairline-soft); }
+.breakdown-name { font-size: 13.5px; font-weight: 500; min-width: 180px; display: flex; align-items: center; gap: 9px; }
+.breakdown-bar { flex: 1; height: 7px; border-radius: 4px; background: var(--gray-100); overflow: hidden; }
+.breakdown-fill { height: 100%; border-radius: 4px; background: var(--accent); }
+.breakdown-fill.low { background: var(--red); }
+.breakdown-fill.mid { background: var(--orange); }
+.breakdown-val { font-size: 12.5px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
+
+/* Review list */
+.review-item { border-bottom: 1px solid var(--hairline-soft); }
+.review-item:last-child { border-bottom: none; }
+.review-summary {
+  width: 100%; display: flex; align-items: flex-start; gap: 13px;
+  padding: 16px 24px; text-align: left;
+}
+.review-status {
+  flex: none; width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center; margin-top: 1px;
+}
+.review-status.ok { background: var(--green-soft); color: var(--green-text); }
+.review-status.no { background: var(--red-soft); color: var(--red-text); }
+.review-q { font-size: 14px; font-weight: 500; line-height: 1.45; }
+.review-meta { display: flex; align-items: center; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+.review-chev { margin-left: auto; color: var(--text-3); flex: none; transition: transform 0.2s ease; }
+.review-item.open .review-chev { transform: rotate(180deg); }
+.review-body { padding: 2px 24px 20px; display: none; }
+.review-item.open .review-body { display: block; animation: fadeIn 0.2s ease; }
+.review-line { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; margin-bottom: 8px; }
+.review-line .lbl { flex: none; width: 86px; color: var(--text-3); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.review-line .val { flex: 1; }
+.val-correct { color: var(--green-text); font-weight: 600; }
+.val-wrong { color: var(--red-text); font-weight: 600; }
+.review-explain { background: var(--gray-50); border-radius: 8px; padding: 11px 14px; font-size: 13px; color: var(--text-2); line-height: 1.55; margin-top: 12px; }
+
+/* ────────────────────────── Auth screens ──────────────────── */
+
+.auth-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--gray-50); }
+.auth-screen { width: 100%; max-width: 420px; }
+.auth-card { padding: 34px 32px 30px; box-shadow: var(--shadow); }
+.auth-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 24px; }
+.auth-title { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 5px; }
+.auth-sub { font-size: 13.5px; color: var(--text-2); line-height: 1.55; margin-bottom: 22px; }
+.auth-field { margin-bottom: 15px; }
+.auth-input { position: relative; }
+.auth-input .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
+.auth-input .input { padding-left: 38px; }
+.auth-divider { height: 1px; background: var(--hairline-soft); margin: 20px 0 16px; }
+.auth-bootstrap { margin-top: 2px; }
+
+/* ────────────────────────── Brand ─────────────────────────── */
+
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand-mark {
+  width: 30px; height: 30px; border-radius: 8px; flex: none;
+  background: var(--blue-600);
+  display: grid; place-items: center; color: #fff;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+}
+.brand-name { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: var(--gray-900); }
+.brand-sub { font-size: 12px; color: var(--text-3); font-weight: 500; }
+
+/* ────────────────────────── Code snippets ─────────────────── */
+
+.q-code {
+  font-family: var(--mono); font-size: 13px; line-height: 1.6;
+  background: var(--gray-100); border: 1px solid var(--hairline-soft);
+  border-radius: 8px; padding: 14px 16px; margin: 0 0 22px;
+  overflow-x: auto; color: #333336; white-space: pre;
+}
+
+/* Admin list avatar (reused) */
+.admin-avatar {
+  width: 28px; height: 28px; border-radius: 50%; flex: none;
+  background: var(--gray-300); color: #fff;
+  display: grid; place-items: center; font-size: 12.5px; font-weight: 600;
+}
+
+.rot-180 { transform: rotate(180deg); }
+
+/* kbd hint */
+.hint-keys { font-size: 11.5px; color: var(--text-3); }
+kbd {
+  font-family: var(--mono); font-size: 10.5px;
+  background: var(--gray-100); border: 1px solid var(--hairline);
+  border-bottom-width: 2px; border-radius: 5px; padding: 1px 5px;
+}
+
+/* ────────────────────────── Responsive ────────────────────── */
+
+@media (min-width: 768px) {
+  .hide-desktop { display: none; }
+  .hide-mobile { display: block; }
+}
+
+@media (max-width: 900px) {
+  .runner { grid-template-columns: 1fr; }
+  .side-card { position: static; }
+}
+@media (max-width: 620px) {
+  .container { padding: 20px 16px; }
+  .brand-sub { display: none; }
+  .palette { grid-template-columns: repeat(6, 1fr); }
+  .q-card { padding: 20px; }
+  .modal { max-height: 92vh; }
+}
+
+/* ────────────────────────── Motion ────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ═══════════════════ Ported from orion (feature classes) ═══════════════════ */
+
+/* Scrollable segmented control (many categories) */
+.seg-scroll { overflow-x: auto; flex: 1; min-width: 0; scrollbar-width: none; }
+.seg-scroll::-webkit-scrollbar { display: none; }
+.seg-scroll .seg { white-space: nowrap; }
+
+/* Matching & ordering */
+.match-grid { display: flex; flex-direction: column; gap: 10px; }
+.match-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.match-left { flex: 1; min-width: 200px; font-size: 14.5px; font-weight: 500; background: var(--gray-100); border: 1px solid var(--hairline-soft); border-radius: 10px; padding: 10px 14px; }
+.match-select { flex: 1; min-width: 200px; }
+.order-list { display: flex; flex-direction: column; gap: 8px; }
+.order-row { display: flex; align-items: center; gap: 10px; background: var(--gray-100); border: 1px solid var(--hairline-soft); border-radius: 10px; padding: 9px 12px; }
+.order-num { width: 26px; height: 26px; flex: none; border-radius: 8px; background: var(--gray-200); color: var(--text-2); display: grid; place-items: center; font-weight: 600; font-size: 12.5px; }
+.order-item { flex: 1; font-size: 14px; }
+.order-btn { width: 30px; height: 30px; }
+.order-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* Coding challenges */
+.code-box { border: 1px solid var(--hairline); border-radius: 10px; overflow: hidden; background: var(--surface-2); }
+.code-box-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; background: var(--gray-100); border-bottom: 1px solid var(--hairline-soft); }
+.code-editor {
+  width: 100%; min-height: 200px; padding: 14px 16px;
+  font-family: var(--mono); font-size: 13.5px; line-height: 1.6;
+  background: #1d1d1f; color: #e8e8ec; border: none; resize: vertical;
+  tab-size: 2;
+}
+.code-editor:focus { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.code-box-foot { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--gray-100); border-top: 1px solid var(--hairline-soft); }
+.code-out { font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+/* ============================================================
+   Orion — core: constants, icons, state, UI atoms, helpers
+   ('use strict' directive lives at the top of the bundle)
+   ============================================================ */
+
+/* ── Constants ─────────────────────────────────────────────── */
+
+const CATS = [
+  { id: 'system-design', name: 'System Design', icon: 'layers' },
+  { id: 'frontend',      name: 'Frontend · React / Next.js', icon: 'code' },
+  { id: 'backend',       name: 'Backend · Node.js', icon: 'server' },
+  { id: 'db-mongodb',    name: 'Database · MongoDB', icon: 'database' },
+  { id: 'db-postgres',   name: 'Database · PostgreSQL', icon: 'database' },
+  { id: 'coding',        name: 'General Coding Practice', icon: 'pencil' },
+  { id: 'devops',        name: 'DevOps', icon: 'terminal' },
+  { id: 'solutions',     name: 'Solutions Architecture', icon: 'blueprint' },
+  { id: 'cs',            name: 'C#', icon: 'hash' },
+  { id: 'java',          name: 'Java', icon: 'coffee' },
+  { id: 'python',        name: 'Python', icon: 'snake' },
+  { id: 'dotnet',      name: '.NET / ASP.NET Core', icon: 'window' },
+  { id: 'springboot',  name: 'Spring Boot', icon: 'leaf' },
+  { id: 'django',      name: 'Django', icon: 'flower' },
+  { id: 'typescript',  name: 'TypeScript', icon: 'braces' },
+  { id: 'go',          name: 'Go', icon: 'compass' },
+  { id: 'rust',        name: 'Rust', icon: 'gear' },
+  { id: 'dsa',          name: 'Data Structures & Algorithms', icon: 'tree' },
+  { id: 'backend-eng', name: 'Backend Engineering · C# / Java / Python', icon: 'server' }
+];
+
+const DIFFS = [
+  { id: 'beginner',     name: 'Beginner' },
+  { id: 'intermediate', name: 'Intermediate' },
+  { id: 'advanced',     name: 'Advanced' }
+];
+
+const DIFF_FOCUS_LABEL = {
+  beginner: 'Weighted toward beginner questions',
+  balanced: 'A balanced mix of all difficulty levels',
+  advanced: 'Weighted toward advanced questions'
+};
+
+const DIFF_WEIGHTS = {
+  beginner: { beginner: 0.6,  intermediate: 0.3, advanced: 0.1 },
+  balanced: { beginner: 0.34, intermediate: 0.33, advanced: 0.33 },
+  advanced: { beginner: 0.1,  intermediate: 0.3, advanced: 0.6 }
+};
+
+const LETTERS = ['A', 'B', 'C', 'D'];
+
+/* ── State ─────────────────────────────────────────────────── */
+
+const S = {
+  mode: 'console',        // console | candidate
+  view: 'app',            // app | login (console requires auth)
+  tab: 'dashboard',       // dashboard | tests | editor | questions | results | admins
+  candView: 'home',       // home | runner | result
+  auth: null,             // admin session
+  stats: null,            // dashboard stats from server
+  questions: [],          // admin: full bank
+  tests: [],
+  attempts: [],
+  admins: [],
+  pubTests: [],           // candidate: published tests
+  qPool: {},              // qid -> question (rendering pool)
+  live: null,             // candidate in-progress attempt
+  liveQuestions: {},      // qid -> sanitized question for the live attempt
+  candResult: null,       // submitted attempt record (server-graded)
+  qIdx: 0,
+  timerId: null,
+  qFilters: { search: '', cat: 'all', diff: 'all', type: 'all' },
+  events: [],             // admin: proctoring / audit log
+  modal: null,
+  _pendingTestId: null,
+  _focusSearch: null
+};
+
+/* draft objects for the editors (module-level so every module shares them) */
+let tDraft = null;
+let qDraft = null;
+
+/* ── DOM / string helpers ──────────────────────────────────── */
+
+const $  = (sel, root) => (root || document).querySelector(sel);
+const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function norm(s) {
+  return String(s == null ? '' : s).trim().toLowerCase()
+    .replace(/[.,;:!?'")\]]+$/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function fmtClock(sec) {
+  sec = Math.max(0, Math.round(sec));
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function fmtMins(sec) {
+  sec = Math.round(sec);
+  const m = Math.floor(sec / 60), s = sec % 60;
+  if (m === 0) return s + 's';
+  if (s === 0) return m + ' min';
+  return m + 'm ' + s + 's';
+}
+
+function fmtDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString() + ' · ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+/* ── Storage (auth token only; all data lives in MongoDB) ──── */
+
+const store = {
+  get(k, d) {
+    try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }
+    catch (e) { return d; }
+  },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+
+/* ── Lookups ───────────────────────────────────────────────── */
+
+const catOf  = id => CATS.find(c => c.id === id) || { id, name: id, icon: 'layers' };
+const diffOf = id => DIFFS.find(d => d.id === id) || { id, name: id };
+
+/* Question lookup: prefers the rendering pool (attempt questions),
+   falls back to the admin bank. */
+function qOf(id) {
+  if (S.qPool && S.qPool[id]) return S.qPool[id];
+  return S.questions.find(q => q.id === id);
+}
+
+function buildQPool(list) {
+  S.qPool = {};
+  (list || []).forEach(q => { if (q) S.qPool[q.id] = q; });
+}
+
+/* ── Icons (consistent outline set) ────────────────────────── */
+
+const ICONS = {
+  dashboard: '<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
+  doc: '<path d="M6 2.5h9l5 5V21a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1z"/><path d="M15 2.5v5h5"/><path d="M9 12.5h6M9 16.5h6"/>',
+  question: '<circle cx="12" cy="12" r="9"/><path d="M9.4 9.2a2.6 2.6 0 1 1 4.6 1.5c-.9.8-2 1.5-2 3.1"/><path d="M12 17.4h.01"/>',
+  chart: '<path d="M5 20v-9M11 20V4.5M17 20v-6"/><path d="M3 20h18"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  minus: '<path d="M5 12h14"/>',
+  x: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+  check: '<path d="M4.5 12.5l5 5L19.5 7"/>',
+  chevronR: '<path d="M9 6l6 6-6 6"/>',
+  chevronD: '<path d="M6 9l6 6 6-6"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16 16"/>',
+  flag: '<path d="M5.5 21V4"/><path d="M5.5 4h11l-2.4 4 2.4 4h-11"/>',
+  trash: '<path d="M4 7h16M9.5 7V5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2M6.5 7l1 12.5h9L17.5 7M10 11v5.5M14 11v5.5"/>',
+  pencil: '<path d="M4 20l1.2-4.5L16.7 4a2.1 2.1 0 0 1 3 3L8.2 18.5 4 20z"/><path d="M14.5 6.5l3 3"/>',
+  copy: '<rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 4H6a2 2 0 0 0-2 2v9.5"/>',
+  eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+  play: '<path d="M7.5 5.2v13.6L19 12 7.5 5.2z"/>',
+  arrowL: '<path d="M19 12H5M12 5l-7 7 7 7"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7.5" r="3.5"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M15.5 4.2a3.5 3.5 0 0 1 0 6.7"/>',
+  lock: '<rect x="4.5" y="11" width="15" height="9.5" rx="2.5"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>',
+  gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>',
+  refresh: '<path d="M20.5 12a8.5 8.5 0 1 1-2.5-6L20.5 8"/><path d="M20.5 3.5V8h-4.5"/>',
+  book: '<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17.5H6.5A2.5 2.5 0 0 0 4 22V4.5z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>',
+  layers: '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>',
+  code: '<path d="M8 7L3 12l5 5M16 7l5 5-5 5"/>',
+  server: '<rect x="3.5" y="4" width="17" height="7" rx="2"/><rect x="3.5" y="13" width="17" height="7" rx="2"/><path d="M7.5 7.5h.01M7.5 16.5h.01"/>',
+  database: '<ellipse cx="12" cy="5" rx="8" ry="2.8"/><path d="M4 5v14c0 1.55 3.6 2.8 8 2.8s8-1.25 8-2.8V5"/><path d="M4 12c0 1.55 3.6 2.8 8 2.8s8-1.25 8-2.8"/>',
+  terminal: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9.5l3 2.5-3 2.5M12.5 14.5H17"/>',
+  blueprint: '<rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M3.5 9.5h17M9.5 21v-11.5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+  alert: '<path d="M12 3.5L22 20.5H2L12 3.5z"/><path d="M12 10v4"/><path d="M12 17.2h.01"/>',
+  logout: '<path d="M9 21H5.5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2H9"/><path d="M15.5 16.5L20 12l-4.5-4.5M20 12H8.5"/>',
+  filter: '<path d="M4 5.5h16M7 12h10M10 18.5h4"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>',
+  key: '<circle cx="7.5" cy="15.5" r="3.5"/><path d="M10.2 12.8L20.5 2.5M15.5 7.5l3 3M12.5 10.5l3 3"/>',
+  hash: '<path d="M9 3.5L7.5 20.5"/><path d="M16.5 3.5L15 20.5"/><path d="M4 8.5h16"/><path d="M3.5 15.5h16"/>',
+  coffee: '<path d="M4 8h13v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8z"/><path d="M17 9.5h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M7.5 3.5c.8 1 .8 1.8 0 2.8M11.5 3.5c.8 1 .8 1.8 0 2.8"/>',
+  snake: '<path d="M4 9h10a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h7"/><circle cx="19.5" cy="8" r="1.6"/>',
+  window: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17"/><path d="M9.5 9.5v10"/>',
+  leaf: '<path d="M5.5 18.5C5.5 10 11.5 5 20 4c-1 8.5-6 14.5-14.5 14.5z"/><path d="M5.5 18.5C9 13 12.5 10 16 8"/>',
+  flower: '<circle cx="12" cy="12" r="2.4"/><path d="M12 9.6a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4z"/><path d="M9.6 12a3.2 3.2 0 1 1-6.4 0 3.2 3.2 0 0 1 6.4 0z"/><path d="M14.4 12a3.2 3.2 0 1 1 6.4 0 3.2 3.2 0 0 1-6.4 0z"/><path d="M9.6 14.4a3.2 3.2 0 1 1-2.26 5.46A3.2 3.2 0 0 1 9.6 14.4z"/><path d="M14.4 14.4a3.2 3.2 0 1 0 2.26 5.46 3.2 3.2 0 0 0-2.26-5.46z"/>',
+  braces: '<path d="M9 4a4 4 0 0 0-4 4c0 1.6-1 2-1 4s1 2.4 1 4a4 4 0 0 0 4 4"/><path d="M15 4a4 4 0 0 1 4 4c0 1.6 1 2 1 4s-1 2.4-1 4a4 4 0 0 1-4 4"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5.2-5.2 2.2 2.2-5.2 5.2-2.2z"/>',
+  link: '<path d="M9.5 14.5l5-5"/><path d="M11 6.5l1.7-1.7a3.5 3.5 0 0 1 5 5L15.8 12"/><path d="M13 17.5l-1.7 1.7a3.5 3.5 0 0 1-5-5L8.2 12"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r=".9"/><circle cx="4.5" cy="12" r=".9"/><circle cx="4.5" cy="18" r=".9"/>',
+  terminal2: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9.5l3 2.5-3 2.5M12.5 14.5H17"/>',
+  tree: '<path d="M12 3v6M12 9L7 15M12 9l5 6M7 15H4v3M12 21v-6M7 18H4.5M7 18h5M12 15h5v3M17 18h2.5"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>',
+  shield: '<path d="M12 2.5l7.5 3v5.5c0 4.8-3.2 8.4-7.5 10.5-4.3-2.1-7.5-5.7-7.5-10.5V5.5l7.5-3z"/>',
+  bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>'
+};
+
+function ic(name, size, cls) {
+  return '<svg class="ic ' + (cls || '') + '" width="' + (size || 17) + '" height="' + (size || 17) +
+    '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    (ICONS[name] || '') + '</svg>';
+}
+
+function logoMark() {
+  return '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+    '<circle cx="7.5" cy="7.5" r="2.6"/><circle cx="12" cy="12" r="2.6"/><circle cx="16.5" cy="16.5" r="2.6"/></svg>';
+}
+
+/* ── Shared UI atoms ───────────────────────────────────────── */
+
+function brandHTML() {
+  return '<a class="brand" href="#" data-action="brand" aria-label="Orion home">' +
+    '<span class="brand-mark">' + logoMark() + '</span>' +
+    '<span class="brand-name">Orion</span>' +
+    '<span class="brand-sub">Engineering Assessments</span></a>';
+}
+
+function modeSeg() {
+  const opts = [['console', 'Console'], ['candidate', 'Candidate']];
+  return '<div class="seg" id="modeSeg">' +
+    opts.map(o => '<button class="seg-item ' + (S.mode === o[0] ? 'active' : '') + '" data-action="mode" data-value="' + o[0] + '">' + o[1] + '</button>').join('') +
+    '<span class="seg-thumb" id="modeThumb"></span></div>';
+}
+
+function positionSeg(segSel, thumbSel, idx) {
+  const seg = $(segSel), thumb = $(thumbSel);
+  if (!seg || !thumb) return;
+  const items = Array.from(seg.querySelectorAll('.seg-item'));
+  const el = items[idx];
+  if (!el) return;
+  thumb.style.width = el.offsetWidth + 'px';
+  thumb.style.transform = 'translateX(' + (el.offsetLeft - 3) + 'px)';
+}
+
+function sidebarHTML(nav, mode) {
+  const isCand = mode === 'candidate';
+  const activeVal = isCand ? S.candView : S.tab;
+  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length };
+  return '<aside class="sidebar" id="sidebar">' +
+    '<div class="sidebar-inner">' +
+      '<div class="sidebar-head">' + brandHTML() +
+        '<button class="btn-icon hide-desktop" data-action="sidebar-close" aria-label="Close menu" style="width:32px;height:32px">' + ic('x', 18) + '</button>' +
+      '</div>' +
+      '<nav class="sidebar-nav">' +
+        nav.map(n => {
+          const active = activeVal === n[0] || (n[0] === 'tests' && activeVal === 'editor');
+          return '<button class="nav-item ' + (active ? 'active' : '') + '" data-action="' + (isCand ? 'cand-nav' : 'tab') + '" data-value="' + n[0] + '">' +
+            ic(n[2], 18) +
+            '<span class="nav-label">' + n[1] + '</span>' +
+            (counts[n[0]] != null ? '<span class="nav-count">' + counts[n[0]] + '</span>' : '') +
+          '</button>';
+        }).join('') +
+      '</nav>' +
+      '<div class="sidebar-foot">' +
+        '<div class="sidebar-label">Portal</div>' + modeSeg() +
+      '</div>' +
+    '</div>' +
+  '</aside>' +
+  '<div class="sidebar-overlay" id="sidebarOverlay" data-action="sidebar-close"></div>';
+}
+
+function headerHTML(mode) {
+  const isCand = mode === 'candidate';
+  const inRunner = isCand && S.candView === 'runner' && S.live;
+  const inProgress = (!isCand && S.attempts) ? S.attempts.filter(a => a.status !== 'submitted').length : 0;
+  return '<div class="topbar-inner">' +
+    '<div class="topbar-left">' +
+      '<button class="btn-icon hide-desktop" data-action="sidebar-open" aria-label="Open menu">' + ic('menu', 20) + '</button>' +
+      '<div class="search">' +
+        '<input id="globalSearch" placeholder="Search" value="' + esc(S.qFilters.search) + '" autocomplete="off">' +
+        ic('search', 18) +
+      '</div>' +
+    '</div>' +
+    '<div class="topbar-right">' +
+      (inRunner ? '<span class="timer" id="timerDisplay">' + ic('clock', 15) + ' ' + fmtClock(S.live.remaining) + '</span>' : '') +
+      (isCand ? '' : '<button class="btn-icon bell-wrap" data-action="tab" data-value="results" title="In-progress attempts">' +
+        ic('bell', 20) + (inProgress ? '<span class="bell-badge">' + inProgress + '</span>' : '') + '</button>') +
+      (isCand ? '' : '<div class="user-menu-wrap">' +
+        '<button class="user-chip" data-action="user-menu" aria-expanded="false">' +
+          '<span class="user-avatar">' + esc((S.auth.displayName || S.auth.username).slice(0, 1).toUpperCase()) + '</span>' +
+          '<span class="user-info hide-mobile">' +
+            '<span class="user-name">' + esc(S.auth.displayName || S.auth.username) + '</span>' +
+            '<span class="user-role">' + (S.auth.role === 'superadmin' ? 'Superadmin' : 'Admin') + '</span>' +
+          '</span>' +
+          ic('chevronD', 14) +
+        '</button>' +
+        '<div class="user-menu">' +
+          '<button class="user-menu-item" data-action="change-password">' + ic('key', 15) + ' Change password</button>' +
+          '<button class="user-menu-item danger" data-action="logout">' + ic('logout', 15) + ' Sign out</button>' +
+        '</div>' +
+      '</div>') +
+    '</div>' +
+  '</div>';
+}
+
+function toast(msg, type) {
+  let wrap = $('.toast-wrap');
+  if (!wrap) { wrap = document.createElement('div'); wrap.className = 'toast-wrap'; document.body.appendChild(wrap); }
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type || '');
+  const icon = type === 'success' ? 'check' : type === 'error' ? 'alert' : 'info';
+  t.innerHTML = ic(icon, 15) + '<span>' + esc(msg) + '</span>';
+  wrap.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .35s ease'; setTimeout(() => t.remove(), 380); }, 2600);
+}
+
+/* ── Modal ─────────────────────────────────────────────────── */
+
+let modalConfirmCb = null;
+
+function openModal(o) {
+  S.modal = o;
+  modalConfirmCb = o.onConfirm || null;
+  render();
+}
+
+function closeModal() { S.modal = null; modalConfirmCb = null; render(); }
+
+function confirmModal(o) {
+  S.modal = {
+    title: o.title,
+    body: '<p style="font-size:14.5px;color:var(--text-2);line-height:1.65">' + o.body + '</p>',
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn ' + (o.danger ? 'btn-danger-solid' : 'btn-primary') + '" data-action="modal-confirm">' + (o.confirmLabel || 'Confirm') + '</button>',
+    wide: !!o.wide
+  };
+  modalConfirmCb = o.onConfirm || null;
+  render();
+}
+
+function modalHTML() {
+  if (!S.modal) return '';
+  const m = S.modal;
+  return '<div class="modal-overlay" data-action="overlay-close">' +
+    '<div class="modal ' + (m.wide ? 'wide' : '') + '" role="dialog" aria-modal="true">' +
+      '<div class="modal-head">' +
+        '<h2 class="modal-title">' + m.title + '</h2>' +
+        '<button class="btn-icon" data-action="close-modal" aria-label="Close">' + ic('x', 17) + '</button>' +
+      '</div>' +
+      '<div class="modal-body">' + (m.body || '') + '</div>' +
+      (m.foot ? '<div class="modal-foot">' + m.foot + '</div>' : '') +
+    '</div></div>';
+}
+
+/* ── Grading helpers (authoritative grading happens server-side) ── */
+
+function gradeQuestion(q, value) {
+  if (value === undefined || value === null || value === '') return null;
+  if (q.type === 'mcq') {
+    // q.correct is the shown-space index when options were permuted
+    return q.correct !== undefined ? value === q.correct : value === q.answer;
+  }
+  if (q.type === 'multi') {
+    const want = (q.correct || q.answer || []).slice().sort((a, b) => a - b);
+    const got = Array.isArray(value) ? value.slice().sort((a, b) => a - b) : null;
+    if (!got) return null;
+    return want.length === got.length && want.every((v, i) => v === got[i]);
+  }
+  if (q.type === 'matching') {
+    if (!Array.isArray(value) || !q.correctPairs) return null;
+    const answered = value.every(v => v !== undefined && v !== null && v !== -1 && v !== '');
+    if (!answered) return null;
+    // correct: each chosen option value equals the pair's right value
+    return value.every((optIdx, i) => q.options[optIdx] === q.correctPairs[i].split(' → ')[1]);
+  }
+  if (q.type === 'ordering') {
+    if (!Array.isArray(value) || value.length === 0 || !q.correctOrder) return null;
+    if (value.length !== q.correctOrder.length) return false;
+    return value.every((v, i) => v === q.correctOrder[i]);
+  }
+  if (q.type === 'code') {
+    if (!value || !String(value).trim()) return null;
+    if (q.passed != null) return q.passed === q.total;
+    return true;
+  }
+  return (q.answer || []).some(a => norm(a) === norm(value));
+}
+
+function countAnsweredIn(att) {
+  const answers = att.answers || {};
+  return (att.order || []).filter(id => {
+    const v = answers[id];
+    if (v === undefined || v === null || v === '') return false;
+    if (Array.isArray(v) && v.length === 0) return false;
+    return true;
+  }).length;
+}
+
+/* ── Small render helpers ──────────────────────────────────── */
+
+function statCard(icon, label, value, sub) {
+  return '<div class="stat-card">' +
+    '<span class="stat-icon">' + ic(icon, 22) + '</span>' +
+    '<div class="stat-body">' +
+      '<p class="stat-label">' + label + '</p>' +
+      '<div class="stat-value-row">' +
+        '<p class="stat-value">' + value + '</p>' +
+        (sub ? '<span class="stat-trend">' + ic('trend', 14) + sub + '</span>' : '') +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function emptyState(icon, title, sub, action, label, dataValue) {
+  return '<div class="card empty">' +
+    '<div class="empty-icon">' + ic(icon, 24) + '</div>' +
+    '<div class="empty-title">' + title + '</div>' +
+    '<div class="empty-sub">' + sub + '</div>' +
+    (action ? '<div style="margin-top:16px"><button class="btn btn-primary" data-action="' + action + '"' +
+      (dataValue ? ' data-value="' + dataValue + '"' : '') + '>' + label + '</button></div>' : '') +
+  '</div>';
+}
+
+function diffSplitHTML(pool) {
+  const b = pool.filter(q => q.diff === 'beginner').length;
+  const i = pool.filter(q => q.diff === 'intermediate').length;
+  const a = pool.filter(q => q.diff === 'advanced').length;
+  return '<span class="diff-split"><i class="d-b"></i><i class="d-i"></i><i class="d-a"></i></span>' +
+    '<span class="num">' + b + ' · ' + i + ' · ' + a + '</span>';
+}
+
+function breakdownHTML(byCat) {
+  const cats = Object.keys(byCat || {});
+  if (!cats.length) return '<p style="color:var(--text-3);font-size:13.5px">No data.</p>';
+  return cats.map(cid => {
+    const b = byCat[cid];
+    const pct = b.t ? Math.round((b.c / b.t) * 100) : 0;
+    const cls = pct >= 70 ? '' : pct >= 40 ? 'mid' : 'low';
+    return '<div class="breakdown-row">' +
+      '<span class="breakdown-name">' + ic(catOf(cid).icon, 15) + ' ' + esc(catOf(cid).name) + '</span>' +
+      '<span class="breakdown-bar"><span class="breakdown-fill ' + cls + '" style="width:' + pct + '%"></span></span>' +
+      '<span class="breakdown-val">' + b.c + '/' + b.t + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+function questionTextHTML(q) {
+  let out = '<div class="q-text">' + esc(q.q) + '</div>';
+  if (q.code) out += '<pre class="q-code">' + esc(q.code) + '</pre>';
+  return out;
+}
+
+function reviewHTML(rec) {
+  if (!rec || !Array.isArray(rec.order)) return '';
+  const results = rec.results || {};
+  return rec.order.map((qid, qi) => {
+    const q = qOf(qid);
+    if (!q) return '';
+    const v = rec.answers ? rec.answers[qid] : undefined;
+    const res = results[qid] || {};
+    const correct = q.type === 'code' ? res.correct : gradeQuestion(q, v);
+    return '<div class="review-item" data-ri="' + qi + '">' +
+      '<button class="review-summary" data-action="toggle-review" data-idx="' + qi + '">' +
+        '<span class="review-status ' + (correct ? 'ok' : 'no') + '">' + ic(correct ? 'check' : 'x', 13) + '</span>' +
+        '<span style="flex:1;min-width:0">' +
+          '<span class="review-q">' + esc(q.q) + '</span>' +
+          '<span class="review-meta">' +
+            '<span class="badge b-' + q.diff + '"><span class="dot"></span>' + diffOf(q.diff).name + '</span>' +
+            '<span class="badge b-mcq">' + esc(catOf(q.cat).name) + '</span>' +
+            '<span class="badge b-mcq">' + { mcq: 'Multiple choice', multi: 'Multi-select', fill: 'Fill in the blank', matching: 'Matching', ordering: 'Ordering', code: 'Coding challenge' }[q.type] || q.type + '</span>' +
+          '</span>' +
+        '</span>' +
+        '<span class="review-chev">' + ic('chevronD', 16) + '</span>' +
+      '</button>' +
+      '<div class="review-body">' + reviewBodyHTML(q, v, res) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function reviewBodyHTML(q, v, res) {
+  let content = '';
+  if (q.type === 'mcq') {
+    content = '<div class="opts" style="margin-bottom:12px">' + q.options.map((o, i) => {
+      const isC = q.correct !== undefined ? i === q.correct : i === q.answer;
+      const isU = v === i;
+      const cls = isC ? 'correct' : isU ? 'wrong' : '';
+      const markColor = isC ? 'var(--green-text)' : isU ? 'var(--red-text)' : '';
+      const mark = isC || isU ? '<span style="margin-left:auto;display:grid;place-items:center;color:' + markColor + '">' + ic(isC ? 'check' : 'x', 14) + '</span>' : '';
+      return '<div class="opt ' + cls + '" style="cursor:default"><span class="opt-key">' + LETTERS[i] + '</span><span>' + esc(o) + '</span>' + mark + '</div>';
+    }).join('') + '</div>';
+    const shownCorrect = q.correct !== undefined ? q.correct : q.answer;
+    content += '<div class="review-line"><span class="lbl">Your answer</span><span class="val ' + (v !== undefined && v !== '' ? (gradeQuestion(q, v) ? 'val-correct' : 'val-wrong') : '') + '">' +
+      (v !== undefined && v !== '' ? esc(q.options[v]) : '— (unanswered)') + '</span></div>';
+    content += '<div class="review-line"><span class="lbl">Correct</span><span class="val val-correct">' + esc(q.options[shownCorrect]) + '</span></div>';
+  } else if (q.type === 'multi') {
+    const sel = Array.isArray(v) ? v : [];
+    const correctSet = (q.correct !== undefined ? q.correct : q.answer || []).slice().sort((a, b) => a - b);
+    const gotSet = sel.slice().sort((a, b) => a - b);
+    const right = correctSet.length === gotSet.length && correctSet.every((x, i) => x === gotSet[i]);
+    content = '<div class="opts" style="margin-bottom:12px">' + q.options.map((o, i) => {
+      const isC = correctSet.includes(i);
+      const isU = sel.includes(i);
+      const cls = isC ? 'correct' : isU ? 'wrong' : '';
+      const markColor = isC ? 'var(--green-text)' : isU ? 'var(--red-text)' : '';
+      const mark = isC || isU ? '<span style="margin-left:auto;display:grid;place-items:center;color:' + markColor + '">' + ic(isC ? 'check' : 'x', 14) + '</span>' : '';
+      return '<div class="opt ' + cls + '" style="cursor:default"><span class="opt-key">' + LETTERS[i] + '</span><span>' + esc(o) + '</span>' + mark + '</div>';
+    }).join('') + '</div>';
+    content += '<div class="review-line"><span class="lbl">Your answer</span><span class="val ' + (sel.length ? (right ? 'val-correct' : 'val-wrong') : '') + '">' +
+      (sel.length ? esc(sel.map(i => q.options[i]).join(' · ')) : '— (unanswered)') + '</span></div>';
+    content += '<div class="review-line"><span class="lbl">Correct</span><span class="val val-correct">' + esc(correctSet.map(i => q.options[i]).join(' · ')) + '</span></div>';
+  } else if (q.type === 'matching') {
+    const sel = Array.isArray(v) ? v : [];
+    const rows = (q.pairsLeft || []).map((left, i) => {
+      const chosen = sel[i] !== undefined && sel[i] !== -1 && sel[i] !== '' && q.options[sel[i]];
+      const correct = q.correctPairs && chosen === q.correctPairs[i].split(' → ')[1];
+      return '<div class="review-line"><span class="lbl">' + esc(left) + '</span><span class="val ' + (chosen ? (correct ? 'val-correct' : 'val-wrong') : '') + '">' +
+        (chosen ? esc(chosen) : '— (unmatched)') + ' ' + (correct === false ? '→ <span class="val-correct">' + esc(q.correctPairs[i].split(' → ')[1]) + '</span>' : '') + '</span></div>';
+    }).join('');
+    content = rows + '<div class="review-line" style="margin-top:8px"><span class="lbl">Score</span><span class="val ' + (gradeQuestion(q, v) === true ? 'val-correct' : gradeQuestion(q, v) === false ? 'val-wrong' : '') + '">' +
+      (gradeQuestion(q, v) === null ? 'Not completed' : gradeQuestion(q, v) ? 'All matched correctly' : 'Incorrect') + '</span></div>';
+  } else if (q.type === 'ordering') {
+    const sel = Array.isArray(v) ? v : [];
+    const items = q.items || [];
+    const correctOrder = q.correctOrder || [];
+    const row = (idx) => {
+      const isCorrectPos = idx < correctOrder.length && correctOrder[idx] === sel[idx];
+      return '<div class="review-line"><span class="lbl">#' + (idx + 1) + '</span><span class="val ' + (isCorrectPos ? 'val-correct' : 'val-wrong') + '">' +
+        esc(items[sel[idx]] !== undefined ? items[sel[idx]] : '—') + '</span></div>';
+    };
+    content = sel.map((_, i) => row(i)).join('') +
+      '<div class="review-line" style="margin-top:8px"><span class="lbl">Correct</span><span class="val val-correct">' + esc(correctOrder.map(i => items[i]).join(' → ')) + '</span></div>';
+  } else if (q.type === 'code') {
+    const passed = res.passed, total = res.total;
+    content =
+      '<div class="review-line"><span class="lbl">Status</span><span class="val ' + (res.correct === true ? 'val-correct' : res.correct === false ? 'val-wrong' : '') + '">' +
+        (res.correct == null ? 'Not submitted' : (res.correct ? 'Passed all tests' : 'Tests failed')) +
+        (passed != null && total != null ? ' — ' + passed + '/' + total + ' tests passed' : '') + '</span></div>' +
+      '<div class="review-line"><span class="lbl">Language</span><span class="val">' + esc(q.codeLang || 'javascript') + '</span></div>' +
+      '<pre class="q-code" style="margin-top:8px;white-space:pre-wrap">' + esc(v || '// no code submitted') + '</pre>' +
+      (res.detail && res.detail !== 'All tests passed' && res.correct === false ? '<div class="review-explain">' + ic('info', 14) + ' <span style="vertical-align:1px">' + esc(res.detail) + '</span></div>' : '');
+  } else {
+    content =
+      '<div class="review-line"><span class="lbl">Your answer</span><span class="val ' + (v ? 'val-correct' : 'val-wrong') + '">' +
+        (v ? esc(v) : '— (unanswered)') + '</span></div>' +
+      '<div class="review-line"><span class="lbl">Correct</span><span class="val val-correct">' + esc((q.answer || [''])[0]) + '</span></div>';
+  }
+  if (q.code) content += '<pre class="q-code" style="margin-top:12px">' + esc(q.code) + '</pre>';
+  content += '<div class="review-explain">' + ic('info', 14) + ' <span style="vertical-align:1px">' + esc(q.explain) + '</span></div>';
+  return content;
+}
+/* ============================================================
+   Orion — API client: talks to the Express/MongoDB backend
+   ============================================================ */
+
+const API = (() => {
+  let token = store.get('orion.token', null);
+
+  async function req(method, path, body) {
+    const opts = { method, headers: {} };
+    if (body !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+    let res;
+    try {
+      res = await fetch(path, opts);
+    } catch (e) {
+      throw new Error('Cannot reach the server — is it running?');
+    }
+    let data = null;
+    try { data = await res.json(); } catch (e) { /* non-JSON */ }
+    if (!res.ok) {
+      const err = new Error((data && data.error) || 'Request failed (' + res.status + ')');
+      err.status = res.status;
+      err.data = data;
+      if (res.status === 401 && !path.startsWith('/api/auth/')) {
+        setToken(null);
+        S.auth = null;
+      }
+      throw err;
+    }
+    return data;
+  }
+
+  function setToken(t) {
+    token = t || null;
+    if (t) store.set('orion.token', t); else store.del('orion.token');
+  }
+
+  return {
+    setToken,
+    get token() { return token; },
+    get: p => req('GET', p),
+    post: (p, b) => req('POST', p, b || {}),
+    put: (p, b) => req('PUT', p, b || {}),
+    patch: (p, b) => req('PATCH', p, b || {}),
+    del: p => req('DELETE', p)
+  };
+})();
+/* ============================================================
+   Orion — console (admin): login, dashboard, tests, editor,
+   questions, results, admins — all API-driven
+   ============================================================ */
+
+/* ── Login ─────────────────────────────────────────────────── */
+
+function vLogin() {
+  return '<div class="auth-screen">' +
+    '<div class="auth-card card">' +
+      '<h1 class="auth-title">Admin console</h1>' +
+      '<p class="auth-sub">Sign in to manage tests, questions, and results.</p>' +
+      '<form id="loginForm" data-form="login" novalidate>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="loginUser">Username</label>' +
+          '<div class="auth-input">' + ic('user', 15) +
+            '<input class="input" id="loginUser" autocomplete="username" placeholder="admin" required>' +
+          '</div>' +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="loginPass">Password</label>' +
+          '<div class="auth-input">' + ic('key', 15) +
+            '<input class="input" id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••" required>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn btn-primary btn-lg" style="width:100%" type="submit">' + ic('arrowL', 15, 'rot-180') + ' Sign in</button>' +
+      '</form>' +
+      '<div id="bootstrapSlot" class="auth-bootstrap"></div>' +
+      '<div class="auth-divider"></div>' +
+      '<button class="btn btn-ghost" style="width:100%" data-action="go-candidate">' + ic('doc', 15) + ' Take a test as a candidate</button>' +
+    '</div>' +
+  '</div>';
+}
+
+async function checkBootstrap() {
+  const slot = $('#bootstrapSlot');
+  if (!slot) return;
+  try {
+    const r = await API.get('/api/auth/bootstrap');
+    if (r.needsBootstrap) {
+      slot.innerHTML = '<div class="auth-divider"></div>' +
+        '<p class="auth-sub" style="margin:0 0 10px">No admin account exists yet — create the first one.</p>' +
+        '<button class="btn btn-secondary" style="width:100%" data-action="show-register">' + ic('plus', 14) + ' Create admin account</button>';
+    }
+  } catch (e) { /* server unreachable — message shown by login submit */ }
+}
+
+function vRegister() {
+  return '<div class="auth-screen">' +
+    '<div class="auth-card card">' +
+      '<h1 class="auth-title">Create the first admin</h1>' +
+      '<p class="auth-sub">This account becomes the superadmin with full control.</p>' +
+      '<form id="registerForm" data-form="register" novalidate>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="regUser">Username</label>' +
+          '<div class="auth-input">' + ic('user', 15) + '<input class="input" id="regUser" autocomplete="username" placeholder="e.g., admin" required></div>' +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="regEmail">Email <span class="field-help">Optional</span></label>' +
+          '<div class="auth-input">' + ic('info', 15) + '<input class="input" id="regEmail" type="email" autocomplete="email" placeholder="admin@company.com"></div>' +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="regPass">Password</label>' +
+          '<div class="auth-input">' + ic('key', 15) + '<input class="input" id="regPass" type="password" autocomplete="new-password" placeholder="Min. 6 characters" required></div>' +
+        '</div>' +
+        '<button class="btn btn-primary btn-lg" style="width:100%" type="submit">' + ic('check', 15) + ' Create account</button>' +
+      '</form>' +
+      '<div class="auth-divider"></div>' +
+      '<button class="btn btn-ghost" style="width:100%" data-action="back-to-login">' + ic('arrowL', 14) + ' Back to sign in</button>' +
+    '</div>' +
+  '</div>';
+}
+
+async function doLogin(e) {
+  e.preventDefault();
+  const u = $('#loginUser'), p = $('#loginPass');
+  const btn = $('button[type="submit"]', e.target);
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+  try {
+    const r = await API.post('/api/auth/login', { username: u.value, password: p.value });
+    API.setToken(r.token);
+    S.auth = r.admin;
+    S.view = 'app';
+    await loadAdminData();
+    toast('Welcome back, ' + (S.auth.displayName || S.auth.username), 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+  render();
+}
+
+async function doRegister(e) {
+  e.preventDefault();
+  const u = $('#regUser'), em = $('#regEmail'), p = $('#regPass');
+  const btn = $('button[type="submit"]', e.target);
+  if (btn) btn.disabled = true;
+  try {
+    const r = await API.post('/api/auth/register', { username: u.value, email: em.value, password: p.value });
+    API.setToken(r.token);
+    S.auth = r.admin;
+    S.view = 'app';
+    await loadAdminData();
+    toast('Admin account created — welcome!', 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+  render();
+}
+
+async function logout() {
+  try { await API.post('/api/auth/logout'); } catch (e) {}
+  API.setToken(null);
+  S.auth = null;
+  S.view = 'login';
+  render();
+}
+
+/* ── Change password ───────────────────────────────────────── */
+
+function openPasswordModal() {
+  S.modal = {
+    title: 'Change password',
+    body:
+      '<div class="field"><label class="field-label">Current password</label>' +
+        '<input class="input" id="pwCurrent" type="password" autocomplete="current-password"></div>' +
+      '<div class="field" style="margin-bottom:4px"><label class="field-label">New password</label>' +
+        '<input class="input" id="pwNext" type="password" autocomplete="new-password" placeholder="Min. 6 characters"></div>',
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="save-password">' + ic('check', 14) + ' Update password</button>'
+  };
+  render();
+}
+
+async function savePassword() {
+  const cur = $('#pwCurrent'), nxt = $('#pwNext');
+  if (!cur || !nxt) return;
+  try {
+    await API.post('/api/admin/password', { current: cur.value, next: nxt.value });
+    closeModal();
+    toast('Password updated', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+/* ── Shell ─────────────────────────────────────────────────── */
+
+function consoleShell() {
+  if (!S.auth) return '<div class="auth-page">' + (S.view === 'register' ? vRegister() : vLogin()) + modalHTML() + '</div>';
+  const nav = [
+    ['dashboard', 'Dashboard', 'dashboard'],
+    ['tests', 'Tests', 'doc'],
+    ['questions', 'Questions', 'question'],
+    ['results', 'Results', 'chart'],
+    ['activity', 'Activity', 'clock']
+  ];
+  if (S.auth.role === 'superadmin') nav.push(['admins', 'Admins', 'users']);
+  return sidebarHTML(nav, 'console') +
+    '<div class="app-main">' +
+      '<header class="topbar">' + headerHTML('console') + '</header>' +
+      '<main class="content"><div class="container">' + consoleView() + '</div></main>' +
+    '</div>' +
+    modalHTML();
+}
+
+function consoleView() {
+  if (S.tab === 'admins' && !(S.auth && S.auth.role === 'superadmin')) {
+    S.tab = 'dashboard';   // non-superadmins never see the admins view
+  }
+  if (S.tab === 'editor') return vEditor();
+  if (S.tab === 'tests') return vTests();
+  if (S.tab === 'questions') return vQuestions();
+  if (S.tab === 'results') return vResults();
+  if (S.tab === 'activity') return vActivity();
+  if (S.tab === 'admins') return vAdmins();
+  return vDashboard();
+}
+
+/* ── Dashboard ─────────────────────────────────────────────── */
+
+function vDashboard() {
+  const st = S.stats;
+  const total = st ? st.questions : S.questions.length;
+  const tests = st ? st.tests : S.tests.length;
+  const attempts = st ? st.attempts : S.attempts.length;
+  const published = st ? st.published : S.tests.filter(t => t.published).length;
+  const avg = st ? st.avgPct : 0;
+  const active = st ? st.active : 0;
+
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Good day, ' + esc((S.auth && (S.auth.displayName || S.auth.username)) || 'Admin') + '</h1>' +
+    '<p class="page-desc">Here\u2019s what\u2019s happening across your assessment program.</p></div>' +
+    '<div class="page-actions">' +
+      '<button class="btn btn-secondary" data-action="tab" data-value="questions">' + ic('question', 15) + ' Question bank</button>' +
+      '<button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button>' +
+    '</div></div>' +
+
+    '<div class="stat-grid">' +
+      statCard('question', 'Questions', total, 'seeded in MongoDB') +
+      statCard('doc', 'Tests', tests, published + ' published') +
+      statCard('users', 'Attempts', attempts, st ? st.avgPct + '% average · ' + st.passRate + '% pass' : '') +
+      statCard('clock', 'In progress', active, 'active sessions') +
+    '</div>' +
+
+    '<div style="height:16px"></div>' +
+    '<div class="card card-pad">' +
+      '<div class="section-label">Question coverage</div>' +
+      (st && st.coverage ? st.coverage.map(c => {
+        const t = c.total;
+        const pct = total ? Math.round((t / total) * 100) : 0;
+        return '<div class="coverage-row">' +
+          '<span class="coverage-icon">' + ic(catOf(c.cat).icon, 16) + '</span>' +
+          '<div style="min-width:190px"><div class="coverage-name">' + esc(catOf(c.cat).name) + '</div>' +
+          '<div class="coverage-sub">' + c.beginner + ' beginner · ' + c.intermediate + ' intermediate · ' + c.advanced + ' advanced</div></div>' +
+          '<span class="coverage-bar"><span class="coverage-fill" style="width:' + pct + '%"></span></span>' +
+          '<span class="coverage-total">' + t + '</span>' +
+        '</div>';
+      }).join('') : '<p style="color:var(--text-3);font-size:13.5px">Loading…</p>') +
+    '</div>' +
+
+    ((st && st.recent && st.recent.length) ? '<div style="height:16px"></div>' +
+      '<div class="card card-pad">' +
+        '<div class="section-label">Recent attempts</div>' +
+        st.recent.map(x =>
+          '<div class="coverage-row" style="cursor:pointer" data-action="view-attempt" data-id="' + x._id + '">' +
+            '<span class="coverage-icon">' + ic('users', 15) + '</span>' +
+            '<div style="flex:1;min-width:0"><div class="coverage-name">' + esc(x.candidate) + ' <span style="color:var(--text-3);font-weight:500">· ' + esc(x.testName) + '</span></div>' +
+            '<div class="coverage-sub">' + fmtDate(x.startedAt) + ' · ' + (x.status === 'submitted' ? 'submitted' : 'in progress') + '</div></div>' +
+            (x.status === 'submitted'
+              ? '<span class="badge ' + (x.passed ? 'b-pass' : 'b-fail') + '">' + x.pct + '%</span>'
+              : '<span class="badge b-draft">In progress</span>') +
+            '<span style="color:var(--text-3)">' + ic('chevronR', 15) + '</span>' +
+          '</div>').join('') +
+      '</div>' : '');
+}
+
+/* ── Tests list ────────────────────────────────────────────── */
+
+function vTests() {
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Tests</h1>' +
+    '<p class="page-desc">Compose timed assessments from your question bank, then publish them to the candidate portal.</p></div>' +
+    '<div class="page-actions"><button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button></div>' +
+  '</div>' +
+  (S.tests.length ? '<div class="card">' + S.tests.map(testRowHTML).join('') + '</div>'
+    : emptyState('doc', 'No tests yet', 'Create your first assessment to start screening candidates.', 'new-test', 'Create a test'));
+}
+
+function testRowHTML(t) {
+  const cats = (t.categories || []).map(catOf);
+  return '<div class="row-item">' +
+    '<div class="row-main">' +
+      '<div class="row-title">' + esc(t.name) +
+        '<span class="badge ' + (t.published ? 'b-published' : 'b-draft') + '"><span class="dot"></span>' + (t.published ? 'Published' : 'Draft') + '</span>' +
+      '</div>' +
+      '<div class="row-meta">' +
+        '<span>' + ic('clock', 13) + ' ' + t.durationMin + ' min</span><span class="meta-sep">·</span>' +
+        '<span>' + t.count + ' questions</span><span class="meta-sep">·</span>' +
+        '<span>' + t.passPct + '% to pass</span><span class="meta-sep">·</span>' +
+        '<span>' + diffFocusLabel(t.diffFocus) + '</span>' +
+      '</div>' +
+      '<div class="row-meta" style="margin-top:7px">' +
+        cats.map(c => '<span class="badge b-mcq">' + ic(c.icon, 11) + ' ' + esc(c.name) + '</span>').join('') +
+      '</div>' +
+    '</div>' +
+    '<div class="row-actions">' +
+      '<label class="switch" title="Publish / unpublish"><input type="checkbox" data-action="toggle-publish" data-id="' + t.id + '" ' + (t.published ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+      '<button class="btn-icon" data-action="preview-test" data-id="' + t.id + '" title="Preview">' + ic('eye', 17) + '</button>' +
+      '<button class="btn-icon" data-action="edit-test" data-id="' + t.id + '" title="Edit">' + ic('pencil', 16) + '</button>' +
+      '<button class="btn-icon" data-action="duplicate-test" data-id="' + t.id + '" title="Duplicate">' + ic('copy', 16) + '</button>' +
+      '<button class="btn-icon danger" data-action="delete-test" data-id="' + t.id + '" title="Delete">' + ic('trash', 16) + '</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function diffFocusLabel(d) {
+  return DIFF_FOCUS_LABEL[d || 'balanced'] || 'Balanced';
+}
+
+/* ── Test editor ───────────────────────────────────────────── */
+
+function startTestEditor(id) {
+  const src = id ? S.tests.find(t => t.id === id) : null;
+  tDraft = {
+    id: src ? src.id : null,
+    name: src ? src.name : '',
+    desc: src ? (src.description || '') : '',
+    duration: src ? src.durationMin : 30,
+    pass: src ? src.passPct : 70,
+    cats: new Set(src ? (src.categories || []) : CATS.map(c => c.id)),
+    diffFocus: src ? (src.diffFocus || 'balanced') : 'balanced',
+    count: src ? src.count : 20,
+    shuffle: src ? src.shuffle !== false : true,
+    autoSubmit: src ? src.autoSubmit !== false : true,
+    showAnswers: src ? src.showAnswers !== false : true
+  };
+  S.tab = 'editor';
+  render();
+  toast(src ? 'Editing \u201C' + src.name + '\u201D' : 'New test', '');
+}
+
+function eligibleQuestions() {
+  if (!tDraft || !tDraft.cats.size) return [];
+  return S.questions.filter(q => tDraft.cats.has(q.cat) && (DIFF_WEIGHTS[tDraft.diffFocus] || {})[q.diff]);
+}
+
+function validDraft() {
+  return tDraft && tDraft.name.trim() && tDraft.cats.size > 0 && tDraft.count >= 1;
+}
+
+function clampCount() {
+  const max = Math.max(1, eligibleQuestions().length);
+  if (tDraft.count > max) tDraft.count = max;
+}
+
+function vEditor() {
+  const d = tDraft;
+  const pool = eligibleQuestions();
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">' + (d.id ? 'Edit test' : 'New test') + '</h1>' +
+    '<p class="page-desc">' + (d.id ? 'Adjust the assessment configuration below.' : 'Configure a timed assessment drawn from your question bank.') + '</p></div>' +
+    '<div class="page-actions"><button class="btn btn-ghost" data-action="editor-cancel">' + ic('arrowL', 15) + ' Back to tests</button></div>' +
+  '</div>' +
+
+  '<div class="card card-pad">' +
+    '<div class="section-label">Details</div>' +
+    '<div class="field">' +
+      '<label class="field-label" for="tName">Test name</label>' +
+      '<input class="input" id="tName" data-draft="name" value="' + esc(d.name) + '" placeholder="e.g., Senior Frontend Screening — Round 1" maxlength="80">' +
+    '</div>' +
+    '<div class="field" style="margin-bottom:4px">' +
+      '<label class="field-label" for="tDesc">Description <span class="field-help">Shown to candidates on the test card</span></label>' +
+      '<textarea class="input" id="tDesc" data-draft="desc" placeholder="What is this assessment measuring?">' + esc(d.desc) + '</textarea>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="card card-pad">' +
+    '<div class="section-label">Timing &amp; scoring</div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Duration</div><div class="setting-sub">Time limit for the whole test</div></div>' +
+      '<div class="stepper"><button data-action="step" data-field="duration" data-dir="-1" ' + (d.duration <= 1 ? 'disabled' : '') + '>' + ic('minus', 15) + '</button>' +
+      '<span class="stepper-val">' + d.duration + ' min</span>' +
+      '<button data-action="step" data-field="duration" data-dir="1">' + ic('plus', 15) + '</button></div>' +
+    '</div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Pass mark</div><div class="setting-sub">Minimum score (%) required to pass</div></div>' +
+      '<div class="stepper"><button data-action="step" data-field="pass" data-dir="-1" ' + (d.pass <= 0 ? 'disabled' : '') + '>' + ic('minus', 15) + '</button>' +
+      '<span class="stepper-val">' + d.pass + '%</span>' +
+      '<button data-action="step" data-field="pass" data-dir="1" ' + (d.pass >= 100 ? 'disabled' : '') + '>' + ic('plus', 15) + '</button></div>' +
+    '</div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Auto-submit</div><div class="setting-sub">Submit automatically when the timer reaches zero</div></div>' +
+      '<label class="switch"><input type="checkbox" data-draft="autoSubmit" ' + (d.autoSubmit ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+    '</div>' +
+    '<div class="setting-row" style="border-bottom:none">' +
+      '<div><div class="setting-label">Reveal answers</div><div class="setting-sub">Show correct answers and explanations after submission</div></div>' +
+      '<label class="switch"><input type="checkbox" data-draft="showAnswers" ' + (d.showAnswers ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="card card-pad">' +
+    '<div class="section-label">Content</div>' +
+    '<div class="field">' +
+      '<div class="field-label">Categories <span class="field-help">' + d.cats.size + ' selected</span></div>' +
+      '<div class="chip-row">' +
+        CATS.map(c => {
+          const n = S.questions.filter(q => q.cat === c.id).length;
+          const on = d.cats.has(c.id);
+          return '<button class="chip ' + (on ? 'active' : '') + '" data-action="toggle-cat" data-value="' + c.id + '" aria-pressed="' + on + '">' +
+            ic(c.icon, 14) + ' ' + esc(c.name) + '<span class="chip-count">' + n + '</span>' + ic('check', 12) + '</button>';
+        }).join('') +
+      '</div>' +
+    '</div>' +
+    '<div class="field">' +
+      '<div class="field-label">Difficulty focus</div>' +
+      '<div class="seg" id="diffSeg">' +
+        [['beginner', 'Beginner'], ['balanced', 'Balanced'], ['advanced', 'Advanced']].map(o =>
+          '<button class="seg-item ' + (d.diffFocus === o[0] ? 'active' : '') + '" data-action="set-diff" data-value="' + o[0] + '">' + o[1] + '</button>').join('') +
+        '<span class="seg-thumb" id="diffThumb"></span>' +
+      '</div>' +
+      '<div class="field-hint">' + diffFocusLabel(d.diffFocus) + '</div>' +
+    '</div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Number of questions</div><div class="setting-sub">Drawn at random from the matching pool</div></div>' +
+      '<div class="stepper"><button data-action="step" data-field="count" data-dir="-1" ' + (d.count <= 1 ? 'disabled' : '') + '>' + ic('minus', 15) + '</button>' +
+      '<span class="stepper-val">' + d.count + '</span>' +
+      '<button data-action="step" data-field="count" data-dir="1" ' + (d.count >= pool.length ? 'disabled' : '') + '>' + ic('plus', 15) + '</button></div>' +
+    '</div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Shuffle questions</div><div class="setting-sub">Randomize question order for every attempt</div></div>' +
+      '<label class="switch"><input type="checkbox" data-draft="shuffle" ' + (d.shuffle !== false ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+    '</div>' +
+    '<div class="setting-row" style="border-bottom:none">' +
+      '<div><div class="setting-label">Pool availability</div>' +
+      '<div class="setting-sub">' + pool.length + ' question' + (pool.length === 1 ? '' : 's') + ' match your selection' + (pool.length === 0 ? ' — choose at least one category' : '') + '</div></div>' +
+      '<div class="row-meta">' + diffSplitHTML(pool) + '</div>' +
+    '</div>' +
+  '</div>' +
+
+  '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">' +
+    '<button class="btn btn-secondary" data-action="editor-cancel">Cancel</button>' +
+    '<button class="btn btn-secondary" data-action="save-test" data-mode="draft" ' + (validDraft() ? '' : 'disabled') + '>Save draft</button>' +
+    '<button class="btn btn-primary" data-action="save-test" data-mode="publish" ' + (validDraft() ? '' : 'disabled') + '>' + ic('check', 14) + ' Save &amp; publish</button>' +
+  '</div>';
+}
+
+async function saveTest(mode) {
+  const d = tDraft;
+  if (!validDraft()) { toast('Fill in the test name and choose at least one category', 'error'); return; }
+  clampCount();
+  const payload = {
+    id: d.id,
+    name: d.name.trim(),
+    description: d.desc.trim(),
+    durationMin: Math.max(1, d.duration),
+    passPct: Math.min(100, Math.max(0, d.pass)),
+    categories: Array.from(d.cats),
+    diffFocus: d.diffFocus,
+    count: d.count,
+    shuffle: d.shuffle !== false,
+    autoSubmit: d.autoSubmit !== false,
+    showAnswers: d.showAnswers !== false,
+    published: mode === 'publish'
+  };
+  try {
+    const saved = d.id ? await API.put('/api/admin/tests/' + d.id, payload) : await API.post('/api/admin/tests', payload);
+    S.tab = 'tests';
+    tDraft = null;
+    await loadAdminData();
+    toast(mode === 'publish' ? '\u201C' + saved.name + '\u201D published' : 'Draft saved', 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  render();
+}
+
+/* ── Questions bank ────────────────────────────────────────── */
+
+function vQuestions() {
+  const f = S.qFilters;
+  const list = S.questions.filter(q => {
+    if (f.cat !== 'all' && q.cat !== f.cat) return false;
+    if (f.diff !== 'all' && q.diff !== f.diff) return false;
+    if (f.type !== 'all' && q.type !== f.type) return false;
+    if (f.search && !(q.q.toLowerCase().includes(f.search) || q.id.toLowerCase().includes(f.search))) return false;
+    return true;
+  });
+
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Question bank</h1>' +
+    '<p class="page-desc">' + S.questions.length + ' questions across ' + CATS.length + ' categories, beginner to advanced.</p></div>' +
+    '<div class="page-actions">' +
+      '<button class="btn btn-secondary" data-action="reseed">' + ic('refresh', 15) + ' Reseed bank</button>' +
+      '<button class="btn btn-primary" data-action="add-question">' + ic('plus', 15) + ' Add question</button>' +
+    '</div></div>' +
+
+    '<div class="card card-pad">' +
+      '<div class="toolbar">' +
+        '<div class="search-box">' + ic('search', 16) +
+          '<input class="input" id="qSearch" placeholder="Search questions\u2026" value="' + esc(f.search) + '"></div>' +
+        '<div class="seg-scroll"><div class="seg" id="catSeg">' +
+          '<button class="seg-item ' + (f.cat === 'all' ? 'active' : '') + '" data-action="qfilter" data-field="cat" data-value="all">All</button>' +
+          CATS.map(c => '<button class="seg-item ' + (f.cat === c.id ? 'active' : '') + '" data-action="qfilter" data-field="cat" data-value="' + c.id + '" title="' + esc(c.name) + '">' + ic(c.icon, 13) + '</button>').join('') +
+          '<span class="seg-thumb" id="catThumb"></span>' +
+        '</div></div>' +
+      '</div>' +
+      '<div class="toolbar" style="margin-top:14px">' +
+        '<div class="seg" id="diffSeg2">' +
+          [['all', 'All levels'], ['beginner', 'Beginner'], ['intermediate', 'Intermediate'], ['advanced', 'Advanced']].map(o =>
+            '<button class="seg-item ' + (f.diff === o[0] ? 'active' : '') + '" data-action="qfilter" data-field="diff" data-value="' + o[0] + '">' + o[1] + '</button>').join('') +
+          '<span class="seg-thumb" id="diffThumb2"></span>' +
+        '</div>' +
+        '<div class="seg" id="typeSeg">' +
+          [['all', 'All types'], ['mcq', 'Multiple choice'], ['multi', 'Multi-select'], ['matching', 'Matching'], ['ordering', 'Ordering'], ['code', 'Coding'], ['fill', 'Fill in the blank']].map(o =>
+            '<button class="seg-item ' + (f.type === o[0] ? 'active' : '') + '" data-action="qfilter" data-field="type" data-value="' + o[0] + '">' + o[1] + '</button>').join('') +
+          '<span class="seg-thumb" id="typeThumb"></span>' +
+        '</div>' +
+        '<div class="row-meta" style="margin-left:auto">' + list.length + ' shown</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div style="height:16px"></div>' +
+    (list.length ? '<div class="card">' + list.map(qRowHTML).join('') + '</div>'
+      : emptyState('search', 'No matching questions', 'Try adjusting your filters, or add a new question to the bank.', 'add-question', 'Add question'));
+}
+
+function qRowHTML(q) {
+  const c = catOf(q.cat);
+  return '<div class="row-item">' +
+    '<span class="coverage-icon">' + ic(q.type === 'mcq' || q.type === 'multi' ? 'question' : q.type === 'matching' ? 'link' : q.type === 'ordering' ? 'list' : q.type === 'code' ? 'terminal2' : 'pencil', 15) + '</span>' +
+    '<div class="row-main">' +
+      '<div class="row-title" style="font-weight:600">' + esc(q.q) + '</div>' +
+      '<div class="row-meta">' +
+        '<span class="badge b-' + q.diff + '"><span class="dot"></span>' + diffOf(q.diff).name + '</span>' +
+        '<span class="badge b-mcq">' + ic(c.icon, 11) + ' ' + esc(c.name) + '</span>' +
+        '<span class="badge b-mcq">' + { mcq: 'Multiple choice', multi: 'Multi-select', fill: 'Fill in the blank', matching: 'Matching', ordering: 'Ordering', code: 'Coding' }[q.type] + '</span>' +
+        (q.code ? '<span class="badge b-mcq">' + ic('code', 11) + ' Code</span>' : '') +
+        (q.source === 'builtin' ? '<span class="badge b-fill" style="background:var(--surface-3)">Built-in</span>' : '') +
+        '<span style="margin-left:auto;font-family:var(--mono);font-size:11px">' + esc(q.id) + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="row-actions">' +
+      '<button class="btn-icon" data-action="edit-question" data-id="' + q.id + '" title="Edit">' + ic('pencil', 16) + '</button>' +
+      '<button class="btn-icon danger" data-action="delete-question" data-id="' + q.id + '" title="Delete">' + ic('trash', 16) + '</button>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ── Question editor modal ─────────────────────────────────── */
+
+function openQuestionModal(id) {
+  const src = id ? S.questions.find(q => q.id === id) : null;
+  qDraft = {
+    id: src ? src.id : null,
+    cat: src ? src.cat : 'frontend',
+    diff: src ? src.diff : 'beginner',
+    type: src ? src.type : 'mcq',
+    q: src ? src.q : '',
+    code: src ? (src.code || '') : '',
+    options: src ? (src.options || ['', '', '', '']) : ['', '', '', ''],
+    answer: src ? (src.answer != null ? src.answer : 0) : 0,
+    explain: src ? (src.explain || '') : '',
+    fillans: src && src.type === 'fill' ? (src.answer || []).join(', ') : '',
+    multiSel: new Set(src && src.type === 'multi' && Array.isArray(src.answer) ? src.answer : []),
+    pairs: src && src.type === 'matching' ? (src.pairs || []).map(pr => ({ l: pr.l, r: pr.r })) : [{ l: '', r: '' }, { l: '', r: '' }],
+    ordered: src && src.type === 'ordering' ? (src.ordered || []).slice() : ['', '', ''],
+    codeLang: src && src.type === 'code' ? (src.codeLang || 'javascript') : 'javascript',
+    codeStub: src && src.type === 'code' ? (src.codeStub || '') : '',
+    testCases: src && src.type === 'code' ? (src.testCases || []).map(tc => ({ args: JSON.stringify(tc.args), expected: JSON.stringify(tc.expected), hidden: !!tc.hidden })) : [{ args: '', expected: '', hidden: false }]
+  };
+  openModal({
+    title: src ? 'Edit question' : 'Add question',
+    body: questionModalBody(qDraft),
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="save-question">' + ic('check', 14) + ' Save question</button>',
+    wide: true
+  });
+}
+
+function questionModalBody(d) {
+  return '<div class="field">' +
+      '<div class="field-label">Category</div>' +
+      '<select class="input" data-qdraft="cat">' +
+        CATS.map(c => '<option value="' + c.id + '" ' + (d.cat === c.id ? 'selected' : '') + '>' + esc(c.name) + '</option>').join('') +
+      '</select>' +
+    '</div>' +
+    '<div class="field">' +
+      '<div class="field-label">Difficulty</div>' +
+      '<div class="seg" id="qDiffSeg">' +
+        DIFFS.map(x => '<button class="seg-item ' + (d.diff === x.id ? 'active' : '') + '" data-action="qdiff" data-value="' + x.id + '">' + x.name + '</button>').join('') +
+        '<span class="seg-thumb" id="qDiffThumb"></span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="field">' +
+      '<div class="field-label">Question type</div>' +
+      '<div class="seg" id="qTypeSeg">' +
+        '<button class="seg-item ' + (d.type === 'mcq' ? 'active' : '') + '" data-action="qtype" data-value="mcq">Multiple choice</button>' +
+        '<button class="seg-item ' + (d.type === 'multi' ? 'active' : '') + '" data-action="qtype" data-value="multi">Multi-select</button>' +
+        '<button class="seg-item ' + (d.type === 'matching' ? 'active' : '') + '" data-action="qtype" data-value="matching">Matching</button>' +
+        '<button class="seg-item ' + (d.type === 'ordering' ? 'active' : '') + '" data-action="qtype" data-value="ordering">Ordering</button>' +
+        '<button class="seg-item ' + (d.type === 'code' ? 'active' : '') + '" data-action="qtype" data-value="code">Coding challenge</button>' +
+        '<button class="seg-item ' + (d.type === 'fill' ? 'active' : '') + '" data-action="qtype" data-value="fill">Fill in the blank</button>' +
+        '<span class="seg-thumb" id="qTypeThumb"></span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="field">' +
+      '<label class="field-label">Question <span class="field-help">Use ___ for the blank in fill-in-the-blank</span></label>' +
+      '<textarea class="input" data-qdraft="q" placeholder="e.g., Which React hook is used for local state?" style="min-height:70px">' + esc(d.q) + '</textarea>' +
+    '</div>' +
+    '<div class="field">' +
+      '<label class="field-label">Code snippet <span class="field-help">Optional — shown in a code block</span></label>' +
+      '<textarea class="input mono" data-qdraft="code" placeholder="function example() { ... }" style="min-height:64px;font-family:var(--mono)">' + esc(d.code) + '</textarea>' +
+    '</div>' +
+    (d.type === 'mcq' ? mcqOptionsHTML(d) : d.type === 'multi' ? multiOptionsHTML(d) : d.type === 'matching' ? matchingOptionsHTML(d) : d.type === 'ordering' ? orderingOptionsHTML(d) : d.type === 'code' ? codeOptionsHTML(d) : fillOptionsHTML(d)) +
+    '<div class="field" style="margin-bottom:4px">' +
+      '<label class="field-label">Explanation <span class="field-help">Shown in the answer review</span></label>' +
+      '<textarea class="input" data-qdraft="explain" placeholder="Why is this the correct answer?" style="min-height:64px">' + esc(d.explain) + '</textarea>' +
+    '</div>';
+}
+
+function mcqOptionsHTML(d) {
+  return '<div class="field"><div class="field-label">Options <span class="field-help">Select the radio of the correct one</span></div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px">' +
+    d.options.map((o, i) =>
+      '<label style="display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1.5px solid var(--hairline);border-radius:10px;padding:8px 12px;cursor:pointer">' +
+        '<input type="radio" name="qcorrect" data-action="qcorrect" data-value="' + i + '" ' + (d.answer === i ? 'checked' : '') + ' style="accent-color:var(--accent);flex:none">' +
+        '<span class="opt-key" style="border-color:var(--hairline)">' + LETTERS[i] + '</span>' +
+        '<input class="input" style="padding:7px 10px;font-size:13.5px" data-qdraft="opt" data-i="' + i + '" value="' + esc(o) + '" placeholder="Option ' + LETTERS[i] + '">' +
+      '</label>').join('') +
+    '</div></div>';
+}
+
+function multiOptionsHTML(d) {
+  return '<div class="field"><div class="field-label">Options <span class="field-help">Check all that are correct</span></div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px">' +
+    d.options.map((o, i) => {
+      const on = d.multiSel.has(i);
+      return '<label style="display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1.5px solid ' + (on ? 'rgba(0,113,227,.45)' : 'var(--hairline)') + ';border-radius:10px;padding:8px 12px;cursor:pointer">' +
+        '<input type="checkbox" data-action="qmulti" data-value="' + i + '" ' + (on ? 'checked' : '') + ' style="accent-color:var(--accent);flex:none">' +
+        '<span class="opt-key" style="border-color:var(--hairline)">' + LETTERS[i] + '</span>' +
+        '<input class="input" style="padding:7px 10px;font-size:13.5px" data-qdraft="opt" data-i="' + i + '" value="' + esc(o) + '" placeholder="Option ' + LETTERS[i] + '">' +
+      '</label>';
+    }).join('') +
+    '</div><div class="field-hint">' + d.multiSel.size + ' marked as correct</div></div>';
+}
+
+function matchingOptionsHTML(d) {
+  return '<div class="field"><div class="field-label">Pairs <span class="field-help">Match each left item to its correct right item</span></div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px">' +
+    d.pairs.map((pr, i) =>
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<input class="input" style="flex:1" data-action="pair-l" data-i="' + i + '" value="' + esc(pr.l) + '" placeholder="Left item">' +
+        '<span style="color:var(--text-3)">→</span>' +
+        '<input class="input" style="flex:1" data-action="pair-r" data-i="' + i + '" value="' + esc(pr.r) + '" placeholder="Right item">' +
+        '<button class="btn-icon danger" data-action="pair-remove" data-i="' + i + '" title="Remove pair">' + ic('x', 14) + '</button>' +
+      '</div>').join('') +
+    '</div>' +
+    '<div style="margin-top:8px"><button class="btn btn-secondary btn-sm" data-action="pair-add">' + ic('plus', 13) + ' Add pair</button></div>' +
+  '</div>';
+}
+
+function orderingOptionsHTML(d) {
+  return '<div class="field"><div class="field-label">Correct order <span class="field-help">Items listed top-to-bottom in the correct sequence</span></div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px">' +
+    d.ordered.map((item, i) =>
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<span class="badge b-mcq">#' + (i + 1) + '</span>' +
+        '<input class="input" style="flex:1" data-action="order-item" data-i="' + i + '" value="' + esc(item) + '" placeholder="Step / item ' + (i + 1) + '">' +
+        '<button class="btn-icon" data-action="order-up" data-i="' + i + '" ' + (i === 0 ? 'disabled' : '') + ' title="Move up">' + ic('chevronD', 14) + '</button>' +
+        '<button class="btn-icon" data-action="order-down" data-i="' + i + '" ' + (i === d.ordered.length - 1 ? 'disabled' : '') + ' title="Move down">' + ic('chevronR', 14) + '</button>' +
+        '<button class="btn-icon danger" data-action="order-remove" data-i="' + i + '" title="Remove">' + ic('x', 14) + '</button>' +
+      '</div>').join('') +
+    '</div>' +
+    '<div style="margin-top:8px"><button class="btn btn-secondary btn-sm" data-action="order-add">' + ic('plus', 13) + ' Add item</button></div>' +
+  '</div>';
+}
+
+function codeOptionsHTML(d) {
+  return '<div class="field">' +
+      '<div class="field-label">Language</div>' +
+      '<select class="input" data-action="code-lang">' +
+        '<option value="javascript" ' + (d.codeLang === 'javascript' ? 'selected' : '') + '>JavaScript</option>' +
+        '<option value="python" ' + (d.codeLang === 'python' ? 'selected' : '') + '>Python</option>' +
+      '</select>' +
+    '</div>' +
+    '<div class="field">' +
+      '<label class="field-label">Starter code <span class="field-help">Must define function solution(...)</span></label>' +
+      '<textarea class="input mono" data-action="code-stub" style="min-height:110px;font-family:var(--mono);font-size:13px">' + esc(d.codeStub) + '</textarea>' +
+    '</div>' +
+    '<div class="field" style="margin-bottom:4px">' +
+      '<div class="field-label">Test cases <span class="field-help">args and expected as JSON; first visible case is the sample</span></div>' +
+      d.testCases.map((tc, i) =>
+        '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
+          '<span class="badge b-mcq">#' + (i + 1) + '</span>' +
+          '<input class="input mono" style="flex:1;min-width:0" data-action="tc-args" data-i="' + i + '" value="' + esc(tc.args) + '" placeholder=&quot;args: [2, 3]&quot;>' +
+          '<input class="input mono" style="flex:1;min-width:0" data-action="tc-expected" data-i="' + i + '" value="' + esc(tc.expected) + '" placeholder=&quot;expected: 5&quot;>' +
+          '<label style="font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="checkbox" data-action="tc-hidden" data-i="' + i + '" ' + (tc.hidden ? 'checked' : '') + ' style="accent-color:var(--accent)">hidden</label>' +
+          '<button class="btn-icon danger" data-action="tc-remove" data-i="' + i + '" title="Remove case">' + ic('x', 14) + '</button>' +
+        '</div>').join('') +
+      '<div><button class="btn btn-secondary btn-sm" data-action="tc-add">' + ic('plus', 13) + ' Add test case</button></div>' +
+    '</div>';
+}
+
+function fillOptionsHTML(d) {
+  return '<div class="field">' +
+    '<label class="field-label">Correct answer <span class="field-help">Accept multiple variants, comma-separated</span></label>' +
+    '<input class="input" data-qdraft="fillans" value="' + esc(d.fillans) + '" placeholder="e.g., useMemo, use memo" style="font-family:var(--mono)">' +
+  '</div>';
+}
+
+async function saveQuestion() {
+  const d = qDraft;
+  if (!d.q.trim()) { toast('Question text is required', 'error'); return; }
+  if (d.type === 'mcq') {
+    if (d.options.some(o => !o.trim())) { toast('Every option needs text', 'error'); return; }
+    if (d.answer == null || d.options[d.answer] === undefined) { toast('Mark the correct answer', 'error'); return; }
+  } else if (d.type === 'multi') {
+    if (d.options.some(o => !o.trim())) { toast('Every option needs text', 'error'); return; }
+    if (d.multiSel.size < 1) { toast('Select at least one correct option', 'error'); return; }
+  } else if (d.type === 'matching') {
+    if (d.pairs.length < 2 || d.pairs.some(pr => !pr.l.trim() || !pr.r.trim())) { toast('Matching needs at least two complete pairs', 'error'); return; }
+  } else if (d.type === 'ordering') {
+    if (d.ordered.length < 2 || d.ordered.some(x => !x.trim())) { toast('Ordering needs at least two items', 'error'); return; }
+  } else if (d.type === 'code') {
+    if (!d.codeStub.trim()) { toast('Provide starter code', 'error'); return; }
+    if (!d.testCases.length) { toast('Add at least one test case', 'error'); return; }
+    for (const tc of d.testCases) {
+      try { JSON.parse(tc.args || '[]'); JSON.parse(tc.expected); } catch (e) { toast('Test cases must be valid JSON', 'error'); return; }
+    }
+  } else {
+    if (!d.fillans.split(',').map(s => s.trim()).filter(Boolean).length) { toast('Provide a correct answer', 'error'); return; }
+  }
+  const payload = {
+    id: d.id || undefined,
+    cat: d.cat,
+    diff: d.diff,
+    type: d.type,
+    q: d.q.trim(),
+    code: d.code.trim(),
+    explain: d.explain.trim(),
+    options: d.type === 'matching' ? d.pairs.map(pr => pr.r.trim()) : (d.type === 'mcq' || d.type === 'multi') ? d.options.map(o => o.trim()) : undefined,
+    pairs: d.type === 'matching' ? d.pairs.map(pr => ({ l: pr.l.trim(), r: pr.r.trim() })) : undefined,
+    ordered: d.type === 'ordering' ? d.ordered.map(x => x.trim()) : undefined,
+    codeLang: d.type === 'code' ? d.codeLang : undefined,
+    codeStub: d.type === 'code' ? d.codeStub : undefined,
+    testCases: d.type === 'code' ? d.testCases.map(tc => ({ args: JSON.parse(tc.args || '[]'), expected: JSON.parse(tc.expected), hidden: !!tc.hidden })) : undefined,
+    answer: d.type === 'mcq' ? d.answer : d.type === 'multi' ? Array.from(d.multiSel).sort((a, b) => a - b) : d.type === 'code' ? [] : d.fillans.split(',').map(s => s.trim()).filter(Boolean)
+  };
+  try {
+    const saved = d.id
+      ? await API.put('/api/admin/questions/' + d.id, payload)
+      : await API.post('/api/admin/questions', payload);
+    qDraft = null;
+    closeModal();
+    await loadAdminData();
+    toast(saved.id === d.id ? 'Question updated' : 'Question added', 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function reseedBank() {
+  confirmModal({
+    title: 'Reseed question bank?',
+    body: 'Built-in questions are replaced with the canonical bank (' + S.questions.length + ' questions). Custom questions are preserved.',
+    confirmLabel: 'Reseed',
+    danger: true,
+    onConfirm: async () => {
+      closeModal();
+      try {
+        const r = await API.post('/api/admin/reseed');
+        await loadAdminData();
+        toast('Seeded ' + r.seeded + ' built-in questions', 'success');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
+/* ── Results (admin) ───────────────────────────────────────── */
+
+function vResults() {
+  const a = S.attempts;
+  const submitted = a.filter(x => x.status === 'submitted');
+  const avg = submitted.length ? Math.round(submitted.reduce((x, y) => x + (y.pct || 0), 0) / submitted.length) : 0;
+  const passRate = submitted.length ? Math.round(submitted.filter(x => x.passed).length / submitted.length * 100) : 0;
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Results</h1>' +
+    '<p class="page-desc">Every attempt submitted through the candidate portal.</p></div>' +
+  '</div>' +
+  '<div class="stat-grid">' +
+    statCard('users', 'Attempts', a.length, 'total') +
+    statCard('chart', 'Average score', avg + '%', 'submitted') +
+    statCard('check', 'Pass rate', passRate + '%', 'at the pass mark') +
+    statCard('clock', 'In progress', a.length - submitted.length, 'to review') +
+  '</div>' +
+  '<div style="height:16px"></div>' +
+  (a.length ? '<div class="card table-wrap"><table class="tbl">' +
+    '<thead><tr><th>Candidate</th><th>Test</th><th>Status</th><th>Score</th><th>Time used</th><th>Started</th><th>IP</th><th>Switches</th><th></th></tr></thead><tbody>' +
+    a.map(attRowHTML).join('') +
+    '</tbody></table></div>'
+    : emptyState('chart', 'No attempts yet', 'When candidates submit a test, results will appear here.'));
+}
+
+function attRowHTML(x) {
+  const done = x.status === 'submitted';
+  return '<tr>' +
+    '<td style="font-weight:600">' + esc(x.candidate) +
+      (x.email ? '<div style="font-weight:400;font-size:12px;color:var(--text-3)">' + esc(x.email) + '</div>' : '') + '</td>' +
+    '<td>' + esc(x.testName) + '</td>' +
+    '<td><span class="badge ' + (done ? (x.passed ? 'b-pass' : 'b-fail') : 'b-draft') + '">' + (done ? 'Submitted' : 'In progress') + '</span></td>' +
+    '<td>' + (done
+      ? '<span class="badge ' + (x.passed ? 'b-pass' : 'b-fail') + '">' + x.pct + '%</span> <span style="color:var(--text-3);font-size:12px" class="num">' + x.correct + '/' + x.total + '</span>'
+      : '<span style="color:var(--text-3);font-size:12.5px">—</span>') + '</td>' +
+    '<td class="num">' + (done ? fmtMins(x.durationSec - (x.remainingSec || 0)) : fmtMins(x.durationSec - (x.remainingSec != null ? x.remainingSec : x.durationSec))) + '</td>' +
+    '<td class="num" style="color:var(--text-2)">' + fmtDate(x.startedAt) + '</td>' +
+    '<td class="num" style="font-size:12px;color:var(--text-2)">' + esc(x.ip || '\u2014') + '</td>' +
+    '<td class="num" style="color:var(--text-2)">' + (x.leaves || 0) + '</td>' +
+    '<td style="display:flex;gap:6px;justify-content:flex-end">' +
+      (done ? '' : '<button class="btn btn-sm btn-secondary" data-action="force-submit" data-id="' + x.id + '">Submit now</button>') +
+      '<button class="btn btn-sm btn-secondary" data-action="view-attempt" data-id="' + x.id + '">View</button>' +
+    '</td>' +
+  '</tr>';
+}
+
+async function openAttempt(id) {
+  try {
+    const { attempt, questions } = await API.get('/api/admin/attempts/' + id);
+    buildQPool(Object.values(questions));
+    const done = attempt.status === 'submitted';
+    openModal({
+      title: attempt.candidate + ' — ' + attempt.testName,
+      body:
+        '<div class="result-stats" style="margin-top:0">' +
+          '<div class="result-stat"><div class="result-stat-val" style="color:' + (done ? (attempt.passed ? 'var(--green-text)' : 'var(--red-text)') : 'var(--text-2)') + '">' + (done ? attempt.pct + '%' : '—') + '</div><div class="result-stat-lbl">Score</div></div>' +
+          '<div class="result-stat"><div class="result-stat-val">' + (done ? attempt.correct + '/' + attempt.total : attempt.order.length) + '</div><div class="result-stat-lbl">' + (done ? 'Correct' : 'Questions') + '</div></div>' +
+          '<div class="result-stat"><div class="result-stat-val">' + fmtMins(attempt.durationSec - (attempt.remainingSec != null ? attempt.remainingSec : attempt.durationSec)) + '</div><div class="result-stat-lbl">Time used</div></div>' +
+          '<div class="result-stat"><div class="result-stat-val">' + attempt.passPct + '%</div><div class="result-stat-lbl">Pass mark</div></div>' +
+        '</div>' +
+        (attempt.ip || attempt.ua || attempt.leaves ? '<div style="margin:18px 0 4px" class="section-label">Proctoring</div>' +
+          '<div class="proctor-grid">' +
+            '<div><div class="result-stat-lbl">IP address</div><div style="font-size:13px;font-weight:600;margin-top:2px">' + esc(attempt.ip || '\u2014') + '</div></div>' +
+            '<div><div class="result-stat-lbl">Tab / window switches</div><div style="font-size:13px;font-weight:600;margin-top:2px" class="' + ((attempt.leaves || 0) > 0 ? 'danger-text' : '') + '">' + (attempt.leaves || 0) + '</div></div>' +
+            '<div style="grid-column:1/-1"><div class="result-stat-lbl">Device</div><div style="font-size:12px;color:var(--text-2);margin-top:2px;word-break:break-all">' + esc(attempt.ua || '\u2014') + '</div></div>' +
+          '</div>' : '') +
+        '<div style="margin:18px 0 4px" class="section-label">By category</div>' +
+        breakdownHTML(attempt.byCat) +
+        (done && attempt.showAnswers !== false ? '<div style="margin:18px 0 4px" class="section-label">Answer review</div>' + reviewHTML(attempt) : ''),
+      foot: '<button class="btn btn-secondary" data-action="close-modal">Close</button>',
+      wide: true
+    });
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function forceSubmit(id) {
+  try {
+    await API.post('/api/admin/attempts/' + id + '/force-submit');
+    await loadAdminData();
+    toast('Attempt submitted and graded', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+/* ── Activity (proctoring / audit log) ─────────────────────── */
+
+async function loadEvents() {
+  try {
+    S.events = await API.get('/api/admin/events');
+  } catch (e) {
+    S.events = [];
+    toast(e.message, 'error');
+  }
+  render();
+}
+
+const _EV_META = {
+  identify: { label: 'Identify', badge: 'b-draft', icon: 'user' },
+  start:    { label: 'Start',    badge: 'b-intermediate', icon: 'play' },
+  submit:   { label: 'Submit',   badge: 'b-pass', icon: 'check' },
+  discard:  { label: 'Discard',  badge: 'b-fail', icon: 'trash' }
+};
+
+function vActivity() {
+  const ev = S.events || [];
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Activity</h1>' +
+    '<p class="page-desc">Every name entry, test start, submit, and discard — with IP and device info. Discards are the ones to watch.</p></div>' +
+  '</div>' +
+  '<div style="height:16px"></div>' +
+  (ev.length ? '<div class="card table-wrap"><table class="tbl">' +
+    '<thead><tr><th>Event</th><th>Candidate</th><th>Test</th><th>IP</th><th>Device</th><th>Switches</th><th>When</th></tr></thead><tbody>' +
+    ev.map(evRowHTML).join('') +
+    '</tbody></table></div>'
+    : emptyState('clock', 'No activity yet', 'Events appear here as candidates identify, start, submit, or discard tests.'));
+}
+
+function evRowHTML(e) {
+  const meta = _EV_META[e.kind] || { label: e.kind, badge: 'b-draft', icon: 'info' };
+  return '<tr>' +
+    '<td><span class="badge ' + meta.badge + '">' + ic(meta.icon, 11) + ' ' + meta.label + '</span></td>' +
+    '<td style="font-weight:600">' + esc(e.candidate || '\u2014') +
+      (e.email ? '<div style="font-weight:400;font-size:12px;color:var(--text-3)">' + esc(e.email) + '</div>' : '') + '</td>' +
+    '<td style="font-size:13px">' + esc(e.testName || '\u2014') + '</td>' +
+    '<td class="num" style="font-size:12px">' + esc(e.ip || '\u2014') + '</td>' +
+    '<td style="font-size:12px;color:var(--text-2);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(e.ua || '') + '">' + esc(e.ua || '\u2014') + '</td>' +
+    '<td class="num">' + (e.leaves || '\u2014') + '</td>' +
+    '<td class="num" style="color:var(--text-2)">' + fmtDate(e.at) + '</td>' +
+  '</tr>';
+}
+
+/* ── Admins (superadmin) ───────────────────────────────────── */
+
+function vAdmins() {
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Administrators</h1>' +
+    '<p class="page-desc">Manage who can access the console. Superadmins can add and remove admins.</p></div>' +
+    '<div class="page-actions"><button class="btn btn-primary" data-action="add-admin">' + ic('plus', 15) + ' Add admin</button></div>' +
+  '</div>' +
+  '<div class="card">' +
+    S.admins.map(x =>
+      '<div class="row-item">' +
+        '<span class="admin-avatar" style="width:34px;height:34px;font-size:14px">' + esc((x.displayName || x.username).slice(0, 1).toUpperCase()) + '</span>' +
+        '<div class="row-main">' +
+          '<div class="row-title" style="font-weight:600">' + esc(x.displayName || x.username) +
+            (x.id === S.auth.id ? '<span class="badge b-fill" style="margin-left:8px">You</span>' : '') + '</div>' +
+          '<div class="row-meta">@' + esc(x.username) + (x.email ? ' · ' + esc(x.email) : '') + ' · joined ' + fmtDate(x.createdAt) + '</div>' +
+        '</div>' +
+        '<span class="badge ' + (x.role === 'superadmin' ? 'b-intermediate' : 'b-mcq') + '">' + (x.role === 'superadmin' ? 'Superadmin' : 'Admin') + '</span>' +
+        '<div class="row-actions">' +
+          (x.id !== S.auth.id
+            ? '<button class="btn-icon danger" data-action="delete-admin" data-id="' + x.id + '" title="Remove admin">' + ic('trash', 16) + '</button>'
+            : '') +
+        '</div>' +
+      '</div>').join('') +
+  '</div>';
+}
+
+function openAddAdminModal() {
+  S.modal = {
+    title: 'Add administrator',
+    body:
+      '<div class="field"><label class="field-label">Username</label>' +
+        '<input class="input" id="newAdminUser" placeholder="e.g., jane" autocomplete="off"></div>' +
+      '<div class="field"><label class="field-label">Display name</label>' +
+        '<input class="input" id="newAdminName" placeholder="e.g., Jane Doe" autocomplete="off"></div>' +
+      '<div class="field"><label class="field-label">Email <span class="field-help">Optional</span></label>' +
+        '<input class="input" id="newAdminEmail" type="email" placeholder="jane@company.com" autocomplete="off"></div>' +
+      '<div class="field"><label class="field-label">Password</label>' +
+        '<input class="input" id="newAdminPass" type="password" placeholder="Min. 6 characters" autocomplete="new-password"></div>' +
+      '<div class="field" style="margin-bottom:4px"><label class="field-label">Role</label>' +
+        '<div class="seg" id="newRoleSeg">' +
+          '<button class="seg-item active" data-action="new-admin-role" data-value="admin">Admin</button>' +
+          '<button class="seg-item" data-action="new-admin-role" data-value="superadmin">Superadmin</button>' +
+          '<span class="seg-thumb" id="newRoleThumb"></span>' +
+        '</div></div>',
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="save-admin">' + ic('check', 14) + ' Create admin</button>'
+  };
+  render();
+  positionSeg('#newRoleSeg', '#newRoleThumb', 0);
+}
+
+let _newAdminRole = 'admin';
+
+async function saveNewAdmin() {
+  const u = $('#newAdminUser'), n = $('#newAdminName'), em = $('#newAdminEmail'), p = $('#newAdminPass');
+  if (!u || !p) return;
+  try {
+    await API.post('/api/admin/admins', {
+      username: u.value, displayName: n.value, email: em.value, password: p.value, role: _newAdminRole
+    });
+    closeModal();
+    await loadAdminData();
+    toast('Admin created', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function confirmDeleteAdmin(id) {
+  const target = S.admins.find(a => a.id === id);
+  if (!target) return;
+  confirmModal({
+    title: 'Remove administrator?',
+    body: '@' + esc(target.username) + ' will lose access to the console immediately.',
+    confirmLabel: 'Remove',
+    danger: true,
+    onConfirm: async () => {
+      closeModal();
+      try {
+        await API.del('/api/admin/admins/' + id);
+        await loadAdminData();
+        toast('Administrator removed');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
+/* ── Preview modal ─────────────────────────────────────────── */
+
+function openPreview(id) {
+  const t = S.tests.find(x => x.id === id);
+  if (!t) return;
+  const cats = (t.categories || []).map(catOf);
+  const w = { beginner: 0.6, intermediate: 0.3, advanced: 0.1 }[t.diffFocus]
+        || { beginner: 0.34, intermediate: 0.33, advanced: 0.33 }
+        || { beginner: 0.1, intermediate: 0.3, advanced: 0.6 };
+  const pool = S.questions.filter(q => (t.categories || []).includes(q.cat) && (w[q.diff] || 0) > 0);
+  const sample = shuffle(pool).slice(0, Math.min(3, t.count));
+  openModal({
+    title: esc(t.name),
+    body:
+      '<div class="test-card-meta" style="margin-bottom:14px">' +
+        '<span class="meta-pill">' + ic('clock', 13) + ' ' + t.durationMin + ' min</span>' +
+        '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
+        '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
+      '</div>' +
+      '<div class="test-card-chips" style="margin-bottom:18px">' +
+        cats.map(c => '<span class="badge b-mcq">' + ic(c.icon, 11) + ' ' + esc(c.name) + '</span>').join('') +
+      '</div>' +
+      '<div class="section-label">Sample questions (first ' + sample.length + ' of ' + t.count + ')</div>' +
+      sample.map(q => '<div style="padding:10px 0;border-top:1px solid var(--hairline-soft)">' +
+        '<div style="font-size:13.5px;font-weight:600;line-height:1.45">' + esc(q.q) + '</div>' +
+        (q.code ? '<pre class="q-code" style="margin-top:8px">' + esc(q.code) + '</pre>' : '') +
+        '<div class="row-meta" style="margin-top:6px">' +
+          '<span class="badge b-' + q.diff + '"><span class="dot"></span>' + diffOf(q.diff).name + '</span>' +
+          '<span class="badge b-mcq">' + { mcq: 'Multiple choice', multi: 'Multi-select', fill: 'Fill in the blank', matching: 'Matching', ordering: 'Ordering', code: 'Coding' }[q.type] + '</span>' +
+        '</div></div>').join(''),
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Close</button>'
+  });
+}
+/* ============================================================
+   Orion — candidate portal: test list, timed runner, results
+   (questions, answers and grading all live on the server)
+   ============================================================ */
+
+function normalizeAttempt(att) {
+  if (!att) return att;
+  if (!att.answers) att.answers = {};
+  if (!Array.isArray(att.flagged)) att.flagged = (att.order || []).map(() => false);
+  if (!att.optionOrder) att.optionOrder = {};
+  if (att.remaining == null && att.remainingSec != null) att.remaining = att.remainingSec;
+  if (att.remaining == null) att.remaining = att.durationSec || 0;
+  if (att.leaves == null) att.leaves = 0;
+  return att;
+}
+
+async function refreshCandidate() {
+  try {
+    const [tests, active] = await Promise.all([
+      API.get('/api/tests'),
+      API.get('/api/attempts/active')
+    ]);
+    S.pubTests = tests;
+    if (active.attempt) {
+      S.live = normalizeAttempt(active.attempt);
+      S.liveQuestions = active.questions || {};
+      buildQPool(Object.values(S.liveQuestions));
+      S.qIdx = 0;
+    } else {
+      S.live = null;
+      S.liveQuestions = {};
+    }
+  } catch (e) {
+    S.pubTests = [];
+    S.live = null;
+    toast('Cannot reach the server', 'error');
+  }
+  render();
+}
+
+function candidateShell() {
+  return sidebarHTML([['home', 'Tests', 'doc']], 'candidate') +
+    '<div class="app-main">' +
+      '<header class="topbar">' + headerHTML('candidate') + '</header>' +
+      '<main class="content"><div class="container">' + candidateView() + '</div></main>' +
+    '</div>' +
+    modalHTML();
+}
+
+function candidateView() {
+  if (S.candView === 'runner' && S.live) return vRunner();
+  if (S.candView === 'result' && S.candResult) return vCandidateResult();
+  return vCandidateHome();
+}
+
+/* ── Candidate home ────────────────────────────────────────── */
+
+function vCandidateHome() {
+  return '<div class="page-head" style="margin-top:34px">' +
+    '<div><h1 class="page-title" style="font-size:34px">Engineering assessments</h1>' +
+    '<p class="page-desc">Pick a published test to begin. Every test is timed and graded automatically.</p></div>' +
+  '</div>' +
+  (S.live ? resumeCardHTML() : '') +
+  (S.pubTests.length ? S.pubTests.map(candidateTestCardHTML).join('')
+    : emptyState('lock', 'No tests available', 'The administrator hasn\u2019t published any tests yet.', 'mode', 'Open the console', 'console'));
+}
+
+function resumeCardHTML() {
+  const l = S.live;
+  const remaining = l.remainingSec != null ? l.remainingSec : l.remaining;
+  return '<div class="card test-card" style="border:1.5px solid var(--accent-ring);box-shadow:var(--shadow)">' +
+    '<div class="test-card-top">' +
+      '<div><div class="test-card-title" style="display:flex;align-items:center;gap:10px">' + ic('clock', 18) + ' Test in progress</div>' +
+      '<div class="test-card-desc">' + esc(l.testName) + ' — ' + countAnsweredIn(l) + ' of ' + l.order.length + ' answered · ' + fmtClock(remaining) + ' remaining</div></div>' +
+      '<span class="badge b-intermediate"><span class="dot"></span>Resumable</span>' +
+    '</div>' +
+    '<div class="test-card-foot">' +
+      '<button class="btn btn-danger-solid" data-action="discard-attempt">' + ic('trash', 14) + ' Discard</button>' +
+      '<button class="btn btn-primary btn-lg" data-action="resume-attempt">' + ic('play', 15) + ' Resume test</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function candidateTestCardHTML(t) {
+  const cats = (t.categories || []).map(catOf);
+  return '<div class="card test-card">' +
+    '<div class="test-card-top">' +
+      '<div><div class="test-card-title">' + esc(t.name) + '</div>' +
+      '<div class="test-card-desc">' + esc(t.description || 'No description provided.') + '</div></div>' +
+    '</div>' +
+    '<div class="test-card-meta">' +
+      '<span class="meta-pill">' + ic('clock', 13) + ' ' + t.durationMin + ' min</span>' +
+      '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
+      '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
+    '</div>' +
+    '<div class="test-card-chips">' +
+      cats.map(c => '<span class="badge b-mcq">' + ic(c.icon, 11) + ' ' + esc(c.name) + '</span>').join('') +
+    '</div>' +
+    '<div class="test-card-foot">' +
+      '<div style="font-size:12.5px;color:var(--text-3)">' + diffFocusLabel(t.diffFocus) + '</div>' +
+      '<button class="btn btn-primary" data-action="start-test" data-id="' + t.id + '">' + ic('play', 13) + ' Start test</button>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ── Start modal ───────────────────────────────────────────── */
+
+function openStartModal(testId) {
+  const t = S.pubTests.find(x => x.id === testId);
+  if (!t) return;
+  S._pendingTestId = testId;
+  const saved = store.get('orion.candidate', {});
+  S.modal = {
+    title: 'Start \u201C' + t.name + '\u201D',
+    body:
+      '<div class="test-card-meta" style="margin-bottom:16px">' +
+        '<span class="meta-pill">' + ic('clock', 13) + ' ' + t.durationMin + ' min</span>' +
+        '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label class="field-label" for="startName">Your name</label>' +
+        '<input class="input" id="startName" data-action="identify" placeholder="e.g., Ada Lovelace" maxlength="60" value="' + esc(saved.name || '') + '">' +
+      '</div>' +
+      '<div class="field" style="margin-bottom:6px">' +
+        '<label class="field-label" for="startEmail">Email <span class="field-help">Optional</span></label>' +
+        '<input class="input" id="startEmail" type="email" data-action="identify" placeholder="ada@company.com" maxlength="90" value="' + esc(saved.email || '') + '">' +
+      '</div>' +
+      '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6">The timer starts as soon as you begin and can\u2019t be paused during the test.</p>',
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="begin-attempt">' + ic('play', 14) + ' Begin</button>'
+  };
+  render();
+  setTimeout(() => { const n = $('#startName'); if (n) n.focus(); }, 60);
+}
+
+let _identifyTimer = null;
+function sendIdentify() {
+  const name = (($('#startName') || {}).value || '').trim();
+  if (!name) return;
+  const email = (($('#startEmail') || {}).value || '').trim();
+  store.set('orion.candidate', { name, email });
+  clearTimeout(_identifyTimer);
+  _identifyTimer = setTimeout(() => {
+    API.post('/api/identify', { candidate: name, email }).catch(() => {});
+  }, 500);
+}
+
+async function beginAttemptFromModal() {
+  const name = ($('#startName') || {}).value || '';
+  const email = ($('#startEmail') || {}).value || '';
+  if (!name.trim()) { toast('Please enter your name', 'error'); return; }
+  const testId = S._pendingTestId;
+  if (!testId) return;
+  S._pendingTestId = null;
+  try {
+    const { attempt, questions } = await API.post('/api/tests/' + testId + '/start', { candidate: name.trim(), email: email.trim() });
+    S.live = normalizeAttempt(attempt);
+    S.liveQuestions = questions || {};
+    buildQPool(Object.values(S.liveQuestions));
+    S.qIdx = 0;
+    S.candView = 'runner';
+    closeModal();
+    render();
+    startTimer();
+    toast('Test started — good luck!', 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+    render();
+  }
+}
+
+function resumeAttempt() {
+  S.candView = 'runner';
+  if (S.live.remainingSec != null) S.live.remaining = S.live.remainingSec;
+  render();
+  startTimer();
+  toast('Welcome back — ' + fmtClock(S.live.remaining) + ' remaining');
+}
+
+function discardAttempt() {
+  confirmModal({
+    title: 'Discard this attempt?',
+    body: 'Your answers and remaining time will be permanently deleted.',
+    confirmLabel: 'Discard',
+    danger: true,
+    onConfirm: async () => {
+      const id = S.live && S.live.id;
+      const leaves = S.live ? (S.live.leaves || 0) : 0;
+      stopTimer();
+      S.live = null;
+      S.liveQuestions = {};
+      closeModal();
+      render();
+      if (id) { try { await API.post('/api/attempts/' + id + '/discard', { leaves }); } catch (e) {} }
+      toast('Attempt discarded');
+    }
+  });
+}
+
+/* ── Timer ─────────────────────────────────────────────────── */
+
+function startTimer() {
+  stopTimer();
+  updateTimerUI();
+  S.timerId = setInterval(tick, 1000);
+}
+
+function stopTimer() {
+  if (S.timerId) { clearInterval(S.timerId); S.timerId = null; }
+}
+
+function tick() {
+  if (!S.live) { stopTimer(); return; }
+  S.live.remaining = Math.max(0, (S.live.remaining || 0) - 1);
+  updateTimerUI();
+  if (S.live.remaining <= 0) {
+    stopTimer();
+    if (S.live.autoSubmit) {
+      submitAttempt(true);
+    } else {
+      S.modal = {
+        title: 'Time\u2019s up',
+        body: '<p style="font-size:14.5px;color:var(--text-2);line-height:1.65">Your time has expired. Submit now to record your answers — unanswered questions count as incorrect.</p>',
+        foot: '<button class="btn btn-primary" data-action="confirm-submit">Submit now</button>'
+      };
+      render();
+    }
+  }
+}
+
+function updateTimerUI() {
+  const els = $$('#timerDisplay');
+  if (!els.length || !S.live) return;
+  els.forEach(el => {
+    el.innerHTML = ic('clock', 15) + ' ' + fmtClock(S.live.remaining);
+    el.className = 'timer' + (S.live.remaining <= 60 ? ' danger' : S.live.remaining <= 300 ? ' warn' : '');
+  });
+}
+
+/* ── Runner ────────────────────────────────────────────────── */
+
+function vRunner() {
+  const l = S.live;
+  const q = qOf(l.order[S.qIdx]);
+  if (!q) return '';
+  const idx = S.qIdx, total = l.order.length;
+  const answered = countAnsweredIn(l);
+
+  return '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin:20px 0 18px;flex-wrap:wrap">' +
+    '<div>' +
+      '<div style="font-size:13px;color:var(--text-3);font-weight:650;display:flex;align-items:center;gap:7px">' + ic('doc', 13) + ' ' + esc(l.testName) + '</div>' +
+      '<div style="font-size:12.5px;color:var(--text-3);margin-top:3px">Question ' + (idx + 1) + ' of ' + total + '</div>' +
+    '</div>' +
+    '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">' +
+      '<div class="progress"><div class="progress-fill" id="progFill" style="width:' + (total ? Math.round(answered / total * 100) : 0) + '%"></div></div>' +
+      '<span id="answeredCount" style="font-size:12.5px;color:var(--text-2);font-weight:600;font-variant-numeric:tabular-nums">' + answered + '/' + total + ' answered</span>' +
+      '<span class="timer" id="timerDisplay">' + ic('clock', 15) + ' ' + fmtClock(l.remaining) + '</span>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="runner">' +
+    '<div class="card q-card">' +
+      '<div class="q-head">' +
+        '<div class="q-badges">' +
+          '<span class="badge b-' + q.diff + '"><span class="dot"></span>' + diffOf(q.diff).name + '</span>' +
+          '<span class="badge b-mcq">' + ic(catOf(q.cat).icon, 11) + ' ' + esc(catOf(q.cat).name) + '</span>' +
+          '<span class="badge ' + (q.type === 'mcq' ? 'b-mcq' : 'b-fill') + '">' + (q.type === 'mcq' ? 'Multiple choice' : 'Fill in the blank') + '</span>' +
+        '</div>' +
+        '<button class="flag-btn ' + (l.flagged[idx] ? 'flagged' : '') + '" id="flagBtn" data-action="flag">' + ic('flag', 14) + ' <span id="flagLabel">' + (l.flagged[idx] ? 'Flagged' : 'Flag for review') + '</span></button>' +
+      '</div>' +
+      questionTextHTML(q) +
+      (q.type === 'mcq' || q.type === 'multi' ? runnerOptsHTML(q, l.answers[q.id]) : q.type === 'matching' ? runnerMatchingHTML(q, l.answers[q.id]) : q.type === 'ordering' ? runnerOrderingHTML(q, l.answers[q.id]) : q.type === 'code' ? runnerCodeHTML(q, l.answers[q.id]) : runnerFillHTML(l.answers[q.id])) +
+      '<div class="q-nav">' +
+        '<button class="btn btn-secondary" data-action="prev-q" ' + (idx === 0 ? 'disabled' : '') + '>' + ic('arrowL', 15) + ' Previous</button>' +
+        '<span class="hint-keys">1\u20134 answer · F flag</span>' +
+        (idx < total - 1
+          ? '<button class="btn btn-primary" data-action="next-q">Next ' + ic('chevronR', 15) + '</button>'
+          : '<button class="btn btn-primary" data-action="ask-submit">' + ic('check', 14) + ' Submit test</button>') +
+      '</div>' +
+    '</div>' +
+
+    '<aside class="card side-card">' +
+      '<div class="side-title">Question navigator</div>' +
+      '<div class="palette" id="palette">' +
+        l.order.map((qid, i) => {
+          const v = l.answers[qid];
+          const has = v !== undefined && v !== null && v !== '';
+          return '<button class="palette-item ' + (has ? 'answered' : '') + ' ' + (i === idx ? 'current' : '') + ' ' + (l.flagged[i] ? 'flagged' : '') + '" data-action="jump" data-idx="' + i + '" aria-label="Question ' + (i + 1) + '">' + (i + 1) + '</button>';
+        }).join('') +
+      '</div>' +
+      '<div class="legend">' +
+        '<div class="legend-item"><span class="legend-swatch ls-answered"></span> Answered</div>' +
+        '<div class="legend-item"><span class="legend-swatch ls-current"></span> Current</div>' +
+        '<div class="legend-item"><span class="legend-swatch ls-flagged"></span> Flagged</div>' +
+        '<div class="legend-item"><span class="legend-swatch ls-unanswered"></span> Unanswered</div>' +
+      '</div>' +
+      '<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">' +
+        '<button class="btn btn-primary" style="width:100%" data-action="ask-submit">' + ic('check', 14) + ' Submit test</button>' +
+        '<button class="btn btn-secondary" style="width:100%" data-action="leave-test">' + ic('logout', 14) + ' Leave &amp; save</button>' +
+      '</div>' +
+    '</aside>' +
+  '</div>';
+}
+
+function runnerOptsHTML(q, val) {
+  if (q.type === 'multi') {
+    const sel = Array.isArray(val) ? val : [];
+    return '<div class="opts" aria-label="Answer options (choose all that apply)">' +
+      q.options.map((o, i) =>
+        '<button class="opt ' + (sel.includes(i) ? 'selected' : '') + '" data-action="opt" data-opt="' + i + '" role="checkbox" aria-checked="' + sel.includes(i) + '">' +
+          '<span class="opt-key">' + LETTERS[i] + '</span><span>' + esc(o) + '</span>' +
+          '<span class="opt-multi-mark" style="margin-left:auto;display:grid;place-items:center;color:' + (sel.includes(i) ? 'var(--accent)' : 'var(--text-3)') + '">' + ic('check', 14) + '</span>' +
+        '</button>').join('') +
+    '</div>';
+  }
+  return '<div class="opts" role="radiogroup" aria-label="Answer options">' +
+    q.options.map((o, i) =>
+      '<button class="opt ' + (val === i ? 'selected' : '') + '" data-action="opt" data-opt="' + i + '" role="radio" aria-checked="' + (val === i) + '">' +
+        '<span class="opt-key">' + LETTERS[i] + '</span><span>' + esc(o) + '</span>' +
+      '</button>').join('') +
+  '</div>';
+}
+
+function runnerMatchingHTML(q, val) {
+  const sel = Array.isArray(val) ? val : [];
+  return '<div class="match-grid">' +
+    (q.pairsLeft || []).map((left, i) =>
+      '<div class="match-row">' +
+        '<span class="match-left">' + esc(left) + '</span>' +
+        '<select class="input match-select" data-action="match" data-i="' + i + '" aria-label="Match for: ' + esc(left) + '">' +
+          '<option value="">— choose —</option>' +
+          q.options.map((o, oi) => '<option value="' + oi + '" ' + (sel[i] === oi ? 'selected' : '') + '>' + esc(o) + '</option>').join('') +
+        '</select>' +
+      '</div>').join('') +
+  '</div>';
+}
+
+function runnerOrderingHTML(q, val) {
+  const items = q.items || [];
+  const order = Array.isArray(val) && val.length === items.length ? val.slice() : items.map((_, i) => i);
+  return '<div class="order-list" id="orderList">' +
+    order.map((itemIdx, pos) =>
+      '<div class="order-row" data-pos="' + pos + '">' +
+        '<span class="order-num">' + (pos + 1) + '</span>' +
+        '<span class="order-item">' + esc(items[itemIdx]) + '</span>' +
+        '<button class="btn-icon order-btn" data-action="order-move" data-dir="-1" data-pos="' + pos + '" ' + (pos === 0 ? 'disabled' : '') + ' title="Move up">' + ic('chevronD', 15) + '</button>' +
+        '<button class="btn-icon order-btn" data-action="order-move" data-dir="1" data-pos="' + pos + '" ' + (pos === order.length - 1 ? 'disabled' : '') + ' title="Move down">' + ic('chevronR', 15) + '</button>' +
+      '</div>').join('') +
+  '</div>';
+}
+
+function runnerCodeHTML(q, val) {
+  const code = val || q.codeStub || '';
+  return '<div class="code-box">' +
+    '<div class="code-box-head">' +
+      '<span class="badge b-mcq">' + ic('terminal2', 11) + ' ' + esc(q.codeLang === 'python' ? 'Python' : 'JavaScript') + '</span>' +
+      '<span style="font-size:12px;color:var(--text-3)">Define <b>solution</b> then press Run to test against the sample</span>' +
+    '</div>' +
+    '<textarea class="code-editor" id="codeEditor" data-action="code" spellcheck="false" autocapitalize="off" autocomplete="off">' + esc(code) + '</textarea>' +
+    '<div class="code-box-foot">' +
+      '<button class="btn btn-secondary btn-sm" data-action="run-code">' + ic('play', 13) + ' Run sample</button>' +
+      '<span id="codeOut" class="code-out"></span>' +
+    '</div>' +
+  '</div>';
+}
+
+function runnerFillHTML(val) {
+  return '<input class="fill-input" id="fillInput" data-action="fill" placeholder="Type your answer\u2026" value="' + esc(val || '') + '" autocomplete="off" autocapitalize="off" spellcheck="false">';
+}
+
+/* ── Runner interactions ───────────────────────────────────── */
+
+function selectOpt(i) {
+  if (!S.live) return;
+  const q = qOf(S.live.order[S.qIdx]);
+  if (!q || (q.type !== 'mcq' && q.type !== 'multi')) return;
+  if (q.type === 'multi') {
+    const sel = Array.isArray(S.live.answers[q.id]) ? S.live.answers[q.id].slice() : [];
+    const at = sel.indexOf(i);
+    if (at >= 0) sel.splice(at, 1); else sel.push(i);
+    sel.sort((a, b) => a - b);
+    S.live.answers[q.id] = sel;
+    $$('.opts .opt').forEach(o => {
+      const on = sel.includes(+o.dataset.opt);
+      o.classList.toggle('selected', on);
+      o.setAttribute('aria-checked', on);
+      const mark = o.querySelector('.opt-multi-mark');
+      if (mark) mark.style.color = on ? 'var(--accent)' : 'var(--text-3)';
+    });
+    $$('#palette .palette-item').forEach(b => { if (+b.dataset.idx === S.qIdx) b.classList.toggle('answered', sel.length > 0); });
+  } else {
+    S.live.answers[q.id] = i;
+    $$('#palette .palette-item').forEach(b => { if (+b.dataset.idx === S.qIdx) b.classList.add('answered'); });
+    $$('.opts .opt').forEach(o => {
+      o.classList.toggle('selected', +o.dataset.opt === i);
+      o.setAttribute('aria-checked', +o.dataset.opt === i);
+    });
+  }
+  updateRunnerCounters();
+  saveAnswerToServer(q.id, S.live.answers[q.id]);
+}
+
+let _fillTimer = null;
+function handleFillInput(el) {
+  if (!S.live) return;
+  const q = qOf(S.live.order[S.qIdx]);
+  if (!q || q.type !== 'fill') return;
+  S.live.answers[q.id] = el.value;
+  $$('#palette .palette-item').forEach(b => {
+    if (+b.dataset.idx === S.qIdx) b.classList.toggle('answered', el.value.trim() !== '');
+  });
+  updateRunnerCounters();
+  clearTimeout(_fillTimer);
+  _fillTimer = setTimeout(() => saveAnswerToServer(q.id, el.value), 400);
+}
+
+async function saveAnswerToServer(qid, value) {
+  if (!S.live) return;
+  try {
+    await API.post('/api/attempts/' + S.live.id + '/answer', { qid, value });
+  } catch (e) {
+    if (e.status === 409) { toast('This attempt was already submitted', 'error'); }
+    else if (e.status === 400) { toast(e.message, 'error'); }
+    else { toast('Answer not saved: ' + e.message, 'error'); }
+  }
+}
+
+function handleMatchSelect(i, optIdx) {
+  if (!S.live) return;
+  const q = qOf(S.live.order[S.qIdx]);
+  if (!q || q.type !== 'matching') return;
+  const arr = Array.isArray(S.live.answers[q.id]) ? S.live.answers[q.id].slice() : (q.pairsLeft || []).map(() => -1);
+  arr[i] = optIdx === '' ? -1 : +optIdx;
+  S.live.answers[q.id] = arr;
+  $$('#palette .palette-item').forEach(b => { if (+b.dataset.idx === S.qIdx) b.classList.toggle('answered', arr.some(v => v !== -1 && v !== '')); });
+  updateRunnerCounters();
+  saveAnswerToServer(q.id, arr);
+}
+
+function moveOrderItem(pos, dir) {
+  if (!S.live) return;
+  const q = qOf(S.live.order[S.qIdx]);
+  if (!q || q.type !== 'ordering') return;
+  const items = q.items || [];
+  const cur = Array.isArray(S.live.answers[q.id]) && S.live.answers[q.id].length === items.length ? S.live.answers[q.id].slice() : items.map((_, i) => i);
+  const np = pos + dir;
+  if (np < 0 || np >= cur.length) return;
+  [cur[pos], cur[np]] = [cur[np], cur[pos]];
+  S.live.answers[q.id] = cur;
+  updateRunnerCounters();
+  saveAnswerToServer(q.id, cur);
+  // re-render the list in place
+  const wrap = $('#orderList');
+  if (wrap) wrap.outerHTML = runnerOrderingHTML(q, cur);
+}
+
+function handleCodeInput(el) {
+  if (!S.live) return;
+  const q = qOf(S.live.order[S.qIdx]);
+  if (!q || q.type !== 'code') return;
+  S.live.answers[q.id] = el.value;
+  $$('#palette .palette-item').forEach(b => { if (+b.dataset.idx === S.qIdx) b.classList.toggle('answered', el.value.trim() !== ''); });
+  updateRunnerCounters();
+  clearTimeout(_fillTimer);
+  _fillTimer = setTimeout(() => saveAnswerToServer(q.id, el.value), 400);
+}
+
+async function runCode() {
+  if (!S.live) return;
+  const q = qOf(S.live.order[S.qIdx]);
+  if (!q || q.type !== 'code') return;
+  const code = ($('#codeEditor') || {}).value || '';
+  if (!code.trim()) { toast('Write some code first', 'error'); return; }
+  const out = $('#codeOut');
+  if (out) out.textContent = 'Running…';
+  try {
+    const r = await API.post('/api/attempts/' + S.live.id + '/run-code', {
+      qid: q.id, code: code, args: q.sample ? q.sample.args : [], expected: q.sample ? q.sample.expected : null
+    });
+    if (out) {
+      if (r.pass) out.textContent = '✓ Passed — got ' + (r.got !== undefined ? r.got : 'expected');
+      else if (r.error) out.textContent = '✗ ' + r.error;
+      else out.textContent = '✗ Expected ' + r.want + ', got ' + r.got;
+    }
+  } catch (e) {
+    if (out) out.textContent = '✗ ' + e.message;
+  }
+}
+
+function toggleFlag() {
+  if (!S.live) return;
+  S.live.flagged[S.qIdx] = !S.live.flagged[S.qIdx];
+  const btn = $('#flagBtn'), label = $('#flagLabel');
+  if (btn) { btn.classList.toggle('flagged', S.live.flagged[S.qIdx]); if (label) label.textContent = S.live.flagged[S.qIdx] ? 'Flagged' : 'Flag for review'; }
+  $$('#palette .palette-item').forEach(b => { if (+b.dataset.idx === S.qIdx) b.classList.toggle('flagged', S.live.flagged[S.qIdx]); });
+  API.post('/api/attempts/' + S.live.id + '/flag', { idx: S.qIdx, flagged: S.live.flagged[S.qIdx] }).catch(() => {});
+}
+
+function updateRunnerCounters() {
+  if (!S.live) return;
+  const total = S.live.order.length;
+  const answered = countAnsweredIn(S.live);
+  const c = $('#answeredCount');
+  if (c) c.textContent = answered + '/' + total + ' answered';
+  const pf = $('#progFill');
+  if (pf) pf.style.width = (total ? Math.round(answered / total * 100) : 0) + '%';
+}
+
+function navQ(dir) {
+  if (!S.live) return;
+  const next = S.qIdx + dir;
+  if (next < 0 || next >= S.live.order.length) return;
+  S.qIdx = next;
+  render();
+}
+
+function jumpTo(i) {
+  if (!S.live || i < 0 || i >= S.live.order.length) return;
+  S.qIdx = i;
+  render();
+}
+
+function leaveTest() {
+  stopTimer();
+  S.candView = 'home';
+  render();
+  toast('Progress saved — you can resume anytime');
+}
+
+function askSubmit() {
+  if (!S.live) return;
+  const total = S.live.order.length;
+  const answered = countAnsweredIn(S.live);
+  const unanswered = total - answered;
+  confirmModal({
+    title: 'Submit this test?',
+    body: 'You have answered <b>' + answered + '</b> of <b>' + total + '</b> questions' +
+      (unanswered ? ' — <b>' + unanswered + '</b> unanswered question' + (unanswered > 1 ? 's' : '') + ' will count as incorrect.' : '.') +
+      ' You still have <b>' + fmtClock(S.live.remaining) + '</b> on the clock.',
+    confirmLabel: 'Submit test',
+    onConfirm: () => { closeModal(); submitAttempt(false); }
+  });
+}
+
+async function submitAttempt(auto) {
+  stopTimer();
+  const att = S.live;
+  if (!att) return;
+  try {
+    const { attempt, questions } = await API.post('/api/attempts/' + att.id + '/submit', { leaves: att.leaves || 0 });
+    S.candResult = normalizeAttempt(attempt);
+    S.live = null;
+    S.liveQuestions = {};
+    buildQPool(Object.values(questions || {}));
+    S.candView = 'result';
+    render();
+    toast(auto ? 'Time is up — test submitted' : 'Test submitted', 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+    if (e.status === 409) { S.live = null; S.candView = 'home'; render(); }
+    else { startTimer(); }
+  }
+}
+
+/* ── Candidate results ─────────────────────────────────────── */
+
+function vCandidateResult() {
+  const rec = S.candResult;
+  if (!rec) return '';
+  const passed = rec.passed;
+  const color = passed ? 'var(--green)' : 'var(--red)';
+  const used = rec.durationSec - (rec.remainingSec != null ? rec.remainingSec : rec.durationSec);
+  return '<div class="card result-hero">' +
+    '<div class="ring-wrap">' +
+      '<svg width="168" height="168" viewBox="0 0 168 168">' +
+        '<circle class="ring-bg" cx="84" cy="84" r="74"/>' +
+        '<circle class="ring-fg" id="ringFg" cx="84" cy="84" r="74" stroke="' + color + '" stroke-dasharray="464.96" stroke-dashoffset="464.96"/>' +
+      '</svg>' +
+      '<div class="ring-label"><div><div class="ring-value">' + rec.pct + '%</div><div class="ring-sub">score</div></div></div>' +
+    '</div>' +
+    '<div>' +
+      '<span class="result-verdict ' + (passed ? 'b-pass' : 'b-fail') + '">' + ic(passed ? 'check' : 'x', 14) + ' ' + (passed ? 'Passed' : 'Not passed') + '</span>' +
+      '<div style="margin-top:8px;font-size:14px;color:var(--text-2)">' + esc(rec.candidate) + ' · ' + esc(rec.testName) + '</div>' +
+    '</div>' +
+    '<div class="result-stats">' +
+      '<div class="result-stat"><div class="result-stat-val">' + rec.correct + '/' + rec.total + '</div><div class="result-stat-lbl">Correct</div></div>' +
+      '<div class="result-stat"><div class="result-stat-val">' + fmtMins(used) + '</div><div class="result-stat-lbl">Time used</div></div>' +
+      '<div class="result-stat"><div class="result-stat-val">' + rec.passPct + '%</div><div class="result-stat-lbl">Pass mark</div></div>' +
+    '</div>' +
+    '<div style="margin-top:22px;display:flex;gap:10px;justify-content:center">' +
+      '<button class="btn btn-secondary" data-action="back-home">' + ic('arrowL', 15) + ' All tests</button>' +
+    '</div>' +
+  '</div>' +
+
+  '<div class="card card-pad" style="margin-top:16px">' +
+    '<div class="section-label">Performance by category</div>' +
+    breakdownHTML(rec.byCat) +
+  '</div>' +
+
+  (rec.showAnswers !== false ? '<div class="card" style="margin-top:16px">' +
+    '<div style="padding:18px 24px 8px"><div class="section-label" style="margin-bottom:8px">Answer review</div></div>' +
+    reviewHTML(rec) +
+  '</div>' : '');
+}
+
+async function backToHome() {
+  S.candView = 'home';
+  S.candResult = null;
+  render();
+  await refreshCandidate();
+}
+
+function animateRing() {
+  const el = $('#ringFg');
+  if (!el || !S.candResult) return;
+  const rec = S.candResult;
+  const C = 464.96; // 2 * PI * 74
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      el.style.transition = 'stroke-dashoffset 1s cubic-bezier(0.3,0.9,0.4,1)';
+      el.style.strokeDashoffset = String(C * (1 - rec.pct / 100));
+    });
+  });
+}
+/* ============================================================
+   Orion — init: boot, data loading, event delegation
+   ============================================================ */
+
+async function refreshAuth() {
+  try {
+    const r = await API.get('/api/auth/me');
+    S.auth = r.admin;
+    return true;
+  } catch (e) {
+    S.auth = null;
+    return false;
+  }
+}
+
+async function loadAdminData() {
+  try {
+    const [stats, questions, tests, attempts] = await Promise.all([
+      API.get('/api/admin/stats'),
+      API.get('/api/admin/questions'),
+      API.get('/api/admin/tests'),
+      API.get('/api/admin/attempts')
+    ]);
+    S.stats = stats;
+    S.questions = questions;
+    S.tests = tests;
+    S.attempts = attempts;
+    buildQPool(questions);
+    if (S.auth && S.auth.role === 'superadmin') {
+      try { S.admins = await API.get('/api/admin/admins'); } catch (e) { S.admins = []; }
+    }
+  } catch (e) {
+    if (e.status === 401) {
+      S.auth = null;
+      S.view = 'login';
+    } else {
+      toast(e.message, 'error');
+    }
+  }
+  render();
+}
+
+/* ── Render dispatcher ─────────────────────────────────────── */
+
+function render() {
+  const app = $('#app');
+  if (!app) return;
+  app.innerHTML = S.mode === 'candidate' ? candidateShell() : consoleShell();
+  postRender();
+}
+
+function postRender() {
+  positionSeg('#modeSeg', '#modeThumb', S.mode === 'candidate' ? 1 : 0);
+
+  if (S.mode === 'console' && !S.auth) {
+    checkBootstrap();
+    return;
+  }
+  if (S.mode === 'console' && S.tab === 'editor' && tDraft) {
+    positionSeg('#diffSeg', '#diffThumb', ['beginner', 'balanced', 'advanced'].indexOf(tDraft.diffFocus));
+  }
+  if (S.mode === 'console' && S.tab === 'questions') {
+    const ci = ['all'].concat(CATS.map(c => c.id)).indexOf(S.qFilters.cat);
+    const di = ['all', 'beginner', 'intermediate', 'advanced'].indexOf(S.qFilters.diff);
+    const ti = ['all', 'mcq', 'multi', 'fill'].indexOf(S.qFilters.type);
+    positionSeg('#catSeg', '#catThumb', ci);
+    positionSeg('#diffSeg2', '#diffThumb2', di);
+    positionSeg('#typeSeg', '#typeThumb', ti);
+    if (S.qFilters.search) {
+      const inp = $(S._focusSearch === 'global' ? '#globalSearch' : '#qSearch');
+      if (inp) { inp.focus(); const l = inp.value.length; inp.setSelectionRange(l, l); }
+    }
+  }
+  if (S.modal && qDraft) {
+    positionSeg('#qDiffSeg', '#qDiffThumb', Math.max(0, ['beginner', 'intermediate', 'advanced'].indexOf(qDraft.diff)));
+    positionSeg('#qTypeSeg', '#qTypeThumb', { fill: 5, multi: 1, matching: 2, ordering: 3, mcq: 0, code: 4 }[qDraft.type] || 0);
+  }
+  if (S.mode === 'candidate' && S.candView === 'result') animateRing();
+  if (S.mode === 'candidate' && S.candView === 'runner' && S.live) updateTimerUI();
+}
+
+/* ── Navigation ────────────────────────────────────────────── */
+
+async function setMode(m) {
+  if (S.mode === m) return;
+  if (m === 'candidate') {
+    if (S.live && S.candView === 'runner') stopTimer();
+    S.mode = m;
+    S.candView = 'home';
+    render();
+    await refreshCandidate();
+  } else {
+    S.mode = m;
+    S.candView = 'home';
+    if (!S.auth) {
+      S.view = 'login';
+      render();
+    } else {
+      await loadAdminData();   // refresh stats/attempts when returning to console
+    }
+  }
+}
+
+function setTab(t) {
+  if (S.tab === 'editor' && t !== 'editor' && tDraft && (tDraft.name.trim() || tDraft.cats.size !== CATS.length)) {
+    confirmModal({
+      title: 'Discard draft?',
+      body: 'Your unsaved test configuration will be lost.',
+      confirmLabel: 'Discard',
+      danger: true,
+      onConfirm: () => { tDraft = null; closeModal(); setTab(t); }
+    });
+    return;
+  }
+  S.tab = t;
+  if (t === 'activity') loadEvents();
+  render();
+}
+
+/* ── Test editor helpers ───────────────────────────────────── */
+
+function toggleCat(cid) {
+  if (!tDraft) return;
+  if (tDraft.cats.has(cid)) tDraft.cats.delete(cid); else tDraft.cats.add(cid);
+  clampCount();
+  render();
+}
+
+function setDiffFocus(v) { if (tDraft) { tDraft.diffFocus = v; clampCount(); render(); } }
+
+function stepField(field, dir) {
+  if (!tDraft) return;
+  if (field === 'duration') tDraft.duration = Math.min(240, Math.max(1, tDraft.duration + dir * 5));
+  if (field === 'pass') tDraft.pass = Math.min(100, Math.max(0, tDraft.pass + dir * 5));
+  if (field === 'count') { tDraft.count = Math.min(eligibleQuestions().length, Math.max(1, tDraft.count + dir)); }
+  render();
+}
+
+function setDraft(field, value) {
+  if (!tDraft) return;
+  if (field === 'name' || field === 'desc') { tDraft[field] = value; return; }
+  tDraft[field] = value;
+  render();
+}
+
+function closeEditor() { S.tab = 'tests'; tDraft = null; render(); }
+
+async function duplicateTest(id) {
+  try {
+    await API.post('/api/admin/tests/' + id + '/duplicate');
+    await loadAdminData();
+    toast('Test duplicated');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function togglePublish(id) {
+  const t = S.tests.find(x => x.id === id);
+  if (!t) return;
+  try {
+    const r = await API.patch('/api/admin/tests/' + id + '/publish', { published: !t.published });
+    await loadAdminData();
+    toast(r.published ? '\u201C' + r.name + '\u201D published' : '\u201C' + r.name + '\u201D moved to drafts');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function confirmDeleteTest(id) {
+  const t = S.tests.find(x => x.id === id);
+  if (!t) return;
+  confirmModal({
+    title: 'Delete test?',
+    body: '\u201C' + esc(t.name) + '\u201D will be permanently removed. Attempts already submitted are kept.',
+    confirmLabel: 'Delete',
+    danger: true,
+    onConfirm: async () => {
+      closeModal();
+      try {
+        await API.del('/api/admin/tests/' + id);
+        await loadAdminData();
+        toast('Test deleted');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
+function confirmDeleteQuestion(id) {
+  const q = qOf(id);
+  if (!q) return;
+  confirmModal({
+    title: 'Delete question?',
+    body: 'This question will be removed from the bank and excluded from future tests.',
+    confirmLabel: 'Delete',
+    danger: true,
+    onConfirm: async () => {
+      closeModal();
+      try {
+        await API.del('/api/admin/questions/' + id);
+        await loadAdminData();
+        toast('Question deleted');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
+function setQFilter(field, value) { S.qFilters[field] = value; render(); }
+
+function setQDraft(field, value) {
+  if (!qDraft) return;
+  qDraft[field] = value;
+  if (field === 'type' && value === 'fill' && !qDraft.fillans) qDraft.fillans = '';
+  if (field === 'type' && value === 'multi' && !qDraft.multiSel) qDraft.multiSel = new Set();
+  if (field === 'type' && value === 'multi' && qDraft.multiSel.size === 0) qDraft.multiSel = new Set([0]);
+  if (field === 'type' && value === 'matching' && (!qDraft.pairs || !qDraft.pairs.length)) qDraft.pairs = [{ l: '', r: '' }, { l: '', r: '' }];
+  if (field === 'type' && value === 'ordering' && (!qDraft.ordered || !qDraft.ordered.length)) qDraft.ordered = ['', '', ''];
+  if (field === 'type' && value === 'code' && (!qDraft.testCases || !qDraft.testCases.length)) qDraft.testCases = [{ args: '', expected: '', hidden: false }];
+  if (field === 'type' && value === 'code' && !qDraft.codeStub) qDraft.codeStub = 'function solution(args) {\n  // write your code here\n  return null;\n}';
+  openModal({
+    title: qDraft.id ? 'Edit question' : 'Add question',
+    body: questionModalBody(qDraft),
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="save-question">' + ic('check', 14) + ' Save question</button>',
+    wide: true
+  });
+}
+
+function rerenderQuestionModal() {
+  openModal({
+    title: qDraft.id ? 'Edit question' : 'Add question',
+    body: questionModalBody(qDraft),
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="save-question">' + ic('check', 14) + ' Save question</button>',
+    wide: true
+  });
+}
+
+function setQDraftField(el) {
+  if (!qDraft) return;
+  const f = el.dataset.qdraft;
+  if (f === 'opt') { qDraft.options[+el.dataset.i] = el.value; return; }
+  if (f === 'fillans') { qDraft.fillans = el.value; return; }
+  qDraft[f] = el.value;
+}
+
+/* ── Review toggle ─────────────────────────────────────────── */
+
+function toggleReview(i) {
+  const item = $$('.review-item')[i];
+  if (item) item.classList.toggle('open');
+}
+
+/* ── Event delegation ──────────────────────────────────────── */
+
+function onClick(e) {
+  if (e.target.closest('[data-action="overlay-close"]') && e.target === e.target.closest('.modal-overlay')) {
+    closeModal();
+    return;
+  }
+  const el = e.target.closest('[data-action]');
+  if (!el) {
+    const menu = $('.user-menu.open');
+    if (menu) { menu.classList.remove('open'); const chip = $('.user-chip'); if (chip) chip.setAttribute('aria-expanded', 'false'); }
+    return;
+  }
+  const act = el.dataset.action;
+  const val = el.dataset.value;
+  const id = el.dataset.id;
+
+  switch (act) {
+    /* shell / navigation */
+    case 'brand': S.mode = 'console'; S.tab = 'dashboard'; S.candView = 'home'; if (!S.auth) S.view = 'login'; render(); break;
+    case 'mode': setMode(val); break;
+    case 'tab': setTab(val); break;
+    case 'cand-nav': S.candView = val; render(); break;
+    case 'logout': logout(); break;
+    case 'change-password': openPasswordModal(); break;
+    case 'save-password': savePassword(); break;
+    case 'sidebar-open':
+      $('#sidebar').classList.add('open');
+      $('#sidebarOverlay').classList.add('show');
+      break;
+    case 'sidebar-close':
+      $('#sidebar').classList.remove('open');
+      $('#sidebarOverlay').classList.remove('show');
+      break;
+    case 'user-menu':
+      const menu = el.nextElementSibling;
+      const open = menu.classList.toggle('open');
+      el.setAttribute('aria-expanded', open);
+      break;
+
+    /* auth */
+    case 'show-register': S.view = 'register'; render(); break;
+    case 'back-to-login': S.view = 'login'; render(); break;
+    case 'go-candidate': setMode('candidate'); break;
+
+    /* console: tests */
+    case 'new-test': startTestEditor(); break;
+    case 'edit-test': startTestEditor(id); break;
+    case 'duplicate-test': duplicateTest(id); break;
+    case 'delete-test': confirmDeleteTest(id); break;
+    case 'preview-test': openPreview(id); break;
+    case 'editor-cancel': closeEditor(); break;
+    case 'step': stepField(el.dataset.field, +el.dataset.dir); break;
+    case 'toggle-cat': toggleCat(val); break;
+    case 'set-diff': setDiffFocus(val); break;
+    case 'save-test': saveTest(el.dataset.mode); break;
+
+    /* console: questions */
+    case 'add-question': openQuestionModal(); break;
+    case 'edit-question': openQuestionModal(id); break;
+    case 'delete-question': confirmDeleteQuestion(id); break;
+    case 'reseed': reseedBank(); break;
+    case 'qfilter': setQFilter(el.dataset.field, val); break;
+    case 'qdiff': setQDraft('diff', val); break;
+    case 'qtype': setQDraft('type', val); break;
+    case 'qcorrect': setQDraft('answer', +val); break;
+    case 'qmulti':
+      if (qDraft) {
+        const i = +val;
+        if (qDraft.multiSel.has(i)) qDraft.multiSel.delete(i); else qDraft.multiSel.add(i);
+        render();
+        positionSeg('#qDiffSeg', '#qDiffThumb', Math.max(0, ['beginner', 'intermediate', 'advanced'].indexOf(qDraft.diff)));
+        positionSeg('#qTypeSeg', '#qTypeThumb', { fill: 5, multi: 1, matching: 2, ordering: 3, mcq: 0, code: 4 }[qDraft.type] || 0);
+      }
+      break;
+    case 'pair-add':
+      if (qDraft) { qDraft.pairs.push({ l: '', r: '' }); rerenderQuestionModal(); }
+      break;
+    case 'pair-remove':
+      if (qDraft) { qDraft.pairs.splice(+el.dataset.i, 1); if (!qDraft.pairs.length) qDraft.pairs = [{ l: '', r: '' }, { l: '', r: '' }]; rerenderQuestionModal(); }
+      break;
+    case 'pair-l':
+      if (qDraft) { qDraft.pairs[+el.dataset.i].l = el.value; }
+      break;
+    case 'pair-r':
+      if (qDraft) { qDraft.pairs[+el.dataset.i].r = el.value; }
+      break;
+    case 'order-add':
+      if (qDraft) { qDraft.ordered.push(''); rerenderQuestionModal(); }
+      break;
+    case 'order-remove':
+      if (qDraft) { qDraft.ordered.splice(+el.dataset.i, 1); if (!qDraft.ordered.length) qDraft.ordered = ['', '']; rerenderQuestionModal(); }
+      break;
+    case 'order-up':
+      if (qDraft && +el.dataset.i > 0) { const i = +el.dataset.i; const a = qDraft.ordered; [a[i - 1], a[i]] = [a[i], a[i - 1]]; rerenderQuestionModal(); }
+      break;
+    case 'order-down':
+      if (qDraft && +el.dataset.i < qDraft.ordered.length - 1) { const i = +el.dataset.i; const a = qDraft.ordered; [a[i + 1], a[i]] = [a[i], a[i + 1]]; rerenderQuestionModal(); }
+      break;
+    case 'order-item':
+      if (qDraft) { qDraft.ordered[+el.dataset.i] = el.value; }
+      break;
+    case 'code-lang':
+      if (qDraft) { qDraft.codeLang = val; rerenderQuestionModal(); }
+      break;
+    case 'code-stub':
+      if (qDraft) { qDraft.codeStub = el.value; }
+      break;
+    case 'tc-args':
+      if (qDraft) { qDraft.testCases[+el.dataset.i].args = el.value; }
+      break;
+    case 'tc-expected':
+      if (qDraft) { qDraft.testCases[+el.dataset.i].expected = el.value; }
+      break;
+    case 'tc-hidden':
+      if (qDraft) { qDraft.testCases[+el.dataset.i].hidden = el.checked; }
+      break;
+    case 'tc-add':
+      if (qDraft) { qDraft.testCases.push({ args: '', expected: '', hidden: false }); rerenderQuestionModal(); }
+      break;
+    case 'tc-remove':
+      if (qDraft) { qDraft.testCases.splice(+el.dataset.i, 1); if (!qDraft.testCases.length) qDraft.testCases = [{ args: '', expected: '', hidden: false }]; rerenderQuestionModal(); }
+      break;
+    case 'save-question': saveQuestion(); break;
+
+    /* console: results */
+    case 'view-attempt': openAttempt(id); break;
+    case 'force-submit': forceSubmit(id); break;
+
+    /* console: admins */
+    case 'add-admin': openAddAdminModal(); break;
+    case 'new-admin-role':
+      _newAdminRole = val;
+      $$('#newRoleSeg .seg-item').forEach(b => b.classList.toggle('active', b.dataset.value === val));
+      positionSeg('#newRoleSeg', '#newRoleThumb', val === 'superadmin' ? 1 : 0);
+      break;
+    case 'save-admin': saveNewAdmin(); break;
+    case 'delete-admin': confirmDeleteAdmin(id); break;
+
+    /* modals */
+    case 'close-modal': closeModal(); break;
+    case 'modal-confirm': if (modalConfirmCb) modalConfirmCb(); break;
+
+    /* candidate: home */
+    case 'start-test': openStartModal(id); break;
+    case 'begin-attempt': beginAttemptFromModal(); break;
+    case 'resume-attempt': resumeAttempt(); break;
+    case 'discard-attempt': discardAttempt(); break;
+    case 'back-home': backToHome(); break;
+
+    /* candidate: runner */
+    case 'opt': selectOpt(+el.dataset.opt); break;
+    case 'match': handleMatchSelect(+el.dataset.i, el.value); break;
+    case 'order-move': moveOrderItem(+el.dataset.pos, +el.dataset.dir); break;
+    case 'run-code': runCode(); break;
+    case 'flag': toggleFlag(); break;
+    case 'prev-q': navQ(-1); break;
+    case 'next-q': navQ(1); break;
+    case 'jump': jumpTo(+el.dataset.idx); break;
+    case 'ask-submit': askSubmit(); break;
+    case 'confirm-submit': closeModal(); submitAttempt(false); break;
+    case 'leave-test': leaveTest(); break;
+
+    /* candidate: results */
+    case 'toggle-review': toggleReview(+el.dataset.idx); break;
+  }
+}
+
+function onInput(e) {
+  const el = e.target;
+  if (el.id === 'globalSearch') {
+    S.qFilters.search = el.value.toLowerCase();
+    S._focusSearch = 'global';
+    if (S.mode === 'console' && S.tab === 'questions') render();
+    return;
+  }
+  if (el.id === 'qSearch') {
+    S.qFilters.search = el.value.toLowerCase();
+    S._focusSearch = 'local';
+    render();
+    return;
+  }
+  if (el.dataset && el.dataset.action === 'identify') { sendIdentify(); return; }
+  if (el.dataset && (el.dataset.action === 'pair-l' || el.dataset.action === 'pair-r' || el.dataset.action === 'order-item' || el.dataset.action === 'code-stub' || el.dataset.action === 'tc-args' || el.dataset.action === 'tc-expected')) {
+    if (!qDraft) return;
+    if (el.dataset.action === 'pair-l') qDraft.pairs[+el.dataset.i].l = el.value;
+    else if (el.dataset.action === 'pair-r') qDraft.pairs[+el.dataset.i].r = el.value;
+    else if (el.dataset.action === 'order-item') qDraft.ordered[+el.dataset.i] = el.value;
+    else if (el.dataset.action === 'code-stub') qDraft.codeStub = el.value;
+    else if (el.dataset.action === 'tc-args') qDraft.testCases[+el.dataset.i].args = el.value;
+    else qDraft.testCases[+el.dataset.i].expected = el.value;
+    return;
+  }
+  if (el.dataset && el.dataset.qdraft) { setQDraftField(el); return; }
+  if (el.dataset && el.dataset.draft) { setDraft(el.dataset.draft, el.type === 'checkbox' ? el.checked : el.value); return; }
+  if (el.dataset && el.dataset.action === 'fill') { handleFillInput(el); return; }
+  if (el.dataset && el.dataset.action === 'code') { handleCodeInput(el); return; }
+}
+
+function onChange(e) {
+  const el = e.target;
+  if (el.dataset && el.dataset.action === 'toggle-publish') { togglePublish(el.dataset.id); return; }
+  if (el.dataset && el.dataset.qdraft) { setQDraftField(el); return; }
+  if (el.dataset && el.dataset.draft) { setDraft(el.dataset.draft, el.type === 'checkbox' ? el.checked : el.value); return; }
+}
+
+function onSubmit(e) {
+  const form = e.target;
+  if (form.dataset.form === 'login') { e.preventDefault(); doLogin(e); }
+  else if (form.dataset.form === 'register') { e.preventDefault(); doRegister(e); }
+}
+
+function onKey(e) {
+  if (S.mode !== 'candidate' || S.candView !== 'runner' || !S.live) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea') return;
+  const q = qOf(S.live.order[S.qIdx]);
+  if (!q) return;
+  if ((q.type === 'mcq' || q.type === 'multi') && ['1', '2', '3', '4'].includes(e.key)) { e.preventDefault(); selectOpt(+e.key - 1); }
+  else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFlag(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); navQ(1); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); navQ(-1); }
+}
+
+/* ── Proctoring: count tab / window switches during a live test ── */
+
+function onVisibility() {
+  if (document.hidden && S.mode === 'candidate' && S.candView === 'runner' && S.live) {
+    S.live.leaves = (S.live.leaves || 0) + 1;
+  }
+}
+
+function onWindowBlur() {
+  if (S.mode === 'candidate' && S.candView === 'runner' && S.live && !document.hidden) {
+    S.live.leaves = (S.live.leaves || 0) + 1;
+  }
+}
+
+/* ── Boot ──────────────────────────────────────────────────── */
+
+async function boot() {
+  document.addEventListener('click', onClick);
+  document.addEventListener('input', onInput);
+  document.addEventListener('change', onChange);
+  document.addEventListener('submit', onSubmit);
+  document.addEventListener('keydown', onKey);
+  document.addEventListener('visibilitychange', onVisibility);
+  window.addEventListener('blur', onWindowBlur);
+
+  const authed = await refreshAuth();
+  if (authed) {
+    S.view = 'app';
+    await loadAdminData();
+  } else {
+    S.view = 'login';
+  }
+  if (S.mode === 'candidate') await refreshCandidate();
+  render();
+}
+
+boot();
+
+</script>
+</body>
+</html>
