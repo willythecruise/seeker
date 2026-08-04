@@ -291,6 +291,7 @@ function onClick(e) {
     case 'show-register': S.view = 'register'; render(); break;
     case 'back-to-login': S.view = 'login'; render(); break;
     case 'go-candidate': setMode('candidate'); break;
+    case 'theme-toggle': toggleTheme(); break;
 
     /* console: tests */
     case 'new-test': startTestEditor(); break;

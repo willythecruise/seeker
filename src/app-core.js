@@ -205,7 +205,10 @@ const ICONS = {
   shield: '<path d="M12 2.5l7.5 3v5.5c0 4.8-3.2 8.4-7.5 10.5-4.3-2.1-7.5-5.7-7.5-10.5V5.5l7.5-3z"/>',
   bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
-  trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>'
+  trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>',
+  moon: '<path d="M20.7 13.6A8.5 8.5 0 1 1 10.4 3.3a7 7 0 0 0 10.3 10.3z"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>'
 };
 
 function ic(name, size, cls) {
@@ -214,18 +217,42 @@ function ic(name, size, cls) {
     (ICONS[name] || '') + '</svg>';
 }
 
-function logoMark() {
-  return '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
-    '<circle cx="7.5" cy="7.5" r="2.6"/><circle cx="12" cy="12" r="2.6"/><circle cx="16.5" cy="16.5" r="2.6"/></svg>';
+/* ── Theme (light / dark) ──────────────────────────────────── */
+
+function isDark() {
+  return document.documentElement.dataset.theme === 'dark';
 }
+
+function brandLogoImgSrc() {
+  return isDark() ? '/seekerlogo-light.svg' : '/seekerlogo.svg';
+}
+
+function applyThemeLogos() {
+  const src = brandLogoImgSrc();
+  document.querySelectorAll('.brand-logo-img').forEach(img => { img.src = src; });
+}
+
+function setTheme(dark, persist) {
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  if (persist) {
+    try { localStorage.setItem('orion.theme', dark ? 'dark' : 'light'); } catch (e) {}
+  }
+  applyThemeLogos();
+}
+
+function toggleTheme() { setTheme(!isDark(), true); }
 
 /* ── Shared UI atoms ───────────────────────────────────────── */
 
 function brandHTML() {
-  return '<a class="brand" href="#" data-action="brand" aria-label="Orion home">' +
-    '<span class="brand-mark">' + logoMark() + '</span>' +
-    '<span class="brand-name">Orion</span>' +
-    '<span class="brand-sub">Engineering Assessments</span></a>';
+  return '<a class="brand" href="#" data-action="brand" aria-label="Seeker home">' +
+    '<img class="brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41">' +
+  '</a>';
+}
+
+function themeFabHTML() {
+  return '<button class="theme-fab" data-action="theme-toggle" title="Toggle light / dark theme" aria-label="Toggle theme">' +
+    ic(isDark() ? 'sun' : 'moon', 18) + '</button>';
 }
 
 function modeSeg() {
@@ -286,6 +313,8 @@ function headerHTML(mode) {
     '</div>' +
     '<div class="topbar-right">' +
       (inRunner ? '<span class="timer" id="timerDisplay">' + ic('clock', 15) + ' ' + fmtClock(S.live.remaining) + '</span>' : '') +
+      '<button class="btn-icon" data-action="theme-toggle" title="Toggle light / dark theme" aria-label="Toggle theme">' +
+        ic(isDark() ? 'sun' : 'moon', 18) + '</button>' +
       (isCand ? '' : '<button class="btn-icon bell-wrap" data-action="tab" data-value="results" title="In-progress attempts">' +
         ic('bell', 20) + (inProgress ? '<span class="bell-badge">' + inProgress + '</span>' : '') + '</button>') +
       (isCand ? '' : '<div class="user-menu-wrap">' +

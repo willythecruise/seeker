@@ -208,7 +208,6 @@ function Hero({ onOpenDemo }) {
         </svg>
       </div>
       <div className="hero-content">
-        <div className="eyebrow-pill">Built for your next technical round</div>
         <h1><span>Sharpen the skills</span><span>that get you hired.</span></h1>
         <p>Timed, role-specific tests for software engineers—with clear feedback that turns every weak spot into your next strength.</p>
         <div className="hero-actions">
@@ -216,6 +215,15 @@ function Hero({ onOpenDemo }) {
           <a className="button button--ghost button--large" href="#paths"><Icon name="play" size={16}/> Explore skill paths</a>
         </div>
         <div className="hero-footnote"><span><Icon name="check" size={14}/> No credit card</span><span><Icon name="check" size={14}/> Instant results</span><span><Icon name="check" size={14}/> 10 minutes to start</span></div>
+      </div>
+      <div className="hero-reticle" aria-hidden="true">
+        <svg viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="46"/>
+          <circle cx="60" cy="60" r="30"/>
+          <circle cx="60" cy="60" r="3.5"/>
+          <path d="M60 3v17M60 100v17M3 60h17M100 60h17"/>
+          <path d="M60 2l4.5 11-4.5 4-4.5-4z"/>
+        </svg>
       </div>
       <div className="hero-product" data-reveal>
         <div className="float-card float-card--streak"><span className="mini-icon"><Icon name="bolt" size={16}/></span><div><b>12 day</b><small>practice streak</small></div></div>
@@ -266,7 +274,7 @@ function SkillMap() {
       <span className="radar-label label-b">Systems <b>71</b></span>
       <span className="radar-label label-c">Databases <b>78</b></span>
       <span className="radar-label label-d">Testing <b>88</b></span>
-      <div className="skill-nudge"><div><b>Next best focus</b><small>Concurrency fundamentals</small></div><Icon name="arrow" size={16}/></div>
+      <div className="skill-nudge"><div><b>Next best focus</b><small>Concurrency fundamentals</small></div><Icon name="target" size={16}/></div>
     </div>
   );
 }

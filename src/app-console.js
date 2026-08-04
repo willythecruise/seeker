@@ -8,6 +8,7 @@
 function vLogin() {
   return '<div class="auth-screen">' +
     '<div class="auth-card card">' +
+      '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
       '<h1 class="auth-title">Admin console</h1>' +
       '<p class="auth-sub">Sign in to manage tests, questions, and results.</p>' +
       '<form id="loginForm" data-form="login" novalidate>' +
@@ -48,6 +49,7 @@ async function checkBootstrap() {
 function vRegister() {
   return '<div class="auth-screen">' +
     '<div class="auth-card card">' +
+      '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
       '<h1 class="auth-title">Create the first admin</h1>' +
       '<p class="auth-sub">This account becomes the superadmin with full control.</p>' +
       '<form id="registerForm" data-form="register" novalidate>' +
@@ -148,7 +150,7 @@ async function savePassword() {
 /* ── Shell ─────────────────────────────────────────────────── */
 
 function consoleShell() {
-  if (!S.auth) return '<div class="auth-page">' + (S.view === 'register' ? vRegister() : vLogin()) + modalHTML() + '</div>';
+  if (!S.auth) return '<div class="auth-page">' + themeFabHTML() + (S.view === 'register' ? vRegister() : vLogin()) + modalHTML() + '</div>';
   const nav = [
     ['dashboard', 'Dashboard', 'dashboard'],
     ['tests', 'Tests', 'doc'],

@@ -89,7 +89,21 @@ img { display: block; max-width: 100%; }
 .hero-contours path:nth-child(3) { animation-duration: 30s; opacity: .5; }
 @keyframes contourSlide { to { stroke-dashoffset: -180; } }
 .hero-content { position: relative; z-index: 2; width: min(900px, calc(100% - 40px)); margin: 0 auto; padding-top: 138px; text-align: center; }
-.eyebrow-pill { display: inline-flex; align-items: center; gap: 8px; height: 33px; border-radius: 99px; padding: 0 12px; color: rgba(255,255,255,.92); background: rgba(4,42,78,.3); border: 1px solid rgba(255,255,255,.26); backdrop-filter: blur(10px); font-size: 12px; font-weight: 570; letter-spacing: .01em; box-shadow: inset 0 1px rgba(255,255,255,.1); }
+.hero-reticle {
+  position: absolute; z-index: 2; top: 128px; left: calc(50% + 466px);
+  width: 132px; height: 132px; pointer-events: none;
+  color: var(--lime); opacity: .92;
+  filter: drop-shadow(0 0 14px rgba(183,223,91,.4));
+  animation: reticleSpin 26s linear infinite;
+}
+.hero-reticle svg { width: 100%; height: 100%; overflow: visible; }
+.hero-reticle circle { fill: none; stroke: currentColor; stroke-width: 1.4; }
+.hero-reticle circle:nth-child(2) { opacity: .5; }
+.hero-reticle circle:nth-child(3) { fill: currentColor; stroke: none; opacity: 1; }
+.hero-reticle path { fill: none; stroke: currentColor; stroke-width: 1.4; }
+.hero-reticle path:last-child { fill: currentColor; stroke: none; }
+@keyframes reticleSpin { to { transform: rotate(360deg); } }
+@media (max-width: 1180px) { .hero-reticle { display: none; } }
 .hero h1 { margin: 20px 0 16px; font-size: clamp(54px, 5.8vw, 88px); line-height: .96; letter-spacing: -.072em; font-weight: 510; text-shadow: 0 3px 28px rgba(0,27,56,.3); }
 .hero h1 span { display: block; }
 .hero h1 span:last-child { font-weight: 650; }
