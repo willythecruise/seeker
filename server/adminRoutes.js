@@ -271,7 +271,7 @@ router.delete('/admins/:id', requireSuperadmin, async (req, res) => {
 function parseTestIds(tests) {
   if (!Array.isArray(tests)) return [];
   return tests.map(t => {
-    try { return mongoose.Types.ObjectId(String(t)); } catch (e) { return null; }
+    try { return new mongoose.Types.ObjectId(String(t)); } catch (e) { return null; }
   }).filter(Boolean);
 }
 
