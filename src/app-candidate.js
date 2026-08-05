@@ -80,7 +80,6 @@ function vCandidateLogin() {
   return '<div class="auth-screen">' +
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
-      '<div class="page-kicker" style="margin-bottom:6px">Seeker / Candidate</div>' +
       '<h1 class="auth-title">Candidate sign in</h1>' +
       '<p class="auth-sub">Sign in with the account your recruiter created for you.</p>' +
       '<form id="candLoginForm" data-form="candidate-login" novalidate>' +
@@ -155,7 +154,7 @@ function vCandidateHome() {
   const tests = S.pubTests || [];
   const list = f ? tests.filter(t => searchMatches(f, t.name, t.description)) : tests;
   return '<div class="page-head" style="margin-top:34px">' +
-    '<div><div class="page-kicker">Seeker / Tests</div><h1 class="page-title" style="font-size:32px">Good to see you, ' + esc(name) + '</h1>' +
+    '<div><h1 class="page-title" style="font-size:32px">Good to see you, ' + esc(name) + '</h1>' +
     '<p class="page-desc">Select one of your assigned tests. Each test is timed and graded automatically.</p></div>' +
   '</div>' +
   (S.live ? resumeCardHTML() : '') +
@@ -169,7 +168,7 @@ function vCandidateHome() {
 function vCandidateResults() {
   const s = S.candStats;
   if (!s || !s.enabled) {
-    return '<div class="page-head" style="margin-top:34px"><div><div class="page-kicker">Seeker / Results</div><h1 class="page-title" style="font-size:28px">My results</h1>' +
+    return '<div class="page-head" style="margin-top:34px"><div><h1 class="page-title" style="font-size:28px">My results</h1>' +
       '<p class="page-desc">Your test results appear here when your administrator enables results access.</p></div></div>' +
       emptyState('chart', 'Results not available', 'Your administrator has not enabled results access for your account yet.', 'cand-nav', 'Back to tests', 'home');
   }
@@ -179,7 +178,7 @@ function vCandidateResults() {
   const passed = list.filter(a => a.passed);
   const failed = list.filter(a => !a.passed);
   return '<div class="page-head" style="margin-top:34px">' +
-    '<div><div class="page-kicker">Seeker / Results</div><h1 class="page-title" style="font-size:28px">My results</h1>' +
+    '<div><h1 class="page-title" style="font-size:28px">My results</h1>' +
     '<p class="page-desc">Your completed tests, grouped by outcome.</p></div>' +
   '</div>' +
   gReportHTML(s) +
@@ -297,7 +296,7 @@ function candAttemptRowHTML(a) {
   return '<div class="row-item">' +
     '<span class="admin-avatar" style="width:30px;height:30px;font-size:13px">' + ic(a.passed ? 'check' : 'x', 13) + '</span>' +
     '<div class="row-main">' +
-      '<div class="row-title" style="font-weight:600">' + esc(a.testName) + '</div>' +
+      '<div class="row-title">' + esc(a.testName) + '</div>' +
       '<div class="row-meta">' + fmtDate(a.submittedAt) + ' \u00B7 ' + a.correct + '/' + a.total + ' correct</div>' +
     '</div>' +
     '<span class="badge ' + (a.passed ? 'b-published' : 'b-fail') + '"><span class="dot"></span>' + a.pct + '%</span>' +
@@ -316,7 +315,7 @@ function vCandidateProfile() {
   const initial = ((u.displayName || u.username || '?') + '').slice(0, 1).toUpperCase();
   const assigned = (u.tests || []).length;
   return '<div class="page-head" style="margin-top:34px">' +
-    '<div><div class="page-kicker">Seeker / Profile</div><h1 class="page-title" style="font-size:28px">My profile</h1>' +
+    '<div><h1 class="page-title" style="font-size:28px">My profile</h1>' +
     '<p class="page-desc">Your account details in the Seeker candidate portal.</p></div>' +
   '</div>' +
   '<div class="card card-pad" style="max-width:560px">' +
@@ -330,11 +329,11 @@ function vCandidateProfile() {
     '<div style="height:1px;background:var(--hairline-soft);margin:18px 0"></div>' +
     '<div class="row-item" style="padding:12px 0">' +
       '<span class="admin-avatar" style="width:30px;height:30px">' + ic('layers', 14) + '</span>' +
-      '<div class="row-main"><div class="row-title" style="font-weight:600">' + assigned + ' test' + (assigned === 1 ? '' : 's') + ' assigned</div><div class="row-meta">Assigned by your administrator</div></div>' +
+      '<div class="row-main"><div class="row-title">' + assigned + ' test' + (assigned === 1 ? '' : 's') + ' assigned</div><div class="row-meta">Assigned by your administrator</div></div>' +
     '</div>' +
     '<div class="row-item" style="padding:12px 0">' +
       '<span class="admin-avatar" style="width:30px;height:30px">' + ic('clock', 14) + '</span>' +
-      '<div class="row-main"><div class="row-title" style="font-weight:600">Member since ' + (u.createdAt ? fmtDate(u.createdAt) : '\u2014') + '</div><div class="row-meta">Candidate account</div></div>' +
+      '<div class="row-main"><div class="row-title">Member since ' + (u.createdAt ? fmtDate(u.createdAt) : '\u2014') + '</div><div class="row-meta">Candidate account</div></div>' +
     '</div>' +
     '<div class="row-item" style="padding:12px 0">' +
       '<span class="admin-avatar" style="width:30px;height:30px">' + ic(u.active ? 'check' : 'x', 14) + '</span>' +
