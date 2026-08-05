@@ -156,7 +156,8 @@ function consoleShell() {
     ['tests', 'Tests', 'doc'],
     ['questions', 'Questions', 'question'],
     ['results', 'Results', 'chart'],
-    ['activity', 'Activity', 'clock']
+    ['activity', 'Activity', 'clock'],
+    ['candidates', 'Candidates', 'users']
   ];
   if (S.auth.role === 'superadmin') nav.push(['admins', 'Admins', 'users']);
   return sidebarHTML(nav, 'console') +
@@ -176,6 +177,7 @@ function consoleView() {
   if (S.tab === 'questions') return vQuestions();
   if (S.tab === 'results') return vResults();
   if (S.tab === 'activity') return vActivity();
+  if (S.tab === 'candidates') return vCandidates();
   if (S.tab === 'admins') return vAdmins();
   return vDashboard();
 }
@@ -951,6 +953,168 @@ function confirmDeleteAdmin(id) {
         await API.del('/api/admin/admins/' + id);
         await loadAdminData();
         toast('Administrator removed');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
+/* ── Candidates (granted candidate accounts) ───────────────── */
+
+async function loadCandidates() {
+  try {
+    S.candidates = await API.get('/api/admin/candidates');
+  } catch (e) {
+    S.candidates = [];
+    toast(e.message, 'error');
+  }
+  render();
+}
+
+function vCandidates() {
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Candidates</h1>' +
+    '<p class="page-desc">Granted accounts can sign in to the candidate portal and take exactly the tests you assign.</p></div>' +
+    '<div class="page-actions"><button class="btn btn-primary" data-action="add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
+  '</div>' +
+  (S.candidates.length ? '<div class="card">' + S.candidates.map(candidateRowHTML).join('') + '</div>'
+    : emptyState('users', 'No candidates yet', 'Create an account and assign tests to give someone access to the candidate portal.', 'add-candidate', 'Add candidate'));
+}
+
+function candidateRowHTML(c) {
+  const granted = (c.tests || []).length;
+  return '<div class="row-item">' +
+    '<span class="admin-avatar" style="width:34px;height:34px;font-size:14px">' + esc((c.displayName || c.username).slice(0, 1).toUpperCase()) + '</span>' +
+    '<div class="row-main">' +
+      '<div class="row-title" style="font-weight:600">' + esc(c.displayName || c.username) + '</div>' +
+      '<div class="row-meta">@' + esc(c.username) + (c.email ? ' · ' + esc(c.email) : '') + ' · joined ' + fmtDate(c.createdAt) + '</div>' +
+    '</div>' +
+    '<span class="badge ' + (c.active ? 'b-published' : 'b-fail') + '"><span class="dot"></span>' + (c.active ? 'Active' : 'Disabled') + '</span>' +
+    '<span class="badge b-mcq">' + granted + ' test' + (granted === 1 ? '' : 's') + '</span>' +
+    '<div class="row-actions">' +
+      '<button class="btn btn-sm btn-secondary" data-action="edit-candidate" data-id="' + c.id + '">' + ic('key', 13) + ' Manage access</button>' +
+      '<button class="btn-icon danger" data-action="delete-candidate" data-id="' + c.id + '" title="Remove candidate">' + ic('trash', 16) + '</button>' +
+    '</div>' +
+  '</div>';
+}
+
+let _candDraft = null;
+
+function candidateModalBody(d) {
+  return '<div class="field"><label class="field-label">Username</label>' +
+      '<input class="input" id="candUser" placeholder="e.g., ada.lovelace" autocomplete="off" ' + (d.id ? 'disabled' : '') + ' value="' + esc(d.username) + '"></div>' +
+    '<div class="field"><label class="field-label">Display name <span class="field-help">Shown on the candidate\u2019s tests</span></label>' +
+      '<input class="input" id="candName" placeholder="e.g., Ada Lovelace" autocomplete="off" value="' + esc(d.displayName) + '"></div>' +
+    '<div class="field"><label class="field-label">Email <span class="field-help">Optional</span></label>' +
+      '<input class="input" id="candEmail" type="email" placeholder="ada@company.com" autocomplete="off" value="' + esc(d.email) + '"></div>' +
+    '<div class="field"><label class="field-label">Password <span class="field-help">' + (d.id ? 'Leave blank to keep the current one' : 'Min. 6 characters') + '</span></label>' +
+      '<input class="input" id="candPass" type="password" placeholder="' + (d.id ? 'Unchanged' : 'Min. 6 characters') + '" autocomplete="new-password"></div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Active</div><div class="setting-sub">Disabled accounts can\u2019t sign in</div></div>' +
+      '<label class="switch"><input type="checkbox" id="candActive" ' + (d.active ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+    '</div>' +
+    '<div class="field" style="margin-bottom:4px">' +
+      '<div class="field-label">Assigned tests <span class="field-help">' + d.tests.size + ' of ' + S.tests.length + ' selected</span></div>' +
+      '<div class="cand-tests">' +
+        (S.tests.length ? S.tests.map(t => {
+          const on = d.tests.has(t.id);
+          return '<label class="cand-test ' + (on ? 'on' : '') + '">' +
+            '<input type="checkbox" data-action="cand-test-toggle" data-value="' + t.id + '" ' + (on ? 'checked' : '') + '>' +
+            '<span>' + esc(t.name) + '</span>' +
+            '<span class="badge ' + (t.published ? 'b-published' : 'b-draft') + '"><span class="dot"></span>' + (t.published ? 'Published' : 'Draft') + '</span>' +
+          '</label>';
+        }).join('')
+        : '<p style="color:var(--text-3);font-size:13px">No tests yet — create a test first.</p>') +
+      '</div>' +
+    '</div>';
+}
+
+function captureCandDraftFromDOM() {
+  if (!_candDraft) return;
+  const g = sel => (($(sel) || {}).value || '');
+  _candDraft.username = g('#candUser');
+  _candDraft.displayName = g('#candName');
+  _candDraft.email = g('#candEmail');
+  _candDraft.password = g('#candPass');
+  _candDraft.active = !!((($('#candActive') || {}).checked));
+}
+
+function openAddCandidateModal() {
+  _candDraft = { id: null, username: '', displayName: '', email: '', password: '', active: true, tests: new Set() };
+  rerenderCandidateModal();
+}
+
+function openEditCandidateModal(id) {
+  const c = S.candidates.find(x => x.id === id);
+  if (!c) return;
+  _candDraft = {
+    id: c.id,
+    username: c.username,
+    displayName: c.displayName || '',
+    email: c.email || '',
+    password: '',
+    active: c.active !== false,
+    tests: new Set(c.tests || [])
+  };
+  rerenderCandidateModal();
+}
+
+function rerenderCandidateModal() {
+  if (!_candDraft) return;
+  openModal({
+    title: _candDraft.id ? 'Manage access' : 'Add candidate',
+    body: candidateModalBody(_candDraft),
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="save-candidate">' + ic('check', 14) + ' ' + (_candDraft.id ? 'Save changes' : 'Create candidate') + '</button>',
+    wide: true
+  });
+}
+
+function toggleCandidateTest(id) {
+  if (!_candDraft) return;
+  captureCandDraftFromDOM();
+  if (_candDraft.tests.has(id)) _candDraft.tests.delete(id); else _candDraft.tests.add(id);
+  rerenderCandidateModal();
+}
+
+async function saveCandidate() {
+  if (!_candDraft) return;
+  captureCandDraftFromDOM();
+  const d = _candDraft;
+  if (!d.id && !/^[a-z0-9._-]{3,24}$/i.test(d.username.trim())) { toast('Username must be 3\u201324 letters, digits, dots, dashes or underscores', 'error'); return; }
+  if (d.password && d.password.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+  if (!d.id && d.password.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+  const payload = {
+    displayName: d.displayName,
+    email: d.email,
+    tests: Array.from(d.tests),
+    active: d.active
+  };
+  if (!d.id) { payload.username = d.username; payload.password = d.password; }
+  else if (d.password) payload.password = d.password;
+  try {
+    if (d.id) await API.put('/api/admin/candidates/' + d.id, payload);
+    else await API.post('/api/admin/candidates', payload);
+    _candDraft = null;
+    closeModal();
+    await loadCandidates();
+    toast(d.id ? 'Candidate updated' : 'Candidate created', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function confirmDeleteCandidate(id) {
+  const c = S.candidates.find(x => x.id === id);
+  if (!c) return;
+  confirmModal({
+    title: 'Remove candidate?',
+    body: '@' + esc(c.username) + ' will lose access to the candidate portal immediately. Their submitted attempts are kept.',
+    confirmLabel: 'Remove',
+    danger: true,
+    onConfirm: async () => {
+      closeModal();
+      try {
+        await API.del('/api/admin/candidates/' + id);
+        await loadCandidates();
+        toast('Candidate removed');
       } catch (e) { toast(e.message, 'error'); }
     }
   });

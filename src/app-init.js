@@ -29,6 +29,7 @@ async function loadAdminData() {
     if (S.auth && S.auth.role === 'superadmin') {
       try { S.admins = await API.get('/api/admin/admins'); } catch (e) { S.admins = []; }
     }
+    try { S.candidates = await API.get('/api/admin/candidates'); } catch (e) { S.candidates = []; }
   } catch (e) {
     if (e.status === 401) {
       S.auth = null;
@@ -114,6 +115,7 @@ function setTab(t) {
   }
   S.tab = t;
   if (t === 'activity') loadEvents();
+  if (t === 'candidates') loadCandidates();
   render();
 }
 
@@ -282,6 +284,7 @@ function onClick(e) {
       $('#sidebarOverlay').classList.remove('show');
       break;
     case 'user-menu':
+    case 'cand-user-menu':
       const menu = el.nextElementSibling;
       const open = menu.classList.toggle('open');
       el.setAttribute('aria-expanded', open);
@@ -291,6 +294,8 @@ function onClick(e) {
     case 'show-register': S.view = 'register'; render(); break;
     case 'back-to-login': S.view = 'login'; render(); break;
     case 'go-candidate': setMode('candidate'); break;
+    case 'go-console': S.mode = 'console'; S.view = S.auth ? 'app' : 'login'; render(); break;
+    case 'cand-logout': candLogout(); break;
     case 'theme-toggle': toggleTheme(); break;
 
     /* console: tests */
@@ -387,6 +392,13 @@ function onClick(e) {
     case 'save-admin': saveNewAdmin(); break;
     case 'delete-admin': confirmDeleteAdmin(id); break;
 
+    /* console: candidates */
+    case 'add-candidate': openAddCandidateModal(); break;
+    case 'edit-candidate': openEditCandidateModal(id); break;
+    case 'cand-test-toggle': toggleCandidateTest(val); break;
+    case 'save-candidate': saveCandidate(); break;
+    case 'delete-candidate': confirmDeleteCandidate(id); break;
+
     /* modals */
     case 'close-modal': closeModal(); break;
     case 'modal-confirm': if (modalConfirmCb) modalConfirmCb(); break;
@@ -430,7 +442,6 @@ function onInput(e) {
     render();
     return;
   }
-  if (el.dataset && el.dataset.action === 'identify') { sendIdentify(); return; }
   if (el.dataset && (el.dataset.action === 'pair-l' || el.dataset.action === 'pair-r' || el.dataset.action === 'order-item' || el.dataset.action === 'code-stub' || el.dataset.action === 'tc-args' || el.dataset.action === 'tc-expected')) {
     if (!qDraft) return;
     if (el.dataset.action === 'pair-l') qDraft.pairs[+el.dataset.i].l = el.value;
@@ -458,6 +469,7 @@ function onSubmit(e) {
   const form = e.target;
   if (form.dataset.form === 'login') { e.preventDefault(); doLogin(e); }
   else if (form.dataset.form === 'register') { e.preventDefault(); doRegister(e); }
+  else if (form.dataset.form === 'candidate-login') { e.preventDefault(); candLogin(); }
 }
 
 function onKey(e) {

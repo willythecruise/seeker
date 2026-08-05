@@ -426,6 +426,20 @@ select.input:focus { background-image: url("data:image/svg+xml,%3Csvg xmlns='htt
 .chip.active .chip-count { color: var(--accent); }
 .chip.active .ic:last-of-type { opacity: 1; transform: scale(1); }
 
+.cand-tests { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; max-height: 300px; overflow: auto; padding-right: 4px; }
+.cand-test {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: var(--r-md);
+  border: 1px solid var(--hairline); background: var(--surface);
+  cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-2);
+  transition: all 0.15s ease;
+}
+.cand-test:hover { border-color: var(--gray-400); color: var(--text); }
+.cand-test input { accent-color: var(--accent); flex: none; }
+.cand-test > span:not(.badge) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cand-test .badge { flex: none; }
+.cand-test.on { background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent); }
+
 .badge {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 3px 10px; border-radius: var(--r-pill);

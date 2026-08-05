@@ -55,11 +55,13 @@ const S = {
   tab: 'dashboard',       // dashboard | tests | editor | questions | results | admins
   candView: 'home',       // home | runner | result
   auth: null,             // admin session
+  candAuth: null,         // signed-in candidate account
   stats: null,            // dashboard stats from server
   questions: [],          // admin: full bank
   tests: [],
   attempts: [],
   admins: [],
+  candidates: [],         // admin: granted candidate accounts
   pubTests: [],           // candidate: published tests
   qPool: {},              // qid -> question (rendering pool)
   live: null,             // candidate in-progress attempt
@@ -275,7 +277,7 @@ function positionSeg(segSel, thumbSel, idx) {
 function sidebarHTML(nav, mode) {
   const isCand = mode === 'candidate';
   const activeVal = isCand ? S.candView : S.tab;
-  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length };
+  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length, candidates: S.candidates.length };
   return '<aside class="sidebar" id="sidebar">' +
     '<div class="sidebar-inner">' +
       '<div class="sidebar-head">' + brandHTML() +
@@ -303,6 +305,7 @@ function headerHTML(mode) {
   const isCand = mode === 'candidate';
   const inRunner = isCand && S.candView === 'runner' && S.live;
   const inProgress = (!isCand && S.attempts) ? S.attempts.filter(a => a.status !== 'submitted').length : 0;
+  const candUser = isCand && S.candAuth;
   return '<div class="topbar-inner">' +
     '<div class="topbar-left">' +
       '<button class="btn-icon hide-desktop" data-action="sidebar-open" aria-label="Open menu">' + ic('menu', 20) + '</button>' +
@@ -315,9 +318,22 @@ function headerHTML(mode) {
       (inRunner ? '<span class="timer" id="timerDisplay">' + ic('clock', 15) + ' ' + fmtClock(S.live.remaining) + '</span>' : '') +
       '<button class="btn-icon" data-action="theme-toggle" title="Toggle light / dark theme" aria-label="Toggle theme">' +
         ic(isDark() ? 'sun' : 'moon', 18) + '</button>' +
-      (isCand ? '' : '<button class="btn-icon bell-wrap" data-action="tab" data-value="results" title="In-progress attempts">' +
-        ic('bell', 20) + (inProgress ? '<span class="bell-badge">' + inProgress + '</span>' : '') + '</button>') +
-      (isCand ? '' : '<div class="user-menu-wrap">' +
+      (!isCand ? '<button class="btn-icon bell-wrap" data-action="tab" data-value="results" title="In-progress attempts">' +
+        ic('bell', 20) + (inProgress ? '<span class="bell-badge">' + inProgress + '</span>' : '') + '</button>' : '') +
+      (candUser ? '<div class="user-menu-wrap">' +
+        '<button class="user-chip" data-action="cand-user-menu" aria-expanded="false">' +
+          '<span class="user-avatar">' + esc((S.candAuth.displayName || S.candAuth.username).slice(0, 1).toUpperCase()) + '</span>' +
+          '<span class="user-info hide-mobile">' +
+            '<span class="user-name">' + esc(S.candAuth.displayName || S.candAuth.username) + '</span>' +
+            '<span class="user-role">Candidate</span>' +
+          '</span>' +
+          ic('chevronD', 14) +
+        '</button>' +
+        '<div class="user-menu">' +
+          '<button class="user-menu-item danger" data-action="cand-logout">' + ic('logout', 15) + ' Sign out</button>' +
+        '</div>' +
+      '</div>' : '') +
+      (!isCand ? '<div class="user-menu-wrap">' +
         '<button class="user-chip" data-action="user-menu" aria-expanded="false">' +
           '<span class="user-avatar">' + esc((S.auth.displayName || S.auth.username).slice(0, 1).toUpperCase()) + '</span>' +
           '<span class="user-info hide-mobile">' +
@@ -330,7 +346,7 @@ function headerHTML(mode) {
           '<button class="user-menu-item" data-action="change-password">' + ic('key', 15) + ' Change password</button>' +
           '<button class="user-menu-item danger" data-action="logout">' + ic('logout', 15) + ' Sign out</button>' +
         '</div>' +
-      '</div>') +
+      '</div>' : '') +
     '</div>' +
   '</div>';
 }

@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { Admin, Session } = require('./models');
+const { Admin, Session, Candidate, CandidateSession } = require('./models');
 const { newToken } = require('./lib');
 
 const router = express.Router();
@@ -37,6 +37,41 @@ async function createSession(admin) {
 
 function publicAdmin(admin) {
   return { id: admin._id.toString(), username: admin.username, displayName: admin.displayName, email: admin.email, role: admin.role, createdAt: admin.createdAt };
+}
+
+async function requireCandidate(req, res, next) {
+  const h = req.headers.authorization || '';
+  const token = h.startsWith('Bearer ') ? h.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'Authentication required' });
+  const session = await CandidateSession.findOne({ token, expiresAt: { $gt: new Date() } });
+  if (!session) return res.status(401).json({ error: 'Session expired — please sign in again' });
+  const candidate = await Candidate.findById(session.candidate);
+  if (!candidate || candidate.active === false) return res.status(401).json({ error: 'Account not found or disabled' });
+  req.candidate = candidate;
+  req.candSession = session;
+  next();
+}
+
+async function createCandidateSession(candidate) {
+  const token = newToken();
+  await CandidateSession.create({ token, candidate: candidate._id, expiresAt: new Date(Date.now() + SESSION_DAYS * 864e5) });
+  // housekeeping: drop expired sessions and cap old ones per candidate
+  await CandidateSession.deleteMany({ expiresAt: { $lt: new Date() } });
+  const old = await CandidateSession.find({ candidate: candidate._id }).sort({ createdAt: -1 }).skip(10).select('_id').lean();
+  if (old.length) await CandidateSession.deleteMany({ _id: { $in: old.map(s => s._id) } });
+  return token;
+}
+
+function publicCandidate(c) {
+  return {
+    id: c._id.toString(),
+    username: c.username,
+    displayName: c.displayName,
+    email: c.email,
+    tests: (c.tests || []).map(t => t.toString()),
+    active: c.active !== false,
+    createdAt: c.createdAt
+  };
 }
 
 /* GET /api/auth/bootstrap — is a first admin needed? */
@@ -83,4 +118,4 @@ router.get('/me', requireAuth, async (req, res) => {
   res.json({ admin: publicAdmin(req.admin) });
 });
 
-module.exports = { router, requireAuth, requireSuperadmin, publicAdmin };
+module.exports = { router, requireAuth, requireSuperadmin, publicAdmin, requireCandidate, createCandidateSession, publicCandidate };

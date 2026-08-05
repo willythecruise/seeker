@@ -39,7 +39,7 @@ async function main() {
   app.get('/api/health', (req, res) => res.json({ ok: true }));
   app.use('/api/auth', authRouter);
   app.use('/api/admin', adminRouter);
-  app.use('/api', candidateRouter);
+  app.use('/api/candidate', candidateRouter);
 
   // Landing page (built Vite app) at the root
   const landingDist = path.join(__dirname, 'landing', 'dist');

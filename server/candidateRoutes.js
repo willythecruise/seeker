@@ -1,8 +1,10 @@
 'use strict';
 const express = require('express');
-const { Question, Test, Attempt, EventLog } = require('./models');
+const bcrypt = require('bcryptjs');
+const { Question, Test, Attempt, EventLog, Candidate, CandidateSession } = require('./models');
 const { sampleAttempt, sanitizeQuestion, gradeAttempt } = require('./lib');
 const { runCase } = require('./codeRunner');
+const { requireCandidate, createCandidateSession, publicCandidate } = require('./auth');
 
 const router = express.Router();
 
@@ -13,30 +15,55 @@ function clientInfo(req) {
   };
 }
 
-/* POST /api/identify — candidate's name is stored the moment it's typed */
-router.post('/identify', async (req, res) => {
-  const { candidate, email } = req.body || {};
-  const name = String(candidate || '').trim().slice(0, 60);
-  if (!name) return res.status(400).json({ error: 'Please enter your name' });
-  const { ip, ua } = clientInfo(req);
-  await EventLog.create({
-    kind: 'identify',
-    candidate: name,
-    email: String(email || '').trim().slice(0, 90),
-    ip, ua
-  });
+/* Is this attempt owned by the signed-in candidate? Legacy attempts
+   created before per-candidate accounts are never resumable. */
+function owns(att, cand) {
+  return !!att && !!att.candidateId && att.candidateId.toString() === cand._id.toString();
+}
+
+function isGranted(cand, testId) {
+  const tid = testId.toString();
+  return (cand.tests || []).some(t => t.toString() === tid);
+}
+
+/* ── Auth (public) ─────────────────────────────────────────── */
+
+/* POST /api/candidate/login */
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body || {};
+  const uname = String(username || '').trim().toLowerCase();
+  const cand = await Candidate.findOne({ username: uname });
+  if (!cand || !(await bcrypt.compare(String(password || ''), cand.passwordHash))) {
+    return res.status(401).json({ error: 'Incorrect username or password' });
+  }
+  if (cand.active === false) return res.status(403).json({ error: 'This account has been disabled' });
+  const token = await createCandidateSession(cand);
+  res.json({ token, user: publicCandidate(cand) });
+});
+
+/* POST /api/candidate/logout */
+router.post('/logout', requireCandidate, async (req, res) => {
+  await CandidateSession.deleteOne({ _id: req.candSession._id });
   res.json({ ok: true });
 });
 
-/* GET /api/tests — published tests only (sanitized) */
+/* GET /api/candidate/me */
+router.get('/me', requireCandidate, async (req, res) => {
+  res.json({ user: publicCandidate(req.candidate) });
+});
+
+/* Everything below requires a signed-in candidate. */
+router.use(requireCandidate);
+
+/* GET /api/candidate/tests — tests granted to this candidate that are published */
 router.get('/tests', async (req, res) => {
-  const tests = await Test.find({ published: true }).sort({ createdAt: -1 });
+  const tests = await Test.find({ _id: { $in: req.candidate.tests || [] }, published: true }).sort({ createdAt: -1 });
   res.json(tests);
 });
 
-/* GET /api/attempts/active — the latest live attempt, if any */
+/* GET /api/candidate/attempts/active — this candidate's latest live attempt, if any */
 router.get('/attempts/active', async (req, res) => {
-  const att = await Attempt.findOne({ status: 'in-progress' }).sort({ startedAt: -1 });
+  const att = await Attempt.findOne({ status: 'in-progress', candidateId: req.candidate._id }).sort({ startedAt: -1 });
   if (!att) return res.json({ attempt: null, questions: {} });
   const qids = att.order || [];
   const questions = await Question.find({ qid: { $in: qids } });
@@ -46,17 +73,16 @@ router.get('/attempts/active', async (req, res) => {
   res.json({ attempt: att, questions: byId });
 });
 
-/* POST /api/tests/:id/start — sample questions, create the attempt */
+/* POST /api/candidate/tests/:id/start — sample questions, create the attempt */
 router.post('/tests/:id/start', async (req, res) => {
   const test = await Test.findById(req.params.id);
   if (!test) return res.status(404).json({ error: 'Test not found' });
   if (!test.published) return res.status(403).json({ error: 'This test is not published yet' });
-  const { candidate, email } = req.body || {};
-  if (!String(candidate || '').trim()) return res.status(400).json({ error: 'Please enter your name' });
-  const name = String(candidate).trim();
+  if (!isGranted(req.candidate, test._id)) return res.status(403).json({ error: 'You don\u2019t have access to this test' });
+  const name = (req.candidate.displayName || req.candidate.username || 'Candidate').trim();
   const { ip, ua } = clientInfo(req);
-  const dup = await Attempt.findOne({ testId: test._id, status: 'in-progress' });
-  if (dup && dup.candidate.trim().toLowerCase() === name.toLowerCase()) {
+  const dup = await Attempt.findOne({ testId: test._id, candidateId: req.candidate._id, status: 'in-progress' });
+  if (dup) {
     return res.status(409).json({ error: 'You already have this test in progress — resume it instead' });
   }
   const { order, optionOrder } = await sampleAttempt(test, Question);
@@ -64,8 +90,9 @@ router.post('/tests/:id/start', async (req, res) => {
   const att = await Attempt.create({
     testId: test._id,
     testName: test.name,
+    candidateId: req.candidate._id,
     candidate: name,
-    email: String(email || '').trim(),
+    email: req.candidate.email || '',
     ip, ua,
     leaves: 0,
     durationSec: test.durationMin * 60,
@@ -83,7 +110,7 @@ router.post('/tests/:id/start', async (req, res) => {
     testId: test._id,
     testName: test.name,
     candidate: name,
-    email: String(email || '').trim(),
+    email: req.candidate.email || '',
     ip, ua
   });
   const qids = order;
@@ -93,18 +120,18 @@ router.post('/tests/:id/start', async (req, res) => {
   res.status(201).json({ attempt: att, questions: byId });
 });
 
-/* GET /api/attempts/:id/state — resume an attempt */
+/* GET /api/candidate/attempts/:id/state — resume an attempt */
 router.get('/attempts/:id/state', async (req, res) => {
   const att = await Attempt.findById(req.params.id);
-  if (!att) return res.status(404).json({ error: 'Attempt not found' });
+  if (!owns(att, req.candidate)) return res.status(404).json({ error: 'Attempt not found' });
   att.remainingSec = Math.max(0, att.durationSec - Math.round((Date.now() - new Date(att.startedAt).getTime()) / 1000));
   res.json(att);
 });
 
-/* POST /api/attempts/:id/answer */
+/* POST /api/candidate/attempts/:id/answer */
 router.post('/attempts/:id/answer', async (req, res) => {
   const att = await Attempt.findById(req.params.id);
-  if (!att) return res.status(404).json({ error: 'Attempt not found' });
+  if (!owns(att, req.candidate)) return res.status(404).json({ error: 'Attempt not found' });
   if (att.status !== 'in-progress') return res.status(409).json({ error: 'Attempt already submitted' });
   const { qid, value } = req.body || {};
   if (!att.order.includes(qid)) return res.status(400).json({ error: 'Unknown question' });
@@ -115,10 +142,10 @@ router.post('/attempts/:id/answer', async (req, res) => {
   res.json({ ok: true });
 });
 
-/* POST /api/attempts/:id/run-code — test candidate code against sample/hidden cases without persisting */
+/* POST /api/candidate/attempts/:id/run-code — test candidate code against sample/hidden cases without persisting */
 router.post('/attempts/:id/run-code', async (req, res) => {
   const att = await Attempt.findById(req.params.id);
-  if (!att) return res.status(404).json({ error: 'Attempt not found' });
+  if (!owns(att, req.candidate)) return res.status(404).json({ error: 'Attempt not found' });
   const { qid, code, args, expected } = req.body || {};
   if (!att.order.includes(qid)) return res.status(400).json({ error: 'Unknown question' });
   const q = await Question.findOne({ qid });
@@ -128,10 +155,10 @@ router.post('/attempts/:id/run-code', async (req, res) => {
   res.json(r);
 });
 
-/* POST /api/attempts/:id/flag */
+/* POST /api/candidate/attempts/:id/flag */
 router.post('/attempts/:id/flag', async (req, res) => {
   const att = await Attempt.findById(req.params.id);
-  if (!att) return res.status(404).json({ error: 'Attempt not found' });
+  if (!owns(att, req.candidate)) return res.status(404).json({ error: 'Attempt not found' });
   const idx = Number(req.body.idx);
   if (!Number.isInteger(idx) || idx < 0 || idx >= att.order.length) return res.status(400).json({ error: 'Invalid index' });
   att.flagged[idx] = !!req.body.flagged;
@@ -139,10 +166,10 @@ router.post('/attempts/:id/flag', async (req, res) => {
   res.json({ ok: true });
 });
 
-/* POST /api/attempts/:id/submit — server-side grading */
+/* POST /api/candidate/attempts/:id/submit — server-side grading */
 router.post('/attempts/:id/submit', async (req, res) => {
   const att = await Attempt.findById(req.params.id);
-  if (!att) return res.status(404).json({ error: 'Attempt not found' });
+  if (!owns(att, req.candidate)) return res.status(404).json({ error: 'Attempt not found' });
   if (att.status === 'submitted') {
     return res.status(409).json({ error: 'This attempt was already submitted' });
   }
@@ -170,10 +197,10 @@ router.post('/attempts/:id/submit', async (req, res) => {
   res.json({ attempt: att, questions: byIdOut });
 });
 
-/* POST /api/attempts/:id/discard */
+/* POST /api/candidate/attempts/:id/discard */
 router.post('/attempts/:id/discard', async (req, res) => {
   const att = await Attempt.findById(req.params.id);
-  if (!att) return res.status(404).json({ error: 'Attempt not found' });
+  if (!owns(att, req.candidate)) return res.status(404).json({ error: 'Attempt not found' });
   if (att.status === 'in-progress') {
     const { ip, ua } = clientInfo(req);
     const leaves = Number.isFinite(req.body && req.body.leaves) ? Math.max(0, Math.round(req.body.leaves)) : (att.leaves || 0);

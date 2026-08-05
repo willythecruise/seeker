@@ -23,6 +23,30 @@ const SessionSchema = new Schema({
   expiresAt: { type: Date, required: true }
 }, { versionKey: false });
 
+/* ── Candidate (granted candidate account) ─────────────────── */
+const CandidateSchema = new Schema({
+  username: { type: String, required: true, unique: true, trim: true, lowercase: true },
+  displayName: { type: String, trim: true, default: '' },
+  email: { type: String, trim: true, lowercase: true, default: '' },
+  passwordHash: { type: String, required: true },
+  tests: { type: [Schema.Types.ObjectId], ref: 'Test', default: [] },  // granted tests
+  active: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now }
+}, { versionKey: false });
+CandidateSchema.set('toJSON', { virtuals: false, transform: (d, r) => {
+  r.id = r._id.toString(); delete r._id; delete r.passwordHash;
+  r.tests = (r.tests || []).map(t => t.toString());
+  return r;
+} });
+
+/* ── Candidate session ─────────────────────────────────────── */
+const CandidateSessionSchema = new Schema({
+  token: { type: String, required: true, unique: true },
+  candidate: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, required: true }
+}, { versionKey: false });
+
 /* ── Question ──────────────────────────────────────────────── */
 const QuestionSchema = new Schema({
   qid: { type: String, required: true, unique: true },   // 'b01' | 'c01' | 'c-<rand>'
@@ -71,6 +95,7 @@ TestSchema.set('toJSON', { virtuals: false, transform: (d, r) => {
 const AttemptSchema = new Schema({
   testId: { type: Schema.Types.ObjectId, ref: 'Test' },
   testName: { type: String },
+  candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate' },
   candidate: { type: String, required: true },
   email: { type: String, default: '' },
   ip: { type: String, default: '' },             // proctoring: client IP at start
@@ -120,6 +145,8 @@ EventLogSchema.set('toJSON', { virtuals: false, transform: (d, r) => {
 module.exports = {
   Admin: mongoose.model('Admin', AdminSchema),
   Session: mongoose.model('Session', SessionSchema),
+  Candidate: mongoose.model('Candidate', CandidateSchema),
+  CandidateSession: mongoose.model('CandidateSession', CandidateSessionSchema),
   Question: mongoose.model('Question', QuestionSchema),
   Test: mongoose.model('Test', TestSchema),
   Attempt: mongoose.model('Attempt', AttemptSchema),

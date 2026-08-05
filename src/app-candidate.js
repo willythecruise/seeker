@@ -15,11 +15,21 @@ function normalizeAttempt(att) {
 }
 
 async function refreshCandidate() {
+  if (!API.candToken) {
+    S.candAuth = null;
+    S.pubTests = [];
+    S.live = null;
+    S.liveQuestions = {};
+    render();
+    return;
+  }
   try {
-    const [tests, active] = await Promise.all([
-      API.get('/api/tests'),
-      API.get('/api/attempts/active')
+    const [me, tests, active] = await Promise.all([
+      API.get('/api/candidate/me'),
+      API.get('/api/candidate/tests'),
+      API.get('/api/candidate/attempts/active')
     ]);
+    S.candAuth = me.user;
     S.pubTests = tests;
     if (active.attempt) {
       S.live = normalizeAttempt(active.attempt);
@@ -33,18 +43,87 @@ async function refreshCandidate() {
   } catch (e) {
     S.pubTests = [];
     S.live = null;
-    toast('Cannot reach the server', 'error');
+    S.liveQuestions = {};
+    if (e.status === 401) {
+      S.candAuth = null;
+    } else {
+      toast('Cannot reach the server', 'error');
+    }
   }
   render();
 }
 
 function candidateShell() {
+  if (!S.candAuth) return '<div class="auth-page">' + themeFabHTML() + vCandidateLogin() + modalHTML() + '</div>';
   return sidebarHTML([['home', 'Tests', 'doc']], 'candidate') +
     '<div class="app-main">' +
       '<header class="topbar">' + headerHTML('candidate') + '</header>' +
       '<main class="content"><div class="container">' + candidateView() + '</div></main>' +
     '</div>' +
     modalHTML();
+}
+
+/* ── Candidate sign in ─────────────────────────────────────── */
+
+function vCandidateLogin() {
+  return '<div class="auth-screen">' +
+    '<div class="auth-card card">' +
+      '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
+      '<h1 class="auth-title">Candidate sign in</h1>' +
+      '<p class="auth-sub">Sign in with the account your recruiter set up for you.</p>' +
+      '<form id="candLoginForm" data-form="candidate-login" novalidate>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="candUser">Username</label>' +
+          '<div class="auth-input">' + ic('user', 15) +
+            '<input class="input" id="candUser" autocomplete="username" placeholder="your username" required>' +
+          '</div>' +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="candPass">Password</label>' +
+          '<div class="auth-input">' + ic('key', 15) +
+            '<input class="input" id="candPass" type="password" autocomplete="current-password" placeholder="••••••••" required>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn btn-primary btn-lg" style="width:100%" type="submit">' + ic('arrowL', 15, 'rot-180') + ' Sign in</button>' +
+      '</form>' +
+      '<div class="auth-divider"></div>' +
+      '<button class="btn btn-ghost" style="width:100%" data-action="go-console">' + ic('gear', 15) + ' Back to console</button>' +
+    '</div>' +
+  '</div>';
+}
+
+async function candLogin() {
+  const u = $('#candUser'), p = $('#candPass');
+  const btn = u ? $('button[type="submit"]', u.closest('form')) : null;
+  if (!u || !p) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+  try {
+    const r = await API.post('/api/candidate/login', { username: u.value, password: p.value });
+    API.setCandToken(r.token);
+    S.candAuth = r.user;
+    S.candView = 'home';
+    await refreshCandidate();
+    toast('Welcome, ' + (r.user.displayName || r.user.username), 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+    S.candAuth = null;
+    render();
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function candLogout() {
+  try { await API.post('/api/candidate/logout'); } catch (e) {}
+  stopTimer();
+  API.setCandToken(null);
+  S.candAuth = null;
+  S.live = null;
+  S.liveQuestions = {};
+  S.candResult = null;
+  S.candView = 'home';
+  render();
+  toast('Signed out');
 }
 
 function candidateView() {
@@ -56,13 +135,14 @@ function candidateView() {
 /* ── Candidate home ────────────────────────────────────────── */
 
 function vCandidateHome() {
+  const name = (S.candAuth && (S.candAuth.displayName || S.candAuth.username)) || 'there';
   return '<div class="page-head" style="margin-top:34px">' +
-    '<div><h1 class="page-title" style="font-size:34px">Engineering assessments</h1>' +
-    '<p class="page-desc">Pick a published test to begin. Every test is timed and graded automatically.</p></div>' +
+    '<div><h1 class="page-title" style="font-size:34px">Good to see you, ' + esc(name) + '</h1>' +
+    '<p class="page-desc">Pick one of your assigned tests to begin. Every test is timed and graded automatically.</p></div>' +
   '</div>' +
   (S.live ? resumeCardHTML() : '') +
   (S.pubTests.length ? S.pubTests.map(candidateTestCardHTML).join('')
-    : emptyState('lock', 'No tests available', 'The administrator hasn\u2019t published any tests yet.', 'mode', 'Open the console', 'console'));
+    : emptyState('lock', 'No tests assigned yet', 'Your administrator hasn\u2019t assigned any tests to you yet.', 'cand-logout', 'Sign out'));
 }
 
 function resumeCardHTML() {
@@ -109,51 +189,28 @@ function openStartModal(testId) {
   const t = S.pubTests.find(x => x.id === testId);
   if (!t) return;
   S._pendingTestId = testId;
-  const saved = store.get('orion.candidate', {});
   S.modal = {
     title: 'Start \u201C' + t.name + '\u201D',
     body:
       '<div class="test-card-meta" style="margin-bottom:16px">' +
         '<span class="meta-pill">' + ic('clock', 13) + ' ' + t.durationMin + ' min</span>' +
         '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
+        '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
       '</div>' +
-      '<div class="field">' +
-        '<label class="field-label" for="startName">Your name</label>' +
-        '<input class="input" id="startName" data-action="identify" placeholder="e.g., Ada Lovelace" maxlength="60" value="' + esc(saved.name || '') + '">' +
-      '</div>' +
-      '<div class="field" style="margin-bottom:6px">' +
-        '<label class="field-label" for="startEmail">Email <span class="field-help">Optional</span></label>' +
-        '<input class="input" id="startEmail" type="email" data-action="identify" placeholder="ada@company.com" maxlength="90" value="' + esc(saved.email || '') + '">' +
-      '</div>' +
-      '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6">The timer starts as soon as you begin and can\u2019t be paused during the test.</p>',
+      '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6">The timer starts as soon as you begin and can\u2019t be paused during the test. You\u2019ll be recorded under ' +
+      esc((S.candAuth.displayName || S.candAuth.username)) + '.</p>',
     foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
           '<button class="btn btn-primary" data-action="begin-attempt">' + ic('play', 14) + ' Begin</button>'
   };
   render();
-  setTimeout(() => { const n = $('#startName'); if (n) n.focus(); }, 60);
-}
-
-let _identifyTimer = null;
-function sendIdentify() {
-  const name = (($('#startName') || {}).value || '').trim();
-  if (!name) return;
-  const email = (($('#startEmail') || {}).value || '').trim();
-  store.set('orion.candidate', { name, email });
-  clearTimeout(_identifyTimer);
-  _identifyTimer = setTimeout(() => {
-    API.post('/api/identify', { candidate: name, email }).catch(() => {});
-  }, 500);
 }
 
 async function beginAttemptFromModal() {
-  const name = ($('#startName') || {}).value || '';
-  const email = ($('#startEmail') || {}).value || '';
-  if (!name.trim()) { toast('Please enter your name', 'error'); return; }
   const testId = S._pendingTestId;
   if (!testId) return;
   S._pendingTestId = null;
   try {
-    const { attempt, questions } = await API.post('/api/tests/' + testId + '/start', { candidate: name.trim(), email: email.trim() });
+    const { attempt, questions } = await API.post('/api/candidate/tests/' + testId + '/start');
     S.live = normalizeAttempt(attempt);
     S.liveQuestions = questions || {};
     buildQPool(Object.values(S.liveQuestions));
@@ -191,7 +248,7 @@ function discardAttempt() {
       S.liveQuestions = {};
       closeModal();
       render();
-      if (id) { try { await API.post('/api/attempts/' + id + '/discard', { leaves }); } catch (e) {} }
+      if (id) { try {     await API.post('/api/candidate/attempts/' + id + '/discard', { leaves }); } catch (e) {} }
       toast('Attempt discarded');
     }
   });
@@ -417,7 +474,7 @@ function handleFillInput(el) {
 async function saveAnswerToServer(qid, value) {
   if (!S.live) return;
   try {
-    await API.post('/api/attempts/' + S.live.id + '/answer', { qid, value });
+    await API.post('/api/candidate/attempts/' + S.live.id + '/answer', { qid, value });
   } catch (e) {
     if (e.status === 409) { toast('This attempt was already submitted', 'error'); }
     else if (e.status === 400) { toast(e.message, 'error'); }
@@ -474,7 +531,7 @@ async function runCode() {
   const out = $('#codeOut');
   if (out) out.textContent = 'Running…';
   try {
-    const r = await API.post('/api/attempts/' + S.live.id + '/run-code', {
+    const r = await API.post('/api/candidate/attempts/' + S.live.id + '/run-code', {
       qid: q.id, code: code, args: q.sample ? q.sample.args : [], expected: q.sample ? q.sample.expected : null
     });
     if (out) {
@@ -493,7 +550,7 @@ function toggleFlag() {
   const btn = $('#flagBtn'), label = $('#flagLabel');
   if (btn) { btn.classList.toggle('flagged', S.live.flagged[S.qIdx]); if (label) label.textContent = S.live.flagged[S.qIdx] ? 'Flagged' : 'Flag for review'; }
   $$('#palette .palette-item').forEach(b => { if (+b.dataset.idx === S.qIdx) b.classList.toggle('flagged', S.live.flagged[S.qIdx]); });
-  API.post('/api/attempts/' + S.live.id + '/flag', { idx: S.qIdx, flagged: S.live.flagged[S.qIdx] }).catch(() => {});
+  API.post('/api/candidate/attempts/' + S.live.id + '/flag', { idx: S.qIdx, flagged: S.live.flagged[S.qIdx] }).catch(() => {});
 }
 
 function updateRunnerCounters() {
@@ -547,7 +604,7 @@ async function submitAttempt(auto) {
   const att = S.live;
   if (!att) return;
   try {
-    const { attempt, questions } = await API.post('/api/attempts/' + att.id + '/submit', { leaves: att.leaves || 0 });
+    const { attempt, questions } = await API.post('/api/candidate/attempts/' + att.id + '/submit', { leaves: att.leaves || 0 });
     S.candResult = normalizeAttempt(attempt);
     S.live = null;
     S.liveQuestions = {};

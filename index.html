@@ -439,6 +439,20 @@ select.input:focus { background-image: url("data:image/svg+xml,%3Csvg xmlns='htt
 .chip.active .chip-count { color: var(--accent); }
 .chip.active .ic:last-of-type { opacity: 1; transform: scale(1); }
 
+.cand-tests { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; max-height: 300px; overflow: auto; padding-right: 4px; }
+.cand-test {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: var(--r-md);
+  border: 1px solid var(--hairline); background: var(--surface);
+  cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-2);
+  transition: all 0.15s ease;
+}
+.cand-test:hover { border-color: var(--gray-400); color: var(--text); }
+.cand-test input { accent-color: var(--accent); flex: none; }
+.cand-test > span:not(.badge) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cand-test .badge { flex: none; }
+.cand-test.on { background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent); }
+
 .badge {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 3px 10px; border-radius: var(--r-pill);
@@ -939,11 +953,13 @@ const S = {
   tab: 'dashboard',       // dashboard | tests | editor | questions | results | admins
   candView: 'home',       // home | runner | result
   auth: null,             // admin session
+  candAuth: null,         // signed-in candidate account
   stats: null,            // dashboard stats from server
   questions: [],          // admin: full bank
   tests: [],
   attempts: [],
   admins: [],
+  candidates: [],         // admin: granted candidate accounts
   pubTests: [],           // candidate: published tests
   qPool: {},              // qid -> question (rendering pool)
   live: null,             // candidate in-progress attempt
@@ -1159,7 +1175,7 @@ function positionSeg(segSel, thumbSel, idx) {
 function sidebarHTML(nav, mode) {
   const isCand = mode === 'candidate';
   const activeVal = isCand ? S.candView : S.tab;
-  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length };
+  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length, candidates: S.candidates.length };
   return '<aside class="sidebar" id="sidebar">' +
     '<div class="sidebar-inner">' +
       '<div class="sidebar-head">' + brandHTML() +
@@ -1187,6 +1203,7 @@ function headerHTML(mode) {
   const isCand = mode === 'candidate';
   const inRunner = isCand && S.candView === 'runner' && S.live;
   const inProgress = (!isCand && S.attempts) ? S.attempts.filter(a => a.status !== 'submitted').length : 0;
+  const candUser = isCand && S.candAuth;
   return '<div class="topbar-inner">' +
     '<div class="topbar-left">' +
       '<button class="btn-icon hide-desktop" data-action="sidebar-open" aria-label="Open menu">' + ic('menu', 20) + '</button>' +
@@ -1199,9 +1216,22 @@ function headerHTML(mode) {
       (inRunner ? '<span class="timer" id="timerDisplay">' + ic('clock', 15) + ' ' + fmtClock(S.live.remaining) + '</span>' : '') +
       '<button class="btn-icon" data-action="theme-toggle" title="Toggle light / dark theme" aria-label="Toggle theme">' +
         ic(isDark() ? 'sun' : 'moon', 18) + '</button>' +
-      (isCand ? '' : '<button class="btn-icon bell-wrap" data-action="tab" data-value="results" title="In-progress attempts">' +
-        ic('bell', 20) + (inProgress ? '<span class="bell-badge">' + inProgress + '</span>' : '') + '</button>') +
-      (isCand ? '' : '<div class="user-menu-wrap">' +
+      (!isCand ? '<button class="btn-icon bell-wrap" data-action="tab" data-value="results" title="In-progress attempts">' +
+        ic('bell', 20) + (inProgress ? '<span class="bell-badge">' + inProgress + '</span>' : '') + '</button>' : '') +
+      (candUser ? '<div class="user-menu-wrap">' +
+        '<button class="user-chip" data-action="cand-user-menu" aria-expanded="false">' +
+          '<span class="user-avatar">' + esc((S.candAuth.displayName || S.candAuth.username).slice(0, 1).toUpperCase()) + '</span>' +
+          '<span class="user-info hide-mobile">' +
+            '<span class="user-name">' + esc(S.candAuth.displayName || S.candAuth.username) + '</span>' +
+            '<span class="user-role">Candidate</span>' +
+          '</span>' +
+          ic('chevronD', 14) +
+        '</button>' +
+        '<div class="user-menu">' +
+          '<button class="user-menu-item danger" data-action="cand-logout">' + ic('logout', 15) + ' Sign out</button>' +
+        '</div>' +
+      '</div>' : '') +
+      (!isCand ? '<div class="user-menu-wrap">' +
         '<button class="user-chip" data-action="user-menu" aria-expanded="false">' +
           '<span class="user-avatar">' + esc((S.auth.displayName || S.auth.username).slice(0, 1).toUpperCase()) + '</span>' +
           '<span class="user-info hide-mobile">' +
@@ -1214,7 +1244,7 @@ function headerHTML(mode) {
           '<button class="user-menu-item" data-action="change-password">' + ic('key', 15) + ' Change password</button>' +
           '<button class="user-menu-item danger" data-action="logout">' + ic('logout', 15) + ' Sign out</button>' +
         '</div>' +
-      '</div>') +
+      '</div>' : '') +
     '</div>' +
   '</div>';
 }
@@ -1466,15 +1496,19 @@ function reviewBodyHTML(q, v, res) {
 }
 /* ============================================================
    Orion — API client: talks to the Express/MongoDB backend
+   Admin and candidate sessions use separate bearer tokens.
    ============================================================ */
 
 const API = (() => {
   let token = store.get('orion.token', null);
+  let candToken = store.get('orion.candToken', null);
 
   async function req(method, path, body) {
     const opts = { method, headers: {} };
     if (body !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
-    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+    const isCandidate = path.startsWith('/api/candidate/');
+    const t = isCandidate ? candToken : token;
+    if (t) opts.headers['Authorization'] = 'Bearer ' + t;
     let res;
     try {
       res = await fetch(path, opts);
@@ -1487,9 +1521,9 @@ const API = (() => {
       const err = new Error((data && data.error) || 'Request failed (' + res.status + ')');
       err.status = res.status;
       err.data = data;
-      if (res.status === 401 && !path.startsWith('/api/auth/')) {
-        setToken(null);
-        S.auth = null;
+      if (res.status === 401) {
+        if (isCandidate) { setCandToken(null); S.candAuth = null; }
+        else if (!path.startsWith('/api/auth/')) { setToken(null); S.auth = null; }
       }
       throw err;
     }
@@ -1501,9 +1535,16 @@ const API = (() => {
     if (t) store.set('orion.token', t); else store.del('orion.token');
   }
 
+  function setCandToken(t) {
+    candToken = t || null;
+    if (t) store.set('orion.candToken', t); else store.del('orion.candToken');
+  }
+
   return {
     setToken,
+    setCandToken,
     get token() { return token; },
+    get candToken() { return candToken; },
     get: p => req('GET', p),
     post: (p, b) => req('POST', p, b || {}),
     put: (p, b) => req('PUT', p, b || {}),
@@ -1669,7 +1710,8 @@ function consoleShell() {
     ['tests', 'Tests', 'doc'],
     ['questions', 'Questions', 'question'],
     ['results', 'Results', 'chart'],
-    ['activity', 'Activity', 'clock']
+    ['activity', 'Activity', 'clock'],
+    ['candidates', 'Candidates', 'users']
   ];
   if (S.auth.role === 'superadmin') nav.push(['admins', 'Admins', 'users']);
   return sidebarHTML(nav, 'console') +
@@ -1689,6 +1731,7 @@ function consoleView() {
   if (S.tab === 'questions') return vQuestions();
   if (S.tab === 'results') return vResults();
   if (S.tab === 'activity') return vActivity();
+  if (S.tab === 'candidates') return vCandidates();
   if (S.tab === 'admins') return vAdmins();
   return vDashboard();
 }
@@ -2469,6 +2512,168 @@ function confirmDeleteAdmin(id) {
   });
 }
 
+/* ── Candidates (granted candidate accounts) ───────────────── */
+
+async function loadCandidates() {
+  try {
+    S.candidates = await API.get('/api/admin/candidates');
+  } catch (e) {
+    S.candidates = [];
+    toast(e.message, 'error');
+  }
+  render();
+}
+
+function vCandidates() {
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Candidates</h1>' +
+    '<p class="page-desc">Granted accounts can sign in to the candidate portal and take exactly the tests you assign.</p></div>' +
+    '<div class="page-actions"><button class="btn btn-primary" data-action="add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
+  '</div>' +
+  (S.candidates.length ? '<div class="card">' + S.candidates.map(candidateRowHTML).join('') + '</div>'
+    : emptyState('users', 'No candidates yet', 'Create an account and assign tests to give someone access to the candidate portal.', 'add-candidate', 'Add candidate'));
+}
+
+function candidateRowHTML(c) {
+  const granted = (c.tests || []).length;
+  return '<div class="row-item">' +
+    '<span class="admin-avatar" style="width:34px;height:34px;font-size:14px">' + esc((c.displayName || c.username).slice(0, 1).toUpperCase()) + '</span>' +
+    '<div class="row-main">' +
+      '<div class="row-title" style="font-weight:600">' + esc(c.displayName || c.username) + '</div>' +
+      '<div class="row-meta">@' + esc(c.username) + (c.email ? ' · ' + esc(c.email) : '') + ' · joined ' + fmtDate(c.createdAt) + '</div>' +
+    '</div>' +
+    '<span class="badge ' + (c.active ? 'b-published' : 'b-fail') + '"><span class="dot"></span>' + (c.active ? 'Active' : 'Disabled') + '</span>' +
+    '<span class="badge b-mcq">' + granted + ' test' + (granted === 1 ? '' : 's') + '</span>' +
+    '<div class="row-actions">' +
+      '<button class="btn btn-sm btn-secondary" data-action="edit-candidate" data-id="' + c.id + '">' + ic('key', 13) + ' Manage access</button>' +
+      '<button class="btn-icon danger" data-action="delete-candidate" data-id="' + c.id + '" title="Remove candidate">' + ic('trash', 16) + '</button>' +
+    '</div>' +
+  '</div>';
+}
+
+let _candDraft = null;
+
+function candidateModalBody(d) {
+  return '<div class="field"><label class="field-label">Username</label>' +
+      '<input class="input" id="candUser" placeholder="e.g., ada.lovelace" autocomplete="off" ' + (d.id ? 'disabled' : '') + ' value="' + esc(d.username) + '"></div>' +
+    '<div class="field"><label class="field-label">Display name <span class="field-help">Shown on the candidate\u2019s tests</span></label>' +
+      '<input class="input" id="candName" placeholder="e.g., Ada Lovelace" autocomplete="off" value="' + esc(d.displayName) + '"></div>' +
+    '<div class="field"><label class="field-label">Email <span class="field-help">Optional</span></label>' +
+      '<input class="input" id="candEmail" type="email" placeholder="ada@company.com" autocomplete="off" value="' + esc(d.email) + '"></div>' +
+    '<div class="field"><label class="field-label">Password <span class="field-help">' + (d.id ? 'Leave blank to keep the current one' : 'Min. 6 characters') + '</span></label>' +
+      '<input class="input" id="candPass" type="password" placeholder="' + (d.id ? 'Unchanged' : 'Min. 6 characters') + '" autocomplete="new-password"></div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Active</div><div class="setting-sub">Disabled accounts can\u2019t sign in</div></div>' +
+      '<label class="switch"><input type="checkbox" id="candActive" ' + (d.active ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+    '</div>' +
+    '<div class="field" style="margin-bottom:4px">' +
+      '<div class="field-label">Assigned tests <span class="field-help">' + d.tests.size + ' of ' + S.tests.length + ' selected</span></div>' +
+      '<div class="cand-tests">' +
+        (S.tests.length ? S.tests.map(t => {
+          const on = d.tests.has(t.id);
+          return '<label class="cand-test ' + (on ? 'on' : '') + '">' +
+            '<input type="checkbox" data-action="cand-test-toggle" data-value="' + t.id + '" ' + (on ? 'checked' : '') + '>' +
+            '<span>' + esc(t.name) + '</span>' +
+            '<span class="badge ' + (t.published ? 'b-published' : 'b-draft') + '"><span class="dot"></span>' + (t.published ? 'Published' : 'Draft') + '</span>' +
+          '</label>';
+        }).join('')
+        : '<p style="color:var(--text-3);font-size:13px">No tests yet — create a test first.</p>') +
+      '</div>' +
+    '</div>';
+}
+
+function captureCandDraftFromDOM() {
+  if (!_candDraft) return;
+  const g = sel => (($(sel) || {}).value || '');
+  _candDraft.username = g('#candUser');
+  _candDraft.displayName = g('#candName');
+  _candDraft.email = g('#candEmail');
+  _candDraft.password = g('#candPass');
+  _candDraft.active = !!((($('#candActive') || {}).checked));
+}
+
+function openAddCandidateModal() {
+  _candDraft = { id: null, username: '', displayName: '', email: '', password: '', active: true, tests: new Set() };
+  rerenderCandidateModal();
+}
+
+function openEditCandidateModal(id) {
+  const c = S.candidates.find(x => x.id === id);
+  if (!c) return;
+  _candDraft = {
+    id: c.id,
+    username: c.username,
+    displayName: c.displayName || '',
+    email: c.email || '',
+    password: '',
+    active: c.active !== false,
+    tests: new Set(c.tests || [])
+  };
+  rerenderCandidateModal();
+}
+
+function rerenderCandidateModal() {
+  if (!_candDraft) return;
+  openModal({
+    title: _candDraft.id ? 'Manage access' : 'Add candidate',
+    body: candidateModalBody(_candDraft),
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="save-candidate">' + ic('check', 14) + ' ' + (_candDraft.id ? 'Save changes' : 'Create candidate') + '</button>',
+    wide: true
+  });
+}
+
+function toggleCandidateTest(id) {
+  if (!_candDraft) return;
+  captureCandDraftFromDOM();
+  if (_candDraft.tests.has(id)) _candDraft.tests.delete(id); else _candDraft.tests.add(id);
+  rerenderCandidateModal();
+}
+
+async function saveCandidate() {
+  if (!_candDraft) return;
+  captureCandDraftFromDOM();
+  const d = _candDraft;
+  if (!d.id && !/^[a-z0-9._-]{3,24}$/i.test(d.username.trim())) { toast('Username must be 3\u201324 letters, digits, dots, dashes or underscores', 'error'); return; }
+  if (d.password && d.password.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+  if (!d.id && d.password.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+  const payload = {
+    displayName: d.displayName,
+    email: d.email,
+    tests: Array.from(d.tests),
+    active: d.active
+  };
+  if (!d.id) { payload.username = d.username; payload.password = d.password; }
+  else if (d.password) payload.password = d.password;
+  try {
+    if (d.id) await API.put('/api/admin/candidates/' + d.id, payload);
+    else await API.post('/api/admin/candidates', payload);
+    _candDraft = null;
+    closeModal();
+    await loadCandidates();
+    toast(d.id ? 'Candidate updated' : 'Candidate created', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function confirmDeleteCandidate(id) {
+  const c = S.candidates.find(x => x.id === id);
+  if (!c) return;
+  confirmModal({
+    title: 'Remove candidate?',
+    body: '@' + esc(c.username) + ' will lose access to the candidate portal immediately. Their submitted attempts are kept.',
+    confirmLabel: 'Remove',
+    danger: true,
+    onConfirm: async () => {
+      closeModal();
+      try {
+        await API.del('/api/admin/candidates/' + id);
+        await loadCandidates();
+        toast('Candidate removed');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
 /* ── Preview modal ─────────────────────────────────────────── */
 
 function openPreview(id) {
@@ -2519,11 +2724,21 @@ function normalizeAttempt(att) {
 }
 
 async function refreshCandidate() {
+  if (!API.candToken) {
+    S.candAuth = null;
+    S.pubTests = [];
+    S.live = null;
+    S.liveQuestions = {};
+    render();
+    return;
+  }
   try {
-    const [tests, active] = await Promise.all([
-      API.get('/api/tests'),
-      API.get('/api/attempts/active')
+    const [me, tests, active] = await Promise.all([
+      API.get('/api/candidate/me'),
+      API.get('/api/candidate/tests'),
+      API.get('/api/candidate/attempts/active')
     ]);
+    S.candAuth = me.user;
     S.pubTests = tests;
     if (active.attempt) {
       S.live = normalizeAttempt(active.attempt);
@@ -2537,18 +2752,87 @@ async function refreshCandidate() {
   } catch (e) {
     S.pubTests = [];
     S.live = null;
-    toast('Cannot reach the server', 'error');
+    S.liveQuestions = {};
+    if (e.status === 401) {
+      S.candAuth = null;
+    } else {
+      toast('Cannot reach the server', 'error');
+    }
   }
   render();
 }
 
 function candidateShell() {
+  if (!S.candAuth) return '<div class="auth-page">' + themeFabHTML() + vCandidateLogin() + modalHTML() + '</div>';
   return sidebarHTML([['home', 'Tests', 'doc']], 'candidate') +
     '<div class="app-main">' +
       '<header class="topbar">' + headerHTML('candidate') + '</header>' +
       '<main class="content"><div class="container">' + candidateView() + '</div></main>' +
     '</div>' +
     modalHTML();
+}
+
+/* ── Candidate sign in ─────────────────────────────────────── */
+
+function vCandidateLogin() {
+  return '<div class="auth-screen">' +
+    '<div class="auth-card card">' +
+      '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
+      '<h1 class="auth-title">Candidate sign in</h1>' +
+      '<p class="auth-sub">Sign in with the account your recruiter set up for you.</p>' +
+      '<form id="candLoginForm" data-form="candidate-login" novalidate>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="candUser">Username</label>' +
+          '<div class="auth-input">' + ic('user', 15) +
+            '<input class="input" id="candUser" autocomplete="username" placeholder="your username" required>' +
+          '</div>' +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="candPass">Password</label>' +
+          '<div class="auth-input">' + ic('key', 15) +
+            '<input class="input" id="candPass" type="password" autocomplete="current-password" placeholder="••••••••" required>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn btn-primary btn-lg" style="width:100%" type="submit">' + ic('arrowL', 15, 'rot-180') + ' Sign in</button>' +
+      '</form>' +
+      '<div class="auth-divider"></div>' +
+      '<button class="btn btn-ghost" style="width:100%" data-action="go-console">' + ic('gear', 15) + ' Back to console</button>' +
+    '</div>' +
+  '</div>';
+}
+
+async function candLogin() {
+  const u = $('#candUser'), p = $('#candPass');
+  const btn = u ? $('button[type="submit"]', u.closest('form')) : null;
+  if (!u || !p) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+  try {
+    const r = await API.post('/api/candidate/login', { username: u.value, password: p.value });
+    API.setCandToken(r.token);
+    S.candAuth = r.user;
+    S.candView = 'home';
+    await refreshCandidate();
+    toast('Welcome, ' + (r.user.displayName || r.user.username), 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+    S.candAuth = null;
+    render();
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function candLogout() {
+  try { await API.post('/api/candidate/logout'); } catch (e) {}
+  stopTimer();
+  API.setCandToken(null);
+  S.candAuth = null;
+  S.live = null;
+  S.liveQuestions = {};
+  S.candResult = null;
+  S.candView = 'home';
+  render();
+  toast('Signed out');
 }
 
 function candidateView() {
@@ -2560,13 +2844,14 @@ function candidateView() {
 /* ── Candidate home ────────────────────────────────────────── */
 
 function vCandidateHome() {
+  const name = (S.candAuth && (S.candAuth.displayName || S.candAuth.username)) || 'there';
   return '<div class="page-head" style="margin-top:34px">' +
-    '<div><h1 class="page-title" style="font-size:34px">Engineering assessments</h1>' +
-    '<p class="page-desc">Pick a published test to begin. Every test is timed and graded automatically.</p></div>' +
+    '<div><h1 class="page-title" style="font-size:34px">Good to see you, ' + esc(name) + '</h1>' +
+    '<p class="page-desc">Pick one of your assigned tests to begin. Every test is timed and graded automatically.</p></div>' +
   '</div>' +
   (S.live ? resumeCardHTML() : '') +
   (S.pubTests.length ? S.pubTests.map(candidateTestCardHTML).join('')
-    : emptyState('lock', 'No tests available', 'The administrator hasn\u2019t published any tests yet.', 'mode', 'Open the console', 'console'));
+    : emptyState('lock', 'No tests assigned yet', 'Your administrator hasn\u2019t assigned any tests to you yet.', 'cand-logout', 'Sign out'));
 }
 
 function resumeCardHTML() {
@@ -2613,51 +2898,28 @@ function openStartModal(testId) {
   const t = S.pubTests.find(x => x.id === testId);
   if (!t) return;
   S._pendingTestId = testId;
-  const saved = store.get('orion.candidate', {});
   S.modal = {
     title: 'Start \u201C' + t.name + '\u201D',
     body:
       '<div class="test-card-meta" style="margin-bottom:16px">' +
         '<span class="meta-pill">' + ic('clock', 13) + ' ' + t.durationMin + ' min</span>' +
         '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
+        '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
       '</div>' +
-      '<div class="field">' +
-        '<label class="field-label" for="startName">Your name</label>' +
-        '<input class="input" id="startName" data-action="identify" placeholder="e.g., Ada Lovelace" maxlength="60" value="' + esc(saved.name || '') + '">' +
-      '</div>' +
-      '<div class="field" style="margin-bottom:6px">' +
-        '<label class="field-label" for="startEmail">Email <span class="field-help">Optional</span></label>' +
-        '<input class="input" id="startEmail" type="email" data-action="identify" placeholder="ada@company.com" maxlength="90" value="' + esc(saved.email || '') + '">' +
-      '</div>' +
-      '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6">The timer starts as soon as you begin and can\u2019t be paused during the test.</p>',
+      '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6">The timer starts as soon as you begin and can\u2019t be paused during the test. You\u2019ll be recorded under ' +
+      esc((S.candAuth.displayName || S.candAuth.username)) + '.</p>',
     foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
           '<button class="btn btn-primary" data-action="begin-attempt">' + ic('play', 14) + ' Begin</button>'
   };
   render();
-  setTimeout(() => { const n = $('#startName'); if (n) n.focus(); }, 60);
-}
-
-let _identifyTimer = null;
-function sendIdentify() {
-  const name = (($('#startName') || {}).value || '').trim();
-  if (!name) return;
-  const email = (($('#startEmail') || {}).value || '').trim();
-  store.set('orion.candidate', { name, email });
-  clearTimeout(_identifyTimer);
-  _identifyTimer = setTimeout(() => {
-    API.post('/api/identify', { candidate: name, email }).catch(() => {});
-  }, 500);
 }
 
 async function beginAttemptFromModal() {
-  const name = ($('#startName') || {}).value || '';
-  const email = ($('#startEmail') || {}).value || '';
-  if (!name.trim()) { toast('Please enter your name', 'error'); return; }
   const testId = S._pendingTestId;
   if (!testId) return;
   S._pendingTestId = null;
   try {
-    const { attempt, questions } = await API.post('/api/tests/' + testId + '/start', { candidate: name.trim(), email: email.trim() });
+    const { attempt, questions } = await API.post('/api/candidate/tests/' + testId + '/start');
     S.live = normalizeAttempt(attempt);
     S.liveQuestions = questions || {};
     buildQPool(Object.values(S.liveQuestions));
@@ -2695,7 +2957,7 @@ function discardAttempt() {
       S.liveQuestions = {};
       closeModal();
       render();
-      if (id) { try { await API.post('/api/attempts/' + id + '/discard', { leaves }); } catch (e) {} }
+      if (id) { try {     await API.post('/api/candidate/attempts/' + id + '/discard', { leaves }); } catch (e) {} }
       toast('Attempt discarded');
     }
   });
@@ -2921,7 +3183,7 @@ function handleFillInput(el) {
 async function saveAnswerToServer(qid, value) {
   if (!S.live) return;
   try {
-    await API.post('/api/attempts/' + S.live.id + '/answer', { qid, value });
+    await API.post('/api/candidate/attempts/' + S.live.id + '/answer', { qid, value });
   } catch (e) {
     if (e.status === 409) { toast('This attempt was already submitted', 'error'); }
     else if (e.status === 400) { toast(e.message, 'error'); }
@@ -2978,7 +3240,7 @@ async function runCode() {
   const out = $('#codeOut');
   if (out) out.textContent = 'Running…';
   try {
-    const r = await API.post('/api/attempts/' + S.live.id + '/run-code', {
+    const r = await API.post('/api/candidate/attempts/' + S.live.id + '/run-code', {
       qid: q.id, code: code, args: q.sample ? q.sample.args : [], expected: q.sample ? q.sample.expected : null
     });
     if (out) {
@@ -2997,7 +3259,7 @@ function toggleFlag() {
   const btn = $('#flagBtn'), label = $('#flagLabel');
   if (btn) { btn.classList.toggle('flagged', S.live.flagged[S.qIdx]); if (label) label.textContent = S.live.flagged[S.qIdx] ? 'Flagged' : 'Flag for review'; }
   $$('#palette .palette-item').forEach(b => { if (+b.dataset.idx === S.qIdx) b.classList.toggle('flagged', S.live.flagged[S.qIdx]); });
-  API.post('/api/attempts/' + S.live.id + '/flag', { idx: S.qIdx, flagged: S.live.flagged[S.qIdx] }).catch(() => {});
+  API.post('/api/candidate/attempts/' + S.live.id + '/flag', { idx: S.qIdx, flagged: S.live.flagged[S.qIdx] }).catch(() => {});
 }
 
 function updateRunnerCounters() {
@@ -3051,7 +3313,7 @@ async function submitAttempt(auto) {
   const att = S.live;
   if (!att) return;
   try {
-    const { attempt, questions } = await API.post('/api/attempts/' + att.id + '/submit', { leaves: att.leaves || 0 });
+    const { attempt, questions } = await API.post('/api/candidate/attempts/' + att.id + '/submit', { leaves: att.leaves || 0 });
     S.candResult = normalizeAttempt(attempt);
     S.live = null;
     S.liveQuestions = {};
@@ -3157,6 +3419,7 @@ async function loadAdminData() {
     if (S.auth && S.auth.role === 'superadmin') {
       try { S.admins = await API.get('/api/admin/admins'); } catch (e) { S.admins = []; }
     }
+    try { S.candidates = await API.get('/api/admin/candidates'); } catch (e) { S.candidates = []; }
   } catch (e) {
     if (e.status === 401) {
       S.auth = null;
@@ -3242,6 +3505,7 @@ function setTab(t) {
   }
   S.tab = t;
   if (t === 'activity') loadEvents();
+  if (t === 'candidates') loadCandidates();
   render();
 }
 
@@ -3410,6 +3674,7 @@ function onClick(e) {
       $('#sidebarOverlay').classList.remove('show');
       break;
     case 'user-menu':
+    case 'cand-user-menu':
       const menu = el.nextElementSibling;
       const open = menu.classList.toggle('open');
       el.setAttribute('aria-expanded', open);
@@ -3419,6 +3684,8 @@ function onClick(e) {
     case 'show-register': S.view = 'register'; render(); break;
     case 'back-to-login': S.view = 'login'; render(); break;
     case 'go-candidate': setMode('candidate'); break;
+    case 'go-console': S.mode = 'console'; S.view = S.auth ? 'app' : 'login'; render(); break;
+    case 'cand-logout': candLogout(); break;
     case 'theme-toggle': toggleTheme(); break;
 
     /* console: tests */
@@ -3515,6 +3782,13 @@ function onClick(e) {
     case 'save-admin': saveNewAdmin(); break;
     case 'delete-admin': confirmDeleteAdmin(id); break;
 
+    /* console: candidates */
+    case 'add-candidate': openAddCandidateModal(); break;
+    case 'edit-candidate': openEditCandidateModal(id); break;
+    case 'cand-test-toggle': toggleCandidateTest(val); break;
+    case 'save-candidate': saveCandidate(); break;
+    case 'delete-candidate': confirmDeleteCandidate(id); break;
+
     /* modals */
     case 'close-modal': closeModal(); break;
     case 'modal-confirm': if (modalConfirmCb) modalConfirmCb(); break;
@@ -3558,7 +3832,6 @@ function onInput(e) {
     render();
     return;
   }
-  if (el.dataset && el.dataset.action === 'identify') { sendIdentify(); return; }
   if (el.dataset && (el.dataset.action === 'pair-l' || el.dataset.action === 'pair-r' || el.dataset.action === 'order-item' || el.dataset.action === 'code-stub' || el.dataset.action === 'tc-args' || el.dataset.action === 'tc-expected')) {
     if (!qDraft) return;
     if (el.dataset.action === 'pair-l') qDraft.pairs[+el.dataset.i].l = el.value;
@@ -3586,6 +3859,7 @@ function onSubmit(e) {
   const form = e.target;
   if (form.dataset.form === 'login') { e.preventDefault(); doLogin(e); }
   else if (form.dataset.form === 'register') { e.preventDefault(); doRegister(e); }
+  else if (form.dataset.form === 'candidate-login') { e.preventDefault(); candLogin(); }
 }
 
 function onKey(e) {
