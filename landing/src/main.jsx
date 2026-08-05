@@ -135,6 +135,7 @@ function Header({ onOpenDemo }) {
         <a href="#how" onClick={close}>How it works <Icon name="arrow"/></a>
         <a href="#paths" onClick={close}>Skill paths <Icon name="arrow"/></a>
         <a href="#insights" onClick={close}>Insights <Icon name="arrow"/></a>
+        <a className="mobile-signin" href="/app" onClick={close}>Sign in <Icon name="arrow"/></a>
         <button onClick={() => { close(); onOpenDemo(); }}>Take a free test <Icon name="arrow"/></button>
       </div>
     </header>
