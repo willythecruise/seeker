@@ -525,7 +525,7 @@ function reviewHTML(rec) {
           '<span class="review-meta">' +
             '<span class="badge b-' + q.diff + '"><span class="dot"></span>' + diffOf(q.diff).name + '</span>' +
             '<span class="badge b-mcq">' + esc(catOf(q.cat).name) + '</span>' +
-            '<span class="badge b-mcq">' + { mcq: 'Multiple choice', multi: 'Multi-select', fill: 'Fill in the blank', matching: 'Matching', ordering: 'Ordering', code: 'Coding challenge' }[q.type] || q.type + '</span>' +
+            '<span class="badge b-mcq">' + ({ mcq: 'Multiple choice', multi: 'Multi-select', fill: 'Fill in the blank', matching: 'Matching', ordering: 'Ordering', code: 'Coding challenge' }[q.type] || q.type) + '</span>' +
           '</span>' +
         '</span>' +
         '<span class="review-chev">' + ic('chevronD', 16) + '</span>' +

@@ -81,7 +81,7 @@ function postRender() {
     positionSeg('#qDiffSeg', '#qDiffThumb', Math.max(0, ['beginner', 'intermediate', 'advanced'].indexOf(qDraft.diff)));
     positionSeg('#qTypeSeg', '#qTypeThumb', { fill: 5, multi: 1, matching: 2, ordering: 3, mcq: 0, code: 4 }[qDraft.type] || 0);
   }
-  if (S.mode === 'candidate' && S.candView === 'result') animateRing();
+  if (S.mode === 'candidate' && S.candView === 'result') animateScore();
   if (S.mode === 'candidate' && S.candView === 'runner' && S.live) updateTimerUI();
 }
 

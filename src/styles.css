@@ -920,6 +920,8 @@ kbd {
 .g-chrome > span { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--text-3); }
 .g-share { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 650; color: var(--accent); }
 .g-share:hover { color: var(--accent-hover); }
+.g-back { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+.g-back:hover { color: var(--text-1); }
 .g-body { padding: 18px; }
 .g-cards { display: grid; grid-template-columns: 1.55fr 1fr 1fr; gap: 14px; }
 .g-card { position: relative; border: 1px solid var(--hairline); border-radius: 13px; padding: 18px 20px; background: var(--surface); overflow: hidden; }
@@ -955,3 +957,7 @@ kbd {
   .g-score .g-big { border-right: none; padding-right: 0; }
   .g-chrome > span { display: none; }
 }
+
+.g-stat strong { display: block; margin-top: 7px; font-size: 27px; font-weight: 620; letter-spacing: -0.03em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.g-stat p { margin: 3px 0 0; font-size: 12px; color: var(--text-3); }
+.g-score .g-signal { margin-bottom: 2px; }

@@ -836,38 +836,53 @@ function vCandidateResult() {
   const rec = S.candResult;
   if (!rec) return '';
   const passed = rec.passed;
-  const color = passed ? 'var(--green)' : 'var(--red)';
   const used = rec.durationSec - (rec.remainingSec != null ? rec.remainingSec : rec.durationSec);
-  return '<div class="card result-hero">' +
-    '<div class="ring-wrap">' +
-      '<svg width="168" height="168" viewBox="0 0 168 168">' +
-        '<circle class="ring-bg" cx="84" cy="84" r="74"/>' +
-        '<circle class="ring-fg" id="ringFg" cx="84" cy="84" r="74" stroke="' + color + '" stroke-dasharray="464.96" stroke-dashoffset="464.96"/>' +
-      '</svg>' +
-      '<div class="ring-label"><div><div class="ring-value">' + rec.pct + '%</div><div class="ring-sub">score</div></div></div>' +
+  const name = (S.candAuth && (S.candAuth.displayName || S.candAuth.username)) || rec.candidate || 'Candidate';
+  const signalCls = passed ? 'g-strong' : 'g-growing';
+  const signalTxt = passed ? 'PASSED' : 'NOT PASSED';
+  return '<div class="g-report">' +
+    '<div class="g-chrome">' +
+      '<div class="g-dots"><i></i><i></i><i></i></div>' +
+      '<span>seeker.dev / my-result</span>' +
+      '<div style="display:flex;align-items:center;gap:14px">' +
+        '<button class="g-back" data-action="back-home" title="Back to all tests">' + ic('arrowL', 14) + ' All tests</button>' +
+        '<button class="g-share" data-action="share-result" title="Copy your result summary">' + ic('link', 14) + ' Share result</button>' +
+      '</div>' +
     '</div>' +
-    '<div>' +
-      '<span class="result-verdict ' + (passed ? 'b-pass' : 'b-fail') + '">' + ic(passed ? 'check' : 'x', 14) + ' ' + (passed ? 'Passed' : 'Not passed') + '</span>' +
-      '<div style="margin-top:8px;font-size:14px;color:var(--text-2)">' + esc(rec.candidate) + ' · ' + esc(rec.testName) + '</div>' +
+    '<div class="g-body">' +
+      '<div class="g-cards">' +
+        '<div class="g-card g-score" style="grid-column:1/-1">' +
+          '<div class="g-big"><b id="resultBig">' + rec.pct + '</b><small>/ 100</small></div>' +
+          '<div>' +
+            '<span class="g-signal ' + signalCls + '">' + signalTxt + '</span>' +
+            '<p>' + esc(name) + ' \u00B7 ' + esc(rec.testName) + ' \u2014 <b>' + rec.correct + '/' + rec.total + '</b> correct</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="g-card g-stat">' +
+          '<span class="g-kicker">Correct</span>' +
+          '<strong>' + rec.correct + '/' + rec.total + '</strong>' +
+          '<p>questions answered correctly</p>' +
+        '</div>' +
+        '<div class="g-card g-stat">' +
+          '<span class="g-kicker">Time used</span>' +
+          '<strong>' + fmtMins(used) + '</strong>' +
+          '<p>of ' + fmtMins(rec.durationSec) + ' allowed</p>' +
+        '</div>' +
+        '<div class="g-card g-stat">' +
+          '<span class="g-kicker">Pass mark</span>' +
+          '<strong>' + rec.passPct + '%</strong>' +
+          '<p>required to pass</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="g-skills">' +
+        '<div class="g-sec-title"><div><span>Performance by category</span><h4>Where your answers landed</h4></div></div>' +
+        gSkillBars(rec.byCat) +
+      '</div>' +
     '</div>' +
-    '<div class="result-stats">' +
-      '<div class="result-stat"><div class="result-stat-val">' + rec.correct + '/' + rec.total + '</div><div class="result-stat-lbl">Correct</div></div>' +
-      '<div class="result-stat"><div class="result-stat-val">' + fmtMins(used) + '</div><div class="result-stat-lbl">Time used</div></div>' +
-      '<div class="result-stat"><div class="result-stat-val">' + rec.passPct + '%</div><div class="result-stat-lbl">Pass mark</div></div>' +
-    '</div>' +
-    '<div style="margin-top:22px;display:flex;gap:10px;justify-content:center">' +
-      '<button class="btn btn-secondary" data-action="back-home">' + ic('arrowL', 15) + ' All tests</button>' +
-      '<button class="btn btn-primary" data-action="share-result">' + ic('link', 14) + ' Share result</button>' +
-    '</div>' +
-  '</div>' +
-
-  '<div class="card card-pad" style="margin-top:16px">' +
-    '<div class="section-label">Performance by category</div>' +
-    breakdownHTML(rec.byCat) +
   '</div>' +
 
   (rec.showAnswers !== false ? '<div class="card" style="margin-top:16px">' +
-    '<div style="padding:18px 24px 8px"><div class="section-label" style="margin-bottom:8px">Answer review</div></div>' +
+    '<div style="padding:18px 24px 8px"><div class="g-sec-title"><div><span>Answer review</span><h4>Correct answers and explanations</h4></div></div></div>' +
     reviewHTML(rec) +
   '</div>' : '');
 }
@@ -879,15 +894,17 @@ async function backToHome() {
   await refreshCandidate();
 }
 
-function animateRing() {
-  const el = $('#ringFg');
+function animateScore() {
+  const el = $('#resultBig');
   if (!el || !S.candResult) return;
-  const rec = S.candResult;
-  const C = 464.96; // 2 * PI * 74
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      el.style.transition = 'stroke-dashoffset 1s cubic-bezier(0.3,0.9,0.4,1)';
-      el.style.strokeDashoffset = String(C * (1 - rec.pct / 100));
-    });
-  });
+  const target = S.candResult.pct || 0;
+  const start = performance.now();
+  const dur = 900;
+  function step(now) {
+    const t = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = String(Math.round(target * eased));
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
