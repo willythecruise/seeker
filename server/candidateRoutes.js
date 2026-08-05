@@ -78,12 +78,12 @@ router.post('/tests/:id/start', async (req, res) => {
   const test = await Test.findById(req.params.id);
   if (!test) return res.status(404).json({ error: 'Test not found' });
   if (!test.published) return res.status(403).json({ error: 'This test is not published yet' });
-  if (!isGranted(req.candidate, test._id)) return res.status(403).json({ error: 'You don\u2019t have access to this test' });
+  if (!isGranted(req.candidate, test._id)) return res.status(403).json({ error: 'You do not have access to this test' });
   const name = (req.candidate.displayName || req.candidate.username || 'Candidate').trim();
   const { ip, ua } = clientInfo(req);
   const dup = await Attempt.findOne({ testId: test._id, candidateId: req.candidate._id, status: 'in-progress' });
   if (dup) {
-    return res.status(409).json({ error: 'You already have this test in progress — resume it instead' });
+    return res.status(409).json({ error: 'You already have this test in progress. Resume it instead' });
   }
   const { order, optionOrder } = await sampleAttempt(test, Question);
   if (!order.length) return res.status(400).json({ error: 'No questions match this test\u2019s configuration' });

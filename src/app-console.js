@@ -28,7 +28,7 @@ function vLogin() {
       '</form>' +
       '<div id="bootstrapSlot" class="auth-bootstrap"></div>' +
       '<div class="auth-divider"></div>' +
-      '<button class="btn btn-ghost" style="width:100%" data-action="go-candidate">' + ic('doc', 15) + ' Take a test as a candidate</button>' +
+      '<button class="btn btn-secondary" style="width:100%" data-action="go-candidate">' + ic('doc', 15) + ' Take a test as a candidate</button>' +
     '</div>' +
   '</div>';
 }
@@ -40,7 +40,7 @@ async function checkBootstrap() {
     const r = await API.get('/api/auth/bootstrap');
     if (r.needsBootstrap) {
       slot.innerHTML = '<div class="auth-divider"></div>' +
-        '<p class="auth-sub" style="margin:0 0 10px">No admin account exists yet — create the first one.</p>' +
+        '<p class="auth-sub" style="margin:0 0 10px">No admin account exists. Create the first one.</p>' +
         '<button class="btn btn-secondary" style="width:100%" data-action="show-register">' + ic('plus', 14) + ' Create admin account</button>';
     }
   } catch (e) { /* server unreachable — message shown by login submit */ }
@@ -51,7 +51,7 @@ function vRegister() {
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
       '<h1 class="auth-title">Create the first admin</h1>' +
-      '<p class="auth-sub">This account becomes the superadmin with full control.</p>' +
+      '<p class="auth-sub">This account becomes the superadmin. It has full control.</p>' +
       '<form id="registerForm" data-form="register" novalidate>' +
         '<div class="auth-field">' +
           '<label class="field-label" for="regUser">Username</label>' +
@@ -195,7 +195,7 @@ function vDashboard() {
 
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Good day, ' + esc((S.auth && (S.auth.displayName || S.auth.username)) || 'Admin') + '</h1>' +
-    '<p class="page-desc">Here\u2019s what\u2019s happening across your assessment program.</p></div>' +
+    '<p class="page-desc">See the current status of your assessment program.</p></div>' +
     '<div class="page-actions">' +
       '<button class="btn btn-secondary" data-action="tab" data-value="questions">' + ic('question', 15) + ' Question bank</button>' +
       '<button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button>' +
@@ -245,11 +245,11 @@ function vDashboard() {
 function vTests() {
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Tests</h1>' +
-    '<p class="page-desc">Compose timed assessments from your question bank, then publish them to the candidate portal.</p></div>' +
+    '<p class="page-desc">Build timed assessments from your question bank. Publish them to the candidate portal.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button></div>' +
   '</div>' +
   (S.tests.length ? '<div class="card">' + S.tests.map(testRowHTML).join('') + '</div>'
-    : emptyState('doc', 'No tests yet', 'Create your first assessment to start screening candidates.', 'new-test', 'Create a test'));
+    : emptyState('doc', 'No tests yet', 'Create your first assessment to begin screening candidates.', 'new-test', 'Create a test'));
 }
 
 function testRowHTML(t) {
@@ -487,7 +487,7 @@ function vQuestions() {
 
     '<div style="height:16px"></div>' +
     (list.length ? '<div class="card">' + list.map(qRowHTML).join('') + '</div>'
-      : emptyState('search', 'No matching questions', 'Try adjusting your filters, or add a new question to the bank.', 'add-question', 'Add question'));
+      : emptyState('search', 'No matching questions', 'Adjust your filters or add a new question to the bank.', 'add-question', 'Add question'));
 }
 
 function qRowHTML(q) {
@@ -848,14 +848,14 @@ function vActivity() {
   const ev = S.events || [];
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Activity</h1>' +
-    '<p class="page-desc">Every name entry, test start, submit, and discard — with IP and device info. Discards are the ones to watch.</p></div>' +
+    '<p class="page-desc">Each sign-in, test start, submit, and discard is recorded with IP and device data. Discards may indicate misuse.</p></div>' +
   '</div>' +
   '<div style="height:16px"></div>' +
   (ev.length ? '<div class="card table-wrap"><table class="tbl">' +
     '<thead><tr><th>Event</th><th>Candidate</th><th>Test</th><th>IP</th><th>Device</th><th>Switches</th><th>When</th></tr></thead><tbody>' +
     ev.map(evRowHTML).join('') +
     '</tbody></table></div>'
-    : emptyState('clock', 'No activity yet', 'Events appear here as candidates identify, start, submit, or discard tests.'));
+    : emptyState('clock', 'No activity yet', 'Events appear here when candidates sign in, start, submit, or discard tests.'));
 }
 
 function evRowHTML(e) {
@@ -973,11 +973,11 @@ async function loadCandidates() {
 function vCandidates() {
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Candidates</h1>' +
-    '<p class="page-desc">Granted accounts can sign in to the candidate portal and take exactly the tests you assign.</p></div>' +
+    '<p class="page-desc">Each candidate can sign in to the portal. They can take only the tests you assign.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
   '</div>' +
   (S.candidates.length ? '<div class="card">' + S.candidates.map(candidateRowHTML).join('') + '</div>'
-    : emptyState('users', 'No candidates yet', 'Create an account and assign tests to give someone access to the candidate portal.', 'add-candidate', 'Add candidate'));
+    : emptyState('users', 'No candidates yet', 'Create an account to give access. Assign the tests that the candidate can take.', 'add-candidate', 'Add candidate'));
 }
 
 function candidateRowHTML(c) {

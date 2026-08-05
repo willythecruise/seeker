@@ -766,13 +766,24 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
   border: 1px solid var(--hairline);
 }
 .auth-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 26px; }
-.auth-brand .brand-logo-img { height: 44px; width: auto; display: block; }
+.auth-brand .brand-logo-img { height: 60px; width: auto; display: block; }
 .auth-title { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 5px; }
 .auth-sub { font-size: 13.5px; color: var(--text-2); line-height: 1.55; margin-bottom: 22px; }
 .auth-field { margin-bottom: 15px; }
 .auth-input { position: relative; }
 .auth-input .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
-.auth-input .input { padding-left: 38px; }
+.auth-input .input {
+  padding-left: 40px; padding-top: 0; padding-bottom: 0; height: 46px;
+  border-radius: 12px; font-size: 14.5px;
+}
+.auth-card .btn-lg { height: 48px; border-radius: 13px; }
+.auth-link {
+  display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%;
+  padding: 10px; border-radius: 10px; font-size: 14px; font-weight: 500;
+  color: var(--text-2); transition: background 0.15s ease, color 0.15s ease;
+}
+.auth-link:hover { background: var(--gray-100); color: var(--text); }
+.auth-link svg { width: 15px; height: 15px; }
 .auth-divider { height: 1px; background: var(--hairline-soft); margin: 20px 0 16px; }
 .auth-bootstrap { margin-top: 2px; }
 
@@ -793,7 +804,15 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 /* ────────────────────────── Brand ─────────────────────────── */
 
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.brand-logo-img { height: 34px; width: auto; display: block; }
+.brand-logo-img { height: 48px; width: auto; display: block; }
+
+/* Logo in the mobile top bar */
+.brand-topbar { flex: none; padding-right: 6px; }
+.brand-topbar .brand-logo-img { height: 40px; }
+
+/* Mobile hamburger (large touch target) */
+.hamburger { width: 48px; height: 48px; border-radius: 12px; }
+.hamburger svg { width: 26px; height: 26px; }
 
 /* ────────────────────────── Code snippets ─────────────────── */
 

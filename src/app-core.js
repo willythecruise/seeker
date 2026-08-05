@@ -308,7 +308,10 @@ function headerHTML(mode) {
   const candUser = isCand && S.candAuth;
   return '<div class="topbar-inner">' +
     '<div class="topbar-left">' +
-      '<button class="btn-icon hide-desktop" data-action="sidebar-open" aria-label="Open menu">' + ic('menu', 20) + '</button>' +
+      '<button class="btn-icon hamburger hide-desktop" data-action="sidebar-open" aria-label="Open menu">' + ic('menu', 26) + '</button>' +
+      '<a class="brand brand-topbar hide-desktop" href="#" data-action="brand" aria-label="Seeker home">' +
+        '<img class="brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41">' +
+      '</a>' +
       '<div class="search">' +
         '<input id="globalSearch" placeholder="Search" value="' + esc(S.qFilters.search) + '" autocomplete="off">' +
         ic('search', 18) +

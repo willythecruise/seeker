@@ -12,7 +12,7 @@ async function requireAuth(req, res, next) {
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
   if (!token) return res.status(401).json({ error: 'Authentication required' });
   const session = await Session.findOne({ token, expiresAt: { $gt: new Date() } });
-  if (!session) return res.status(401).json({ error: 'Session expired — please sign in again' });
+  if (!session) return res.status(401).json({ error: 'Session expired. Sign in again' });
   const admin = await Admin.findById(session.admin);
   if (!admin) return res.status(401).json({ error: 'Account not found' });
   req.admin = admin;
@@ -44,7 +44,7 @@ async function requireCandidate(req, res, next) {
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
   if (!token) return res.status(401).json({ error: 'Authentication required' });
   const session = await CandidateSession.findOne({ token, expiresAt: { $gt: new Date() } });
-  if (!session) return res.status(401).json({ error: 'Session expired — please sign in again' });
+  if (!session) return res.status(401).json({ error: 'Session expired. Sign in again' });
   const candidate = await Candidate.findById(session.candidate);
   if (!candidate || candidate.active === false) return res.status(401).json({ error: 'Account not found or disabled' });
   req.candidate = candidate;
@@ -83,7 +83,7 @@ router.get('/bootstrap', async (req, res) => {
 /* POST /api/auth/register — create the first superadmin */
 router.post('/register', async (req, res) => {
   const count = await Admin.countDocuments();
-  if (count > 0) return res.status(403).json({ error: 'An administrator already exists — sign in instead' });
+  if (count > 0) return res.status(403).json({ error: 'An administrator already exists. Sign in instead' });
   const { username, email, password } = req.body || {};
   const uname = String(username || '').trim().toLowerCase();
   const pw = String(password || '');

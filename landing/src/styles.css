@@ -67,14 +67,15 @@ img { display: block; max-width: 100%; }
 .site-header { position: fixed; z-index: 90; top: 0; left: 50%; transform: translateX(-50%); width: min(calc(100% - 64px), var(--max)); height: 84px; display: flex; align-items: center; justify-content: space-between; color: white; transition: width .35s var(--ease), height .35s var(--ease), top .35s var(--ease), color .25s ease, background .25s ease, box-shadow .25s ease, border-color .25s ease; border: 1px solid transparent; }
 .site-header--scrolled { top: 12px; width: min(calc(100% - 32px), 1240px); height: 64px; color: var(--ink); padding: 0 11px 0 15px; border-radius: 16px; background: rgba(250,251,248,.88); border-color: rgba(7,21,16,.1); box-shadow: 0 14px 44px rgba(8,29,19,.11); backdrop-filter: blur(18px) saturate(1.2); }
 .brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 690; font-size: 20px; letter-spacing: -.04em; }
-.brand-logo { height: 26px; width: auto; display: inline-flex; }
+.brand-logo { height: 38px; width: auto; display: inline-flex; }
 .desktop-nav { display: flex; align-items: center; gap: 34px; margin-left: 90px; }
 .desktop-nav a, .login-link { font-size: 14px; font-weight: 510; color: currentColor; opacity: .82; transition: opacity .2s ease; }
 .desktop-nav a:hover, .login-link:hover { opacity: 1; }
 .header-actions { display: flex; align-items: center; gap: 20px; }
 .button--header { min-height: 41px; border-radius: 10px; padding: 0 16px; font-size: 13px; color: var(--ink); background: white; box-shadow: 0 9px 22px rgba(0,20,30,.15); }
 .site-header--scrolled .button--header { color: white; background: var(--blue); }
-.menu-button { display: none; width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 10px; background: transparent; color: currentColor; cursor: pointer; }
+.menu-button { display: none; width: 48px; height: 48px; align-items: center; justify-content: center; border-radius: 10px; background: transparent; color: currentColor; cursor: pointer; }
+.menu-button svg { width: 26px; height: 26px; }
 .mobile-nav { display: none; }
 
 /* Hero */
@@ -252,7 +253,7 @@ img { display: block; max-width: 100%; }
 .report-layout { display: grid; grid-template-columns: 190px 1fr; min-height: 639px; }
 .report-sidebar { padding: 23px 16px; border-right: 1px solid rgba(4,31,20,.09); background: #f9faf8; }
 .report-logo { font-size: 15px; }
-.report-logo .brand-logo { height: 22px; }
+.report-logo .brand-logo { height: 26px; }
 .report-sidebar nav { display: grid; gap: 5px; margin-top: 35px; }
 .report-sidebar nav span { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 7px; color: #758079; font-size: 10px; }
 .report-sidebar nav span svg { width: 14px; }
@@ -408,7 +409,7 @@ img { display: block; max-width: 100%; }
 @keyframes modalIn { from { opacity: 0; transform: translateY(30px) scale(.98); } }
 .demo-top { position: sticky; z-index: 4; top: 0; height: 68px; display: grid; grid-template-columns: 1fr auto 1fr auto; align-items: center; gap: 20px; padding: 0 22px; background: rgba(248,250,247,.95); border-bottom: 1px solid var(--line); backdrop-filter: blur(15px); }
 .demo-top .brand { font-size: 16px; }
-.demo-top .brand-logo { height: 24px; }
+.demo-top .brand-logo { height: 30px; }
 .demo-progress { display: flex; align-items: center; gap: 9px; color: #76827b; font: 550 9px 'Geist Mono'; letter-spacing: .08em; }
 .demo-progress i { display: block; width: 90px; height: 3px; border-radius: 9px; background: #dce2de; }
 .demo-progress b { display: block; width: 33%; height: 100%; border-radius: inherit; background: var(--blue-bright); }
@@ -503,7 +504,7 @@ img { display: block; max-width: 100%; }
   .site-header--scrolled { width: calc(100% - 20px); top: 9px; }
   .button--header { display: none; }
   .brand { font-size: 18px; }
-  .brand-logo { height: 23px; }
+  .brand-logo { height: 32px; }
   .hero { min-height: 910px; }
   .hero-media img { object-position: 51% 48%; }
   .hero-colorwash { background: linear-gradient(180deg,rgba(0,31,72,.38),rgba(0,40,70,.12) 44%,rgba(2,25,13,.46)); }

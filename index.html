@@ -779,13 +779,24 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
   border: 1px solid var(--hairline);
 }
 .auth-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 26px; }
-.auth-brand .brand-logo-img { height: 44px; width: auto; display: block; }
+.auth-brand .brand-logo-img { height: 60px; width: auto; display: block; }
 .auth-title { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 5px; }
 .auth-sub { font-size: 13.5px; color: var(--text-2); line-height: 1.55; margin-bottom: 22px; }
 .auth-field { margin-bottom: 15px; }
 .auth-input { position: relative; }
 .auth-input .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
-.auth-input .input { padding-left: 38px; }
+.auth-input .input {
+  padding-left: 40px; padding-top: 0; padding-bottom: 0; height: 46px;
+  border-radius: 12px; font-size: 14.5px;
+}
+.auth-card .btn-lg { height: 48px; border-radius: 13px; }
+.auth-link {
+  display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%;
+  padding: 10px; border-radius: 10px; font-size: 14px; font-weight: 500;
+  color: var(--text-2); transition: background 0.15s ease, color 0.15s ease;
+}
+.auth-link:hover { background: var(--gray-100); color: var(--text); }
+.auth-link svg { width: 15px; height: 15px; }
 .auth-divider { height: 1px; background: var(--hairline-soft); margin: 20px 0 16px; }
 .auth-bootstrap { margin-top: 2px; }
 
@@ -806,7 +817,15 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 /* ────────────────────────── Brand ─────────────────────────── */
 
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.brand-logo-img { height: 34px; width: auto; display: block; }
+.brand-logo-img { height: 48px; width: auto; display: block; }
+
+/* Logo in the mobile top bar */
+.brand-topbar { flex: none; padding-right: 6px; }
+.brand-topbar .brand-logo-img { height: 40px; }
+
+/* Mobile hamburger (large touch target) */
+.hamburger { width: 48px; height: 48px; border-radius: 12px; }
+.hamburger svg { width: 26px; height: 26px; }
 
 /* ────────────────────────── Code snippets ─────────────────── */
 
@@ -1206,7 +1225,10 @@ function headerHTML(mode) {
   const candUser = isCand && S.candAuth;
   return '<div class="topbar-inner">' +
     '<div class="topbar-left">' +
-      '<button class="btn-icon hide-desktop" data-action="sidebar-open" aria-label="Open menu">' + ic('menu', 20) + '</button>' +
+      '<button class="btn-icon hamburger hide-desktop" data-action="sidebar-open" aria-label="Open menu">' + ic('menu', 26) + '</button>' +
+      '<a class="brand brand-topbar hide-desktop" href="#" data-action="brand" aria-label="Seeker home">' +
+        '<img class="brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41">' +
+      '</a>' +
       '<div class="search">' +
         '<input id="globalSearch" placeholder="Search" value="' + esc(S.qFilters.search) + '" autocomplete="off">' +
         ic('search', 18) +
@@ -1582,7 +1604,7 @@ function vLogin() {
       '</form>' +
       '<div id="bootstrapSlot" class="auth-bootstrap"></div>' +
       '<div class="auth-divider"></div>' +
-      '<button class="btn btn-ghost" style="width:100%" data-action="go-candidate">' + ic('doc', 15) + ' Take a test as a candidate</button>' +
+      '<button class="btn btn-secondary" style="width:100%" data-action="go-candidate">' + ic('doc', 15) + ' Take a test as a candidate</button>' +
     '</div>' +
   '</div>';
 }
@@ -1594,7 +1616,7 @@ async function checkBootstrap() {
     const r = await API.get('/api/auth/bootstrap');
     if (r.needsBootstrap) {
       slot.innerHTML = '<div class="auth-divider"></div>' +
-        '<p class="auth-sub" style="margin:0 0 10px">No admin account exists yet — create the first one.</p>' +
+        '<p class="auth-sub" style="margin:0 0 10px">No admin account exists. Create the first one.</p>' +
         '<button class="btn btn-secondary" style="width:100%" data-action="show-register">' + ic('plus', 14) + ' Create admin account</button>';
     }
   } catch (e) { /* server unreachable — message shown by login submit */ }
@@ -1605,7 +1627,7 @@ function vRegister() {
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
       '<h1 class="auth-title">Create the first admin</h1>' +
-      '<p class="auth-sub">This account becomes the superadmin with full control.</p>' +
+      '<p class="auth-sub">This account becomes the superadmin. It has full control.</p>' +
       '<form id="registerForm" data-form="register" novalidate>' +
         '<div class="auth-field">' +
           '<label class="field-label" for="regUser">Username</label>' +
@@ -1749,7 +1771,7 @@ function vDashboard() {
 
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Good day, ' + esc((S.auth && (S.auth.displayName || S.auth.username)) || 'Admin') + '</h1>' +
-    '<p class="page-desc">Here\u2019s what\u2019s happening across your assessment program.</p></div>' +
+    '<p class="page-desc">See the current status of your assessment program.</p></div>' +
     '<div class="page-actions">' +
       '<button class="btn btn-secondary" data-action="tab" data-value="questions">' + ic('question', 15) + ' Question bank</button>' +
       '<button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button>' +
@@ -1799,11 +1821,11 @@ function vDashboard() {
 function vTests() {
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Tests</h1>' +
-    '<p class="page-desc">Compose timed assessments from your question bank, then publish them to the candidate portal.</p></div>' +
+    '<p class="page-desc">Build timed assessments from your question bank. Publish them to the candidate portal.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button></div>' +
   '</div>' +
   (S.tests.length ? '<div class="card">' + S.tests.map(testRowHTML).join('') + '</div>'
-    : emptyState('doc', 'No tests yet', 'Create your first assessment to start screening candidates.', 'new-test', 'Create a test'));
+    : emptyState('doc', 'No tests yet', 'Create your first assessment to begin screening candidates.', 'new-test', 'Create a test'));
 }
 
 function testRowHTML(t) {
@@ -2041,7 +2063,7 @@ function vQuestions() {
 
     '<div style="height:16px"></div>' +
     (list.length ? '<div class="card">' + list.map(qRowHTML).join('') + '</div>'
-      : emptyState('search', 'No matching questions', 'Try adjusting your filters, or add a new question to the bank.', 'add-question', 'Add question'));
+      : emptyState('search', 'No matching questions', 'Adjust your filters or add a new question to the bank.', 'add-question', 'Add question'));
 }
 
 function qRowHTML(q) {
@@ -2402,14 +2424,14 @@ function vActivity() {
   const ev = S.events || [];
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Activity</h1>' +
-    '<p class="page-desc">Every name entry, test start, submit, and discard — with IP and device info. Discards are the ones to watch.</p></div>' +
+    '<p class="page-desc">Each sign-in, test start, submit, and discard is recorded with IP and device data. Discards may indicate misuse.</p></div>' +
   '</div>' +
   '<div style="height:16px"></div>' +
   (ev.length ? '<div class="card table-wrap"><table class="tbl">' +
     '<thead><tr><th>Event</th><th>Candidate</th><th>Test</th><th>IP</th><th>Device</th><th>Switches</th><th>When</th></tr></thead><tbody>' +
     ev.map(evRowHTML).join('') +
     '</tbody></table></div>'
-    : emptyState('clock', 'No activity yet', 'Events appear here as candidates identify, start, submit, or discard tests.'));
+    : emptyState('clock', 'No activity yet', 'Events appear here when candidates sign in, start, submit, or discard tests.'));
 }
 
 function evRowHTML(e) {
@@ -2527,11 +2549,11 @@ async function loadCandidates() {
 function vCandidates() {
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Candidates</h1>' +
-    '<p class="page-desc">Granted accounts can sign in to the candidate portal and take exactly the tests you assign.</p></div>' +
+    '<p class="page-desc">Each candidate can sign in to the portal. They can take only the tests you assign.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
   '</div>' +
   (S.candidates.length ? '<div class="card">' + S.candidates.map(candidateRowHTML).join('') + '</div>'
-    : emptyState('users', 'No candidates yet', 'Create an account and assign tests to give someone access to the candidate portal.', 'add-candidate', 'Add candidate'));
+    : emptyState('users', 'No candidates yet', 'Create an account to give access. Assign the tests that the candidate can take.', 'add-candidate', 'Add candidate'));
 }
 
 function candidateRowHTML(c) {
@@ -2779,7 +2801,7 @@ function vCandidateLogin() {
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
       '<h1 class="auth-title">Candidate sign in</h1>' +
-      '<p class="auth-sub">Sign in with the account your recruiter set up for you.</p>' +
+      '<p class="auth-sub">Sign in with the account your recruiter created for you.</p>' +
       '<form id="candLoginForm" data-form="candidate-login" novalidate>' +
         '<div class="auth-field">' +
           '<label class="field-label" for="candUser">Username</label>' +
@@ -2796,7 +2818,7 @@ function vCandidateLogin() {
         '<button class="btn btn-primary btn-lg" style="width:100%" type="submit">' + ic('arrowL', 15, 'rot-180') + ' Sign in</button>' +
       '</form>' +
       '<div class="auth-divider"></div>' +
-      '<button class="btn btn-ghost" style="width:100%" data-action="go-console">' + ic('gear', 15) + ' Back to console</button>' +
+      '<button class="auth-link" data-action="go-console">' + ic('gear', 15) + ' Back to console</button>' +
     '</div>' +
   '</div>';
 }
@@ -2847,11 +2869,11 @@ function vCandidateHome() {
   const name = (S.candAuth && (S.candAuth.displayName || S.candAuth.username)) || 'there';
   return '<div class="page-head" style="margin-top:34px">' +
     '<div><h1 class="page-title" style="font-size:34px">Good to see you, ' + esc(name) + '</h1>' +
-    '<p class="page-desc">Pick one of your assigned tests to begin. Every test is timed and graded automatically.</p></div>' +
+    '<p class="page-desc">Select one of your assigned tests. Each test is timed and graded automatically.</p></div>' +
   '</div>' +
   (S.live ? resumeCardHTML() : '') +
   (S.pubTests.length ? S.pubTests.map(candidateTestCardHTML).join('')
-    : emptyState('lock', 'No tests assigned yet', 'Your administrator hasn\u2019t assigned any tests to you yet.', 'cand-logout', 'Sign out'));
+    : emptyState('lock', 'No tests assigned yet', 'Your administrator has not assigned any tests to you yet.', 'cand-logout', 'Sign out'));
 }
 
 function resumeCardHTML() {
@@ -2906,7 +2928,7 @@ function openStartModal(testId) {
         '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
         '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
       '</div>' +
-      '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6">The timer starts as soon as you begin and can\u2019t be paused during the test. You\u2019ll be recorded under ' +
+      '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6">The timer starts when you begin. It cannot be paused during the test. The system records your attempt under ' +
       esc((S.candAuth.displayName || S.candAuth.username)) + '.</p>',
     foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
           '<button class="btn btn-primary" data-action="begin-attempt">' + ic('play', 14) + ' Begin</button>'
@@ -2928,7 +2950,7 @@ async function beginAttemptFromModal() {
     closeModal();
     render();
     startTimer();
-    toast('Test started — good luck!', 'success');
+    toast('Test started', 'success');
   } catch (e) {
     toast(e.message, 'error');
     render();
@@ -2940,13 +2962,13 @@ function resumeAttempt() {
   if (S.live.remainingSec != null) S.live.remaining = S.live.remainingSec;
   render();
   startTimer();
-  toast('Welcome back — ' + fmtClock(S.live.remaining) + ' remaining');
+  toast('Welcome back. You have ' + fmtClock(S.live.remaining) + ' left');
 }
 
 function discardAttempt() {
   confirmModal({
     title: 'Discard this attempt?',
-    body: 'Your answers and remaining time will be permanently deleted.',
+    body: 'The system permanently deletes your answers and remaining time.',
     confirmLabel: 'Discard',
     danger: true,
     onConfirm: async () => {
@@ -2986,7 +3008,7 @@ function tick() {
     } else {
       S.modal = {
         title: 'Time\u2019s up',
-        body: '<p style="font-size:14.5px;color:var(--text-2);line-height:1.65">Your time has expired. Submit now to record your answers — unanswered questions count as incorrect.</p>',
+        body: '<p style="font-size:14.5px;color:var(--text-2);line-height:1.65">Your time has expired. Submit now to record your answers. Unanswered questions count as incorrect.</p>',
         foot: '<button class="btn btn-primary" data-action="confirm-submit">Submit now</button>'
       };
       render();
@@ -3120,7 +3142,7 @@ function runnerCodeHTML(q, val) {
   return '<div class="code-box">' +
     '<div class="code-box-head">' +
       '<span class="badge b-mcq">' + ic('terminal2', 11) + ' ' + esc(q.codeLang === 'python' ? 'Python' : 'JavaScript') + '</span>' +
-      '<span style="font-size:12px;color:var(--text-3)">Define <b>solution</b> then press Run to test against the sample</span>' +
+      '<span style="font-size:12px;color:var(--text-3)">Define <b>solution</b>. Press Run to test against the sample</span>' +
     '</div>' +
     '<textarea class="code-editor" id="codeEditor" data-action="code" spellcheck="false" autocapitalize="off" autocomplete="off">' + esc(code) + '</textarea>' +
     '<div class="code-box-foot">' +
@@ -3236,7 +3258,7 @@ async function runCode() {
   const q = qOf(S.live.order[S.qIdx]);
   if (!q || q.type !== 'code') return;
   const code = ($('#codeEditor') || {}).value || '';
-  if (!code.trim()) { toast('Write some code first', 'error'); return; }
+  if (!code.trim()) { toast('Write code first', 'error'); return; }
   const out = $('#codeOut');
   if (out) out.textContent = 'Running…';
   try {
@@ -3290,7 +3312,7 @@ function leaveTest() {
   stopTimer();
   S.candView = 'home';
   render();
-  toast('Progress saved — you can resume anytime');
+  toast('Progress saved. You can resume the test later');
 }
 
 function askSubmit() {
@@ -3301,8 +3323,8 @@ function askSubmit() {
   confirmModal({
     title: 'Submit this test?',
     body: 'You have answered <b>' + answered + '</b> of <b>' + total + '</b> questions' +
-      (unanswered ? ' — <b>' + unanswered + '</b> unanswered question' + (unanswered > 1 ? 's' : '') + ' will count as incorrect.' : '.') +
-      ' You still have <b>' + fmtClock(S.live.remaining) + '</b> on the clock.',
+      (unanswered ? ' — <b>' + unanswered + '</b> unanswered question' + (unanswered > 1 ? 's' : '') + ' count as incorrect.' : '.') +
+      ' You have <b>' + fmtClock(S.live.remaining) + '</b> left.',
     confirmLabel: 'Submit test',
     onConfirm: () => { closeModal(); submitAttempt(false); }
   });
@@ -3320,7 +3342,7 @@ async function submitAttempt(auto) {
     buildQPool(Object.values(questions || {}));
     S.candView = 'result';
     render();
-    toast(auto ? 'Time is up — test submitted' : 'Test submitted', 'success');
+    toast(auto ? 'Time is up. Test submitted' : 'Test submitted', 'success');
   } catch (e) {
     toast(e.message, 'error');
     if (e.status === 409) { S.live = null; S.candView = 'home'; render(); }

@@ -70,7 +70,7 @@ function vCandidateLogin() {
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
       '<h1 class="auth-title">Candidate sign in</h1>' +
-      '<p class="auth-sub">Sign in with the account your recruiter set up for you.</p>' +
+      '<p class="auth-sub">Sign in with the account your recruiter created for you.</p>' +
       '<form id="candLoginForm" data-form="candidate-login" novalidate>' +
         '<div class="auth-field">' +
           '<label class="field-label" for="candUser">Username</label>' +
@@ -87,7 +87,7 @@ function vCandidateLogin() {
         '<button class="btn btn-primary btn-lg" style="width:100%" type="submit">' + ic('arrowL', 15, 'rot-180') + ' Sign in</button>' +
       '</form>' +
       '<div class="auth-divider"></div>' +
-      '<button class="btn btn-ghost" style="width:100%" data-action="go-console">' + ic('gear', 15) + ' Back to console</button>' +
+      '<button class="auth-link" data-action="go-console">' + ic('gear', 15) + ' Back to console</button>' +
     '</div>' +
   '</div>';
 }
@@ -138,11 +138,11 @@ function vCandidateHome() {
   const name = (S.candAuth && (S.candAuth.displayName || S.candAuth.username)) || 'there';
   return '<div class="page-head" style="margin-top:34px">' +
     '<div><h1 class="page-title" style="font-size:34px">Good to see you, ' + esc(name) + '</h1>' +
-    '<p class="page-desc">Pick one of your assigned tests to begin. Every test is timed and graded automatically.</p></div>' +
+    '<p class="page-desc">Select one of your assigned tests. Each test is timed and graded automatically.</p></div>' +
   '</div>' +
   (S.live ? resumeCardHTML() : '') +
   (S.pubTests.length ? S.pubTests.map(candidateTestCardHTML).join('')
-    : emptyState('lock', 'No tests assigned yet', 'Your administrator hasn\u2019t assigned any tests to you yet.', 'cand-logout', 'Sign out'));
+    : emptyState('lock', 'No tests assigned yet', 'Your administrator has not assigned any tests to you yet.', 'cand-logout', 'Sign out'));
 }
 
 function resumeCardHTML() {
@@ -197,7 +197,7 @@ function openStartModal(testId) {
         '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
         '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
       '</div>' +
-      '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6">The timer starts as soon as you begin and can\u2019t be paused during the test. You\u2019ll be recorded under ' +
+      '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6">The timer starts when you begin. It cannot be paused during the test. The system records your attempt under ' +
       esc((S.candAuth.displayName || S.candAuth.username)) + '.</p>',
     foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
           '<button class="btn btn-primary" data-action="begin-attempt">' + ic('play', 14) + ' Begin</button>'
@@ -219,7 +219,7 @@ async function beginAttemptFromModal() {
     closeModal();
     render();
     startTimer();
-    toast('Test started — good luck!', 'success');
+    toast('Test started', 'success');
   } catch (e) {
     toast(e.message, 'error');
     render();
@@ -231,13 +231,13 @@ function resumeAttempt() {
   if (S.live.remainingSec != null) S.live.remaining = S.live.remainingSec;
   render();
   startTimer();
-  toast('Welcome back — ' + fmtClock(S.live.remaining) + ' remaining');
+  toast('Welcome back. You have ' + fmtClock(S.live.remaining) + ' left');
 }
 
 function discardAttempt() {
   confirmModal({
     title: 'Discard this attempt?',
-    body: 'Your answers and remaining time will be permanently deleted.',
+    body: 'The system permanently deletes your answers and remaining time.',
     confirmLabel: 'Discard',
     danger: true,
     onConfirm: async () => {
@@ -277,7 +277,7 @@ function tick() {
     } else {
       S.modal = {
         title: 'Time\u2019s up',
-        body: '<p style="font-size:14.5px;color:var(--text-2);line-height:1.65">Your time has expired. Submit now to record your answers — unanswered questions count as incorrect.</p>',
+        body: '<p style="font-size:14.5px;color:var(--text-2);line-height:1.65">Your time has expired. Submit now to record your answers. Unanswered questions count as incorrect.</p>',
         foot: '<button class="btn btn-primary" data-action="confirm-submit">Submit now</button>'
       };
       render();
@@ -411,7 +411,7 @@ function runnerCodeHTML(q, val) {
   return '<div class="code-box">' +
     '<div class="code-box-head">' +
       '<span class="badge b-mcq">' + ic('terminal2', 11) + ' ' + esc(q.codeLang === 'python' ? 'Python' : 'JavaScript') + '</span>' +
-      '<span style="font-size:12px;color:var(--text-3)">Define <b>solution</b> then press Run to test against the sample</span>' +
+      '<span style="font-size:12px;color:var(--text-3)">Define <b>solution</b>. Press Run to test against the sample</span>' +
     '</div>' +
     '<textarea class="code-editor" id="codeEditor" data-action="code" spellcheck="false" autocapitalize="off" autocomplete="off">' + esc(code) + '</textarea>' +
     '<div class="code-box-foot">' +
@@ -527,7 +527,7 @@ async function runCode() {
   const q = qOf(S.live.order[S.qIdx]);
   if (!q || q.type !== 'code') return;
   const code = ($('#codeEditor') || {}).value || '';
-  if (!code.trim()) { toast('Write some code first', 'error'); return; }
+  if (!code.trim()) { toast('Write code first', 'error'); return; }
   const out = $('#codeOut');
   if (out) out.textContent = 'Running…';
   try {
@@ -581,7 +581,7 @@ function leaveTest() {
   stopTimer();
   S.candView = 'home';
   render();
-  toast('Progress saved — you can resume anytime');
+  toast('Progress saved. You can resume the test later');
 }
 
 function askSubmit() {
@@ -592,8 +592,8 @@ function askSubmit() {
   confirmModal({
     title: 'Submit this test?',
     body: 'You have answered <b>' + answered + '</b> of <b>' + total + '</b> questions' +
-      (unanswered ? ' — <b>' + unanswered + '</b> unanswered question' + (unanswered > 1 ? 's' : '') + ' will count as incorrect.' : '.') +
-      ' You still have <b>' + fmtClock(S.live.remaining) + '</b> on the clock.',
+      (unanswered ? ' — <b>' + unanswered + '</b> unanswered question' + (unanswered > 1 ? 's' : '') + ' count as incorrect.' : '.') +
+      ' You have <b>' + fmtClock(S.live.remaining) + '</b> left.',
     confirmLabel: 'Submit test',
     onConfirm: () => { closeModal(); submitAttempt(false); }
   });
@@ -611,7 +611,7 @@ async function submitAttempt(auto) {
     buildQPool(Object.values(questions || {}));
     S.candView = 'result';
     render();
-    toast(auto ? 'Time is up — test submitted' : 'Test submitted', 'success');
+    toast(auto ? 'Time is up. Test submitted' : 'Test submitted', 'success');
   } catch (e) {
     toast(e.message, 'error');
     if (e.status === 409) { S.live = null; S.candView = 'home'; render(); }

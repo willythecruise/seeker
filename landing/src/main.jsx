@@ -209,12 +209,12 @@ function Hero({ onOpenDemo }) {
       </div>
       <div className="hero-content">
         <h1><span>Sharpen the skills</span><span>that get you hired.</span></h1>
-        <p>Timed, role-specific tests for software engineers—with clear feedback that turns every weak spot into your next strength.</p>
+        <p>Take timed tests for your engineering role. Get clear feedback on each answer. Use the feedback to close your skill gaps.</p>
         <div className="hero-actions">
           <button className="button button--primary button--large" onClick={onOpenDemo}>Take a free test <Icon name="arrow" size={18}/></button>
           <a className="button button--ghost button--large" href="#paths"><Icon name="play" size={16}/> Explore skill paths</a>
         </div>
-        <div className="hero-footnote"><span><Icon name="check" size={14}/> No credit card</span><span><Icon name="check" size={14}/> Instant results</span><span><Icon name="check" size={14}/> 10 minutes to start</span></div>
+        <div className="hero-footnote"><span><Icon name="check" size={14}/> No credit card needed</span><span><Icon name="check" size={14}/> Results appear immediately</span><span><Icon name="check" size={14}/> Start in 10 minutes</span></div>
       </div>
       <div className="hero-reticle" aria-hidden="true">
         <svg viewBox="0 0 120 120">
@@ -288,15 +288,15 @@ function HowSection() {
       </div>
       <div className="section-heading section-heading--left" data-reveal>
         <span className="section-kicker">How Seeker works</span>
-        <h2>Practice that feels like<br/>the real thing.</h2>
-        <p>No passive courses. No endless videos. Just focused reps, useful pressure, and a clear way forward.</p>
+        <h2>Practice under<br/>real test conditions.</h2>
+        <p>We do not use long video lessons. We give you focused practice and useful pressure.</p>
       </div>
       <div className="feature-grid">
         <article className="feature-card feature-card--blue" data-reveal>
           <div className="feature-copy">
             <span className="card-number">01</span>
             <h3>Get comfortable<br/>with the clock.</h3>
-            <p>Timed sessions train fast recall and calm decision-making—before an interviewer is watching.</p>
+            <p>Use timed sessions to improve your speed and your decisions. Practice now so you stay calm in an interview.</p>
           </div>
           <TimerVector/>
         </article>
@@ -304,7 +304,7 @@ function HowSection() {
           <div className="feature-copy">
             <span className="card-number">02</span>
             <h3>Follow your gaps,<br/>not a syllabus.</h3>
-            <p>Seeker maps every answer to real engineering skills, then points you to the highest-impact next step.</p>
+            <p>Seeker shows your skill gaps for each answer. Then it recommends the next task with the highest impact.</p>
           </div>
           <SkillMap/>
         </article>
@@ -334,7 +334,7 @@ function FeedbackReport() {
           <div className="report-cards">
             <div className="score-card">
               <div className="big-score"><span>86</span><small>/ 100</small></div>
-              <div><span className="signal-pill">STRONG SIGNAL</span><p>You reason clearly under time pressure and show strong production instincts.</p></div>
+              <div><span className="signal-pill">STRONG SIGNAL</span><p>You reason clearly under time pressure. You show strong production habits.</p></div>
               <svg viewBox="0 0 120 48" preserveAspectRatio="none"><path d="M0 42C17 39 21 28 35 31s19 4 28-9 17-2 27-8 18-15 30-9"/><path className="score-area" d="M0 42C17 39 21 28 35 31s19 4 28-9 17-2 27-8 18-15 30-9V48H0Z"/></svg>
             </div>
             <div className="rank-card"><span>YOUR PERCENTILE</span><strong>Top 14%</strong><p>of engineers on this track</p><div className="rank-dots">{Array.from({length: 18}, (_,i)=><i key={i} className={i>13?'muted':''}/>)}</div></div>
@@ -356,7 +356,7 @@ function FeedbackSection() {
       <div className="section-heading section-heading--center" data-reveal>
         <span className="section-kicker">Feedback you can use</span>
         <h2>Know exactly what<br/>to fix next.</h2>
-        <p>Every session becomes a precise skill map—not another vague score you forget tomorrow.</p>
+        <p>Each session creates a precise skill map. The map shows your next step.</p>
       </div>
       <FeedbackReport/>
     </section>
@@ -389,7 +389,7 @@ function PathsSection({ onOpenDemo }) {
     <section className="paths-section section" id="paths">
       <div className="paths-header" data-reveal>
         <div><span className="section-kicker section-kicker--light">Skill paths</span><h2>Every part of the stack.<br/>One place to get sharper.</h2></div>
-        <p>From fundamentals to senior-level system trade-offs, choose a path that matches the work you want to do.</p>
+        <p>Choose a path that matches the work you want to do. Paths cover fundamentals to senior-level trade-offs.</p>
       </div>
       <div className="path-tabs" role="tablist" aria-label="Engineering skill paths" data-reveal>
         {Object.entries(tracks).map(([key,track])=><button role="tab" aria-selected={active===key} className={active===key?'active':''} onClick={()=>setActive(key)} key={key}><span>{track.label}</span><Icon name="arrow" size={17}/></button>)}
@@ -397,10 +397,10 @@ function PathsSection({ onOpenDemo }) {
       <div className="paths-body">
         <PathsVisual active={active} setActive={setActive}/>
         <div className="path-stats" data-reveal>
-          <div><strong>650<sup>+</sup></strong><span>carefully written<br/>engineering questions</span></div>
-          <div><strong>18</strong><span>focused paths across<br/>the software stack</span></div>
-          <div><strong>4</strong><span>levels from core<br/>to staff-level judgment</span></div>
-          <div className="path-callout"><p><b>New this week</b><br/>Production debugging: logs, traces, and the shortest path to root cause.</p></div>
+          <div><strong>650<sup>+</sup></strong><span>engineering questions<br/>for all skill levels</span></div>
+          <div><strong>18</strong><span>paths across<br/>the software stack</span></div>
+          <div><strong>4</strong><span>levels from core<br/>to staff-level</span></div>
+          <div className="path-callout"><p><b>New this week</b><br/>Production debugging. Use logs and traces to find the root cause quickly.</p></div>
           <button className="button button--lime button--large" onClick={onOpenDemo}>Find your starting point <Icon name="arrow"/></button>
         </div>
       </div>
@@ -414,12 +414,12 @@ function ProofSection() {
     <section className="proof-section section">
       <div className="proof-quote" data-reveal>
         <span className="quote-mark">“</span>
-        <blockquote>Seeker made interview prep feel less like studying and more like training. I stopped freezing on timed questions by week two.</blockquote>
+        <blockquote>Seeker made interview preparation feel like training, not studying. I stopped freezing on timed questions by week two.</blockquote>
         <div className="quote-person"><span className="avatar">AM</span><div><b>Amara M.</b><small>Backend engineer · Hired after 4 weeks</small></div></div>
       </div>
       <div className="proof-metrics" data-reveal>
         <span className="metric-label">BUILT FOR MOMENTUM</span>
-        <div><strong>2.4×</strong><p>more tests completed by engineers using a weekly path</p></div>
+        <div><strong>2.4×</strong><p>more tests completed by engineers who use a weekly path</p></div>
         <div><strong>91%</strong><p>say timed practice made interviews feel more familiar</p></div>
         <small>Based on an internal survey of active Seeker beta users.</small>
       </div>
@@ -436,9 +436,9 @@ function ClosingSection({ onOpenDemo }) {
       <div className="closing-content" data-reveal>
         <span className="section-kicker section-kicker--light">Ready when you are</span>
         <h2>Your next round<br/>starts here.</h2>
-        <p>Ten focused minutes today can change how you show up when it counts.</p>
+        <p>Spend ten focused minutes today. It can change how you perform when it matters.</p>
         <button className="button button--white button--large" onClick={onOpenDemo}>Take a free test <Icon name="arrow"/></button>
-        <span className="closing-note">No credit card · Pick a path in under a minute</span>
+        <span className="closing-note">No credit card needed. Pick a path in under a minute</span>
       </div>
     </section>
   );
@@ -451,9 +451,9 @@ function Footer({ onOpenDemo }) {
   return (
     <footer className="site-footer" id="footer">
       <div className="footer-top">
-        <div className="footer-brand"><a className="brand" href="#top"><Logo light/></a><p>Focused practice for software engineers who want to be ready, not just familiar.</p></div>
+        <div className="footer-brand"><a className="brand" href="#top"><Logo light/></a><p>Focused practice for software engineers who want to be ready.</p></div>
         <div className="footer-links"><div><span>PRODUCT</span><a href="#how">How it works</a><a href="#paths">Skill paths</a><button onClick={onOpenDemo}>Sample test</button></div><div><span>COMPANY</span><a href="#top">About</a><a href="#insights">Insights</a><a href="mailto:hello@seeker.dev">Contact</a></div><div><span>FOLLOW</span><a href="#footer">X / Twitter</a><a href="#footer">LinkedIn</a><a href="#footer">GitHub</a></div></div>
-        <div className="footer-news"><span>THE WEEKLY REP</span><p>One sharp engineering question, every Tuesday.</p><form onSubmit={submit}><label><Icon name="mail" size={17}/><input aria-label="Email address" type="email" required placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)}/></label><button aria-label="Subscribe"><Icon name="arrow"/></button></form>{sent&&<small className="form-success"><Icon name="check" size={14}/> You're on the list.</small>}</div>
+        <div className="footer-news"><span>THE WEEKLY REP</span><p>One engineering question each Tuesday.</p><form onSubmit={submit}><label><Icon name="mail" size={17}/><input aria-label="Email address" type="email" required placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)}/></label><button aria-label="Subscribe"><Icon name="arrow"/></button></form>{sent&&<small className="form-success"><Icon name="check" size={14}/> You're on the list.</small>}</div>
       </div>
       <div className="footer-bottom"><span>© 2026 Seeker Labs</span><div><a href="#footer">Privacy</a><a href="#footer">Terms</a><a href="#footer">Accessibility</a></div><span className="footer-status"><i/> All systems focused</span></div>
     </footer>
@@ -481,8 +481,8 @@ function DemoModal({ open, onClose }) {
       <div className="demo-modal" role="dialog" aria-modal="true" aria-labelledby="demo-title">
         <div className="demo-top"><a className="brand"><Logo/></a><span className="demo-progress">SAMPLE TEST <i><b/></i> 1 / 3</span><span className="demo-timer"><Icon name="clock" size={16}/>{Math.floor(seconds/60)}:{String(seconds%60).padStart(2,'0')}</span><button className="modal-close" onClick={onClose} aria-label="Close sample test"><Icon name="close"/></button></div>
         <div className="demo-body">
-          <div className="demo-question"><span className="demo-kicker">DATA STRUCTURES · MID-LEVEL</span><h3 id="demo-title">Choose the right trade-off</h3><p>You maintain an append-only event list. Writes are frequent; reading the full list happens once per day. Which structure best matches the access pattern?</p><div className="demo-code"><span><i>01</i>events.<b>append</b>(next_event)</span><span><i>02</i><em>// once nightly</em></span><span><i>03</i>for event in events:</span><span><i>04</i>&nbsp;&nbsp;rebuild_projection(event)</span></div></div>
-          <div className="demo-options"><span>SELECT ONE ANSWER</span>{options.map((option,i)=><button key={option} disabled={submitted} onClick={()=>setSelected(i)} className={`${selected===i?'selected':''} ${submitted&&i===correct?'correct':''} ${submitted&&selected===i&&i!==correct?'wrong':''}`}><i>{String.fromCharCode(65+i)}</i><p>{option}</p>{submitted&&i===correct&&<Icon name="check"/>}</button>)}{submitted&&<div className="answer-explanation"><p><b>{selected===correct?'Exactly right.':'Good attempt—the answer is C.'}</b> An append-only list keeps writes O(1); the infrequent full scan is an acceptable O(n).</p></div>}<button className="demo-submit" disabled={selected===null} onClick={()=>submitted?onClose():setSubmitted(true)}>{submitted?'Finish sample':'Submit answer'}<Icon name="arrow"/></button></div>
+          <div className="demo-question"><span className="demo-kicker">DATA STRUCTURES · MID-LEVEL</span><h3 id="demo-title">Choose the right trade-off</h3><p>You maintain an append-only event list. Writes are frequent. You read the full list once per day. Which structure best matches the access pattern?</p><div className="demo-code"><span><i>01</i>events.<b>append</b>(next_event)</span><span><i>02</i><em>// once nightly</em></span><span><i>03</i>for event in events:</span><span><i>04</i>&nbsp;&nbsp;rebuild_projection(event)</span></div></div>
+          <div className="demo-options"><span>SELECT ONE ANSWER</span>{options.map((option,i)=><button key={option} disabled={submitted} onClick={()=>setSelected(i)} className={`${selected===i?'selected':''} ${submitted&&i===correct?'correct':''} ${submitted&&selected===i&&i!==correct?'wrong':''}`}><i>{String.fromCharCode(65+i)}</i><p>{option}</p>{submitted&&i===correct&&<Icon name="check"/>}</button>)}{submitted&&<div className="answer-explanation">        <p><b>{selected===correct?'Exactly right.':'Good attempt. The answer is C.'}</b> An append-only list keeps writes at O(1). The infrequent full scan is an acceptable O(n).</p></div>}<button className="demo-submit" disabled={selected===null} onClick={()=>submitted?onClose():setSubmitted(true)}>{submitted?'Finish sample':'Submit answer'}<Icon name="arrow"/></button></div>
         </div>
       </div>
     </div>
