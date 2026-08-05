@@ -186,8 +186,8 @@ svg.ic { display: block; flex: none; }
 .nav-item.active .nav-count { background: var(--blue-50); color: var(--blue-600); }
 
 .sidebar-label {
-  font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--gray-400); margin: 0 0 8px;
+  font-family: var(--mono); font-size: 10px; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--gray-400); margin: 0 0 10px;
 }
 
 .sidebar-overlay {
@@ -278,32 +278,36 @@ svg.ic { display: block; flex: none; }
   margin: 0 0 28px; display: flex; align-items: flex-start;
   justify-content: space-between; gap: 16px; flex-wrap: wrap;
 }
-.page-title { font-size: 24px; font-weight: 500; color: var(--gray-900); line-height: 1.3; }
-.page-desc { color: var(--gray-600); font-weight: 300; font-size: 15px; margin-top: 6px; max-width: 640px; }
+.page-kicker {
+  font-family: var(--mono); font-size: 10px; font-weight: 650;
+  letter-spacing: .1em; color: var(--text-3); margin-bottom: 8px;
+}
+.page-title { font-size: 30px; font-weight: 620; letter-spacing: -0.04em; color: var(--gray-900); line-height: 1.2; }
+.page-desc { color: var(--gray-600); font-weight: 400; font-size: 14px; margin-top: 8px; max-width: 640px; }
 .page-actions { display: flex; gap: 10px; align-items: center; }
 
 /* ────────────────────────── Cards ─────────────────────────── */
 
 .card {
-  background: var(--surface); border-radius: 8px;
-  box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200);
+  background: var(--surface); border-radius: 13px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--hairline);
 }
 .card + .card { margin-top: 16px; }
 .card-pad { padding: 20px 24px; }
 .card-head { padding: 20px 24px 0; }
-.card-title { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.card-title { font-size: 17px; font-weight: 620; letter-spacing: -0.02em; }
 .card-desc { font-size: 13px; color: var(--text-2); margin-top: 3px; }
 
 .section-label {
-  font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--gray-500); margin: 0 0 10px;
+  font-family: var(--mono); font-size: 10px; font-weight: 650;
+  letter-spacing: .1em; color: var(--text-3); margin: 0 0 12px;
 }
 
 /* ────────────────────────── Buttons ───────────────────────── */
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 8px 24px; border-radius: 8px;
+  padding: 8px 24px; border-radius: 10px;
   font-size: 14px; font-weight: 500; line-height: 1.3; white-space: nowrap;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
   user-select: none;
@@ -472,21 +476,25 @@ select.input:focus { background-image: url("data:image/svg+xml,%3Csvg xmlns='htt
 
 /* ────────────────────────── Dashboard ─────────────────────── */
 
-.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .stat-card {
-  background: var(--gray-50); border-radius: 8px; padding: 24px;
-  display: flex; align-items: center; gap: 16px; border: 4px solid var(--surface);
+  background: var(--surface); border: 1px solid var(--hairline); border-radius: 13px;
+  padding: 18px 20px; display: flex; align-items: flex-start; gap: 14px;
+  box-shadow: var(--shadow-sm);
 }
 .stat-icon {
-  flex: none; width: 48px; height: 48px; border-radius: 6px;
+  flex: none; width: 42px; height: 42px; border-radius: 10px;
   background: var(--gray-100); color: var(--gray-600);
   display: flex; align-items: center; justify-content: center;
 }
 .stat-body { flex: 1; min-width: 0; }
-.stat-label { color: var(--gray-600); margin-bottom: 4px; font-size: 14px; }
-.stat-value-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.stat-value { font-size: 20px; font-weight: 400; color: var(--gray-900); font-variant-numeric: tabular-nums; line-height: 1.3; }
-.stat-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--gray-500); white-space: nowrap; }
+.stat-label {
+  font-family: var(--mono); font-size: 10px; font-weight: 650;
+  letter-spacing: .1em; color: var(--text-3); margin-bottom: 6px;
+}
+.stat-value-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.stat-value { font-size: 27px; font-weight: 620; color: var(--gray-900); font-variant-numeric: tabular-nums; line-height: 1.1; letter-spacing: -0.03em; }
+.stat-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-3); white-space: nowrap; }
 
 .coverage-row {
   display: flex; align-items: center; gap: 14px; padding: 11px 0;
@@ -497,11 +505,11 @@ select.input:focus { background-image: url("data:image/svg+xml,%3Csvg xmlns='htt
   background: var(--gray-100); color: var(--gray-600);
   display: flex; align-items: center; justify-content: center;
 }
-.coverage-name { font-size: 14px; font-weight: 500; }
-.coverage-sub { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
-.coverage-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--gray-100); overflow: hidden; min-width: 60px; }
-.coverage-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.4s ease; }
-.coverage-total { font-size: 13px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
+.coverage-name { font-size: 14px; font-weight: 620; letter-spacing: -0.01em; }
+.coverage-sub { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.coverage-bar { flex: 1; height: 6px; border-radius: 9px; background: var(--gray-100); overflow: hidden; min-width: 60px; }
+.coverage-fill { height: 100%; border-radius: 9px; background: var(--accent); transition: width 0.4s ease; }
+.coverage-total { font-size: 12px; font-weight: 620; color: var(--text-2); font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; font-family: var(--mono); }
 
 .diff-split { display: inline-flex; gap: 2px; }
 .diff-split i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
@@ -514,7 +522,7 @@ select.input:focus { background-image: url("data:image/svg+xml,%3Csvg xmlns='htt
 .row-item { display: flex; align-items: center; gap: 16px; padding: 16px 24px; }
 .row-item + .row-item { border-top: 1px solid var(--hairline-soft); }
 .row-main { flex: 1; min-width: 0; }
-.row-title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row-title { font-size: 15px; font-weight: 620; letter-spacing: -0.01em; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .row-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 5px; font-size: 12.5px; color: var(--text-3); }
 .row-meta .meta-sep { opacity: 0.5; }
 .row-actions { display: flex; align-items: center; gap: 4px; flex: none; }
@@ -522,8 +530,8 @@ select.input:focus { background-image: url("data:image/svg+xml,%3Csvg xmlns='htt
 .table-wrap { overflow-x: auto; }
 table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tbl th {
-  text-align: left; font-size: 12px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--gray-500); padding: 12px 24px; border-bottom: 1px solid var(--gray-200);
+  text-align: left; font-family: var(--mono); font-size: 10px; font-weight: 650;
+  letter-spacing: .1em; color: var(--text-3); padding: 14px 24px; border-bottom: 1px solid var(--hairline);
   white-space: nowrap;
 }
 .tbl td { padding: 16px 24px; border-bottom: 1px solid var(--hairline-soft); vertical-align: middle; }
@@ -570,13 +578,13 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 }
 .modal {
   background: var(--surface); border-radius: 16px;
-  box-shadow: var(--shadow-lg); border: 1px solid var(--gray-200); width: 100%; max-width: 560px;
+  box-shadow: var(--shadow-lg); border: 1px solid var(--hairline); width: 100%; max-width: 560px;
   max-height: min(86vh, 720px); display: flex; flex-direction: column;
   animation: riseIn 0.22s cubic-bezier(0.3, 0.9, 0.4, 1);
 }
 .modal.wide { max-width: 700px; }
 .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px 4px; }
-.modal-title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.modal-title { font-size: 18px; font-weight: 620; letter-spacing: -0.02em; }
 .modal-body { padding: 16px 24px 20px; overflow-y: auto; }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px 20px; border-top: 1px solid var(--hairline-soft); }
 
@@ -611,15 +619,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 
 /* Test cards */
 .test-card { display: flex; flex-direction: column; gap: 14px; padding: 20px 24px; transition: box-shadow 0.16s ease; }
-.test-card:hover { box-shadow: var(--shadow-md); }
+.test-card:hover { box-shadow: var(--shadow); }
 .test-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.test-card-title { font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
+.test-card-title { font-size: 18px; font-weight: 620; letter-spacing: -0.02em; }
 .test-card-desc { font-size: 14px; color: var(--text-2); margin-top: 5px; line-height: 1.5; }
 .test-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-3); }
 .meta-pill {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 4px 10px; border-radius: var(--r-pill); background: var(--gray-100);
-  font-weight: 500; font-variant-numeric: tabular-nums;
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  font-variant-numeric: tabular-nums; letter-spacing: .02em;
 }
 .meta-pill .ic { color: var(--text-3); }
 .test-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; border-top: 1px solid var(--hairline-soft); }
@@ -647,6 +656,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 
 /* Runner layout */
 .runner { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+
+/* Testing pages keep the original card look (excluded from the report restyle) */
+.runner .card { border-radius: 8px; border-color: var(--gray-200); }
 
 .q-card { padding: 24px 28px; }
 .q-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
@@ -734,21 +746,21 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 .ring-value { font-size: 38px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
 .ring-sub { font-size: 12px; color: var(--text-3); margin-top: 4px; font-weight: 500; }
 .result-verdict { display: inline-flex; align-items: center; gap: 7px; padding: 6px 16px; border-radius: var(--r-pill); font-size: 13.5px; font-weight: 600; }
-.result-stats { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
-.result-stat { padding: 10px 18px; background: var(--gray-50); border-radius: 8px; }
-.result-stat-val { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.result-stat-lbl { font-size: 11.5px; color: var(--text-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+.result-stats { display: flex; justify-content: flex-start; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+.result-stat { padding: 14px 18px; background: var(--surface); border: 1px solid var(--hairline); border-radius: 13px; min-width: 108px; }
+.result-stat-val { font-size: 22px; font-weight: 620; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1.1; }
+.result-stat-lbl { font-family: var(--mono); font-size: 10px; font-weight: 650; letter-spacing: .1em; color: var(--text-3); margin-top: 5px; }
 .proctor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; padding: 2px; }
 .danger-text { color: var(--red-text); }
 
 .breakdown-row { display: flex; align-items: center; gap: 13px; padding: 10px 0; }
 .breakdown-row + .breakdown-row { border-top: 1px solid var(--hairline-soft); }
-.breakdown-name { font-size: 13.5px; font-weight: 500; min-width: 180px; display: flex; align-items: center; gap: 9px; }
-.breakdown-bar { flex: 1; height: 7px; border-radius: 4px; background: var(--gray-100); overflow: hidden; }
-.breakdown-fill { display: block; height: 100%; border-radius: 4px; background: var(--accent); transition: width .4s ease; }
+.breakdown-name { font-size: 13.5px; font-weight: 620; min-width: 180px; display: flex; align-items: center; gap: 9px; }
+.breakdown-bar { flex: 1; height: 6px; border-radius: 9px; background: var(--gray-100); overflow: hidden; }
+.breakdown-fill { display: block; height: 100%; border-radius: 9px; background: var(--accent); transition: width .4s ease; }
 .breakdown-fill.low { background: var(--red); }
 .breakdown-fill.mid { background: var(--orange); }
-.breakdown-val { font-size: 12.5px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
+.breakdown-val { font-size: 12px; font-weight: 620; color: var(--text-2); font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; font-family: var(--mono); }
 
 /* Review list */
 .review-item { border-bottom: 1px solid var(--hairline-soft); }
@@ -793,7 +805,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 }
 .auth-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 26px; }
 .auth-brand .brand-logo-img { height: 80px; width: auto; display: block; }
-.auth-title { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 5px; }
+.auth-title { font-size: 24px; font-weight: 620; letter-spacing: -0.03em; margin-bottom: 5px; }
 .auth-sub { font-size: 13.5px; color: var(--text-2); line-height: 1.55; margin-bottom: 22px; }
 .auth-field { margin-bottom: 15px; }
 .auth-input { position: relative; }
@@ -1658,6 +1670,7 @@ function vLogin() {
   return '<div class="auth-screen">' +
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
+      '<div class="page-kicker" style="margin-bottom:6px">Seeker / Console</div>' +
       '<h1 class="auth-title">Admin console</h1>' +
       '<p class="auth-sub">Sign in to manage tests, questions, and results.</p>' +
       '<form id="loginForm" data-form="login" novalidate>' +
@@ -1699,6 +1712,7 @@ function vRegister() {
   return '<div class="auth-screen">' +
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
+      '<div class="page-kicker" style="margin-bottom:6px">Seeker / Console</div>' +
       '<h1 class="auth-title">Create the first admin</h1>' +
       '<p class="auth-sub">This account becomes the superadmin. It has full control.</p>' +
       '<form id="registerForm" data-form="register" novalidate>' +
@@ -1843,7 +1857,7 @@ function vDashboard() {
   const active = st ? st.active : 0;
 
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Good day, ' + esc((S.auth && (S.auth.displayName || S.auth.username)) || 'Admin') + '</h1>' +
+    '<div><div class="page-kicker">Console / Overview</div><h1 class="page-title">Good day, ' + esc((S.auth && (S.auth.displayName || S.auth.username)) || 'Admin') + '</h1>' +
     '<p class="page-desc">See the current status of your assessment program.</p></div>' +
     '<div class="page-actions">' +
       '<button class="btn btn-secondary" data-action="tab" data-value="questions">' + ic('question', 15) + ' Question bank</button>' +
@@ -1939,7 +1953,7 @@ function vTests() {
   const f = S.qFilters.search;
   const list = f ? S.tests.filter(t => searchMatches(f, t.name, t.description)) : S.tests;
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Tests</h1>' +
+    '<div><div class="page-kicker">Console / Tests</div><h1 class="page-title">Tests</h1>' +
     '<p class="page-desc">Build timed assessments from your question bank. Publish them to the candidate portal.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button></div>' +
   '</div>' +
@@ -2018,7 +2032,7 @@ function vEditor() {
   const d = tDraft;
   const pool = eligibleQuestions();
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">' + (d.id ? 'Edit test' : 'New test') + '</h1>' +
+    '<div><div class="page-kicker">Console / Test editor</div><h1 class="page-title">' + (d.id ? 'Edit test' : 'New test') + '</h1>' +
     '<p class="page-desc">' + (d.id ? 'Adjust the assessment configuration below.' : 'Configure a timed assessment drawn from your question bank.') + '</p></div>' +
     '<div class="page-actions"><button class="btn btn-ghost" data-action="editor-cancel">' + ic('arrowL', 15) + ' Back to tests</button></div>' +
   '</div>' +
@@ -2148,7 +2162,7 @@ function vQuestions() {
   });
 
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Question bank</h1>' +
+    '<div><div class="page-kicker">Console / Question bank</div><h1 class="page-title">Question bank</h1>' +
     '<p class="page-desc">' + S.questions.length + ' questions across ' + CATS.length + ' categories, beginner to advanced.</p></div>' +
     '<div class="page-actions">' +
       '<button class="btn btn-secondary" data-action="reseed">' + ic('refresh', 15) + ' Reseed bank</button>' +
@@ -2447,7 +2461,7 @@ function vResults() {
   const f = S.qFilters.search;
   const a = f ? all.filter(x => searchMatches(f, x.candidate, x.email, x.testName)) : all;
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Results</h1>' +
+    '<div><div class="page-kicker">Console / Results</div><h1 class="page-title">Results</h1>' +
     '<p class="page-desc">Every attempt submitted through the candidate portal.</p></div>' +
   '</div>' +
   '<div class="stat-grid">' +
@@ -2546,7 +2560,7 @@ function vActivity() {
   const f = S.qFilters.search;
   const list = f ? ev.filter(e => searchMatches(f, e.candidate, e.email, e.testName, e.ip, e.kind)) : ev;
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Activity</h1>' +
+    '<div><div class="page-kicker">Console / Activity</div><h1 class="page-title">Activity</h1>' +
     '<p class="page-desc">Each sign-in, test start, submit, and discard is recorded with IP and device data. Discards may indicate misuse.</p></div>' +
   '</div>' +
   '<div style="height:16px"></div>' +
@@ -2577,7 +2591,7 @@ function vAdmins() {
   const f = S.qFilters.search;
   const list = f ? S.admins.filter(x => searchMatches(f, x.username, x.displayName, x.email)) : S.admins;
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Administrators</h1>' +
+    '<div><div class="page-kicker">Console / Administrators</div><h1 class="page-title">Administrators</h1>' +
     '<p class="page-desc">Manage who can access the console. Superadmins can add and remove admins.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-admin">' + ic('plus', 15) + ' Add admin</button></div>' +
   '</div>' +
@@ -2676,7 +2690,7 @@ function vCandidates() {
   const f = S.qFilters.search;
   const list = f ? S.candidates.filter(c => searchMatches(f, c.username, c.displayName, c.email)) : S.candidates;
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Candidates</h1>' +
+    '<div><div class="page-kicker">Console / Candidates</div><h1 class="page-title">Candidates</h1>' +
     '<p class="page-desc">Each candidate can sign in to the portal. They can take only the tests you assign.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
   '</div>' +
@@ -2971,6 +2985,7 @@ function vCandidateLogin() {
   return '<div class="auth-screen">' +
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
+      '<div class="page-kicker" style="margin-bottom:6px">Seeker / Candidate</div>' +
       '<h1 class="auth-title">Candidate sign in</h1>' +
       '<p class="auth-sub">Sign in with the account your recruiter created for you.</p>' +
       '<form id="candLoginForm" data-form="candidate-login" novalidate>' +
@@ -3045,7 +3060,7 @@ function vCandidateHome() {
   const tests = S.pubTests || [];
   const list = f ? tests.filter(t => searchMatches(f, t.name, t.description)) : tests;
   return '<div class="page-head" style="margin-top:34px">' +
-    '<div><h1 class="page-title" style="font-size:34px">Good to see you, ' + esc(name) + '</h1>' +
+    '<div><div class="page-kicker">Seeker / Tests</div><h1 class="page-title" style="font-size:32px">Good to see you, ' + esc(name) + '</h1>' +
     '<p class="page-desc">Select one of your assigned tests. Each test is timed and graded automatically.</p></div>' +
   '</div>' +
   (S.live ? resumeCardHTML() : '') +
@@ -3059,7 +3074,7 @@ function vCandidateHome() {
 function vCandidateResults() {
   const s = S.candStats;
   if (!s || !s.enabled) {
-    return '<div class="page-head" style="margin-top:34px"><div><h1 class="page-title" style="font-size:30px">My results</h1>' +
+    return '<div class="page-head" style="margin-top:34px"><div><div class="page-kicker">Seeker / Results</div><h1 class="page-title" style="font-size:28px">My results</h1>' +
       '<p class="page-desc">Your test results appear here when your administrator enables results access.</p></div></div>' +
       emptyState('chart', 'Results not available', 'Your administrator has not enabled results access for your account yet.', 'cand-nav', 'Back to tests', 'home');
   }
@@ -3069,7 +3084,7 @@ function vCandidateResults() {
   const passed = list.filter(a => a.passed);
   const failed = list.filter(a => !a.passed);
   return '<div class="page-head" style="margin-top:34px">' +
-    '<div><h1 class="page-title" style="font-size:30px">My results</h1>' +
+    '<div><div class="page-kicker">Seeker / Results</div><h1 class="page-title" style="font-size:28px">My results</h1>' +
     '<p class="page-desc">Your completed tests, grouped by outcome.</p></div>' +
   '</div>' +
   gReportHTML(s) +
@@ -3206,7 +3221,7 @@ function vCandidateProfile() {
   const initial = ((u.displayName || u.username || '?') + '').slice(0, 1).toUpperCase();
   const assigned = (u.tests || []).length;
   return '<div class="page-head" style="margin-top:34px">' +
-    '<div><h1 class="page-title" style="font-size:30px">My profile</h1>' +
+    '<div><div class="page-kicker">Seeker / Profile</div><h1 class="page-title" style="font-size:28px">My profile</h1>' +
     '<p class="page-desc">Your account details in the Seeker candidate portal.</p></div>' +
   '</div>' +
   '<div class="card card-pad" style="max-width:560px">' +

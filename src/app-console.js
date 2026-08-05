@@ -9,6 +9,7 @@ function vLogin() {
   return '<div class="auth-screen">' +
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
+      '<div class="page-kicker" style="margin-bottom:6px">Seeker / Console</div>' +
       '<h1 class="auth-title">Admin console</h1>' +
       '<p class="auth-sub">Sign in to manage tests, questions, and results.</p>' +
       '<form id="loginForm" data-form="login" novalidate>' +
@@ -50,6 +51,7 @@ function vRegister() {
   return '<div class="auth-screen">' +
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
+      '<div class="page-kicker" style="margin-bottom:6px">Seeker / Console</div>' +
       '<h1 class="auth-title">Create the first admin</h1>' +
       '<p class="auth-sub">This account becomes the superadmin. It has full control.</p>' +
       '<form id="registerForm" data-form="register" novalidate>' +
@@ -194,7 +196,7 @@ function vDashboard() {
   const active = st ? st.active : 0;
 
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Good day, ' + esc((S.auth && (S.auth.displayName || S.auth.username)) || 'Admin') + '</h1>' +
+    '<div><div class="page-kicker">Console / Overview</div><h1 class="page-title">Good day, ' + esc((S.auth && (S.auth.displayName || S.auth.username)) || 'Admin') + '</h1>' +
     '<p class="page-desc">See the current status of your assessment program.</p></div>' +
     '<div class="page-actions">' +
       '<button class="btn btn-secondary" data-action="tab" data-value="questions">' + ic('question', 15) + ' Question bank</button>' +
@@ -290,7 +292,7 @@ function vTests() {
   const f = S.qFilters.search;
   const list = f ? S.tests.filter(t => searchMatches(f, t.name, t.description)) : S.tests;
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Tests</h1>' +
+    '<div><div class="page-kicker">Console / Tests</div><h1 class="page-title">Tests</h1>' +
     '<p class="page-desc">Build timed assessments from your question bank. Publish them to the candidate portal.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button></div>' +
   '</div>' +
@@ -369,7 +371,7 @@ function vEditor() {
   const d = tDraft;
   const pool = eligibleQuestions();
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">' + (d.id ? 'Edit test' : 'New test') + '</h1>' +
+    '<div><div class="page-kicker">Console / Test editor</div><h1 class="page-title">' + (d.id ? 'Edit test' : 'New test') + '</h1>' +
     '<p class="page-desc">' + (d.id ? 'Adjust the assessment configuration below.' : 'Configure a timed assessment drawn from your question bank.') + '</p></div>' +
     '<div class="page-actions"><button class="btn btn-ghost" data-action="editor-cancel">' + ic('arrowL', 15) + ' Back to tests</button></div>' +
   '</div>' +
@@ -499,7 +501,7 @@ function vQuestions() {
   });
 
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Question bank</h1>' +
+    '<div><div class="page-kicker">Console / Question bank</div><h1 class="page-title">Question bank</h1>' +
     '<p class="page-desc">' + S.questions.length + ' questions across ' + CATS.length + ' categories, beginner to advanced.</p></div>' +
     '<div class="page-actions">' +
       '<button class="btn btn-secondary" data-action="reseed">' + ic('refresh', 15) + ' Reseed bank</button>' +
@@ -798,7 +800,7 @@ function vResults() {
   const f = S.qFilters.search;
   const a = f ? all.filter(x => searchMatches(f, x.candidate, x.email, x.testName)) : all;
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Results</h1>' +
+    '<div><div class="page-kicker">Console / Results</div><h1 class="page-title">Results</h1>' +
     '<p class="page-desc">Every attempt submitted through the candidate portal.</p></div>' +
   '</div>' +
   '<div class="stat-grid">' +
@@ -897,7 +899,7 @@ function vActivity() {
   const f = S.qFilters.search;
   const list = f ? ev.filter(e => searchMatches(f, e.candidate, e.email, e.testName, e.ip, e.kind)) : ev;
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Activity</h1>' +
+    '<div><div class="page-kicker">Console / Activity</div><h1 class="page-title">Activity</h1>' +
     '<p class="page-desc">Each sign-in, test start, submit, and discard is recorded with IP and device data. Discards may indicate misuse.</p></div>' +
   '</div>' +
   '<div style="height:16px"></div>' +
@@ -928,7 +930,7 @@ function vAdmins() {
   const f = S.qFilters.search;
   const list = f ? S.admins.filter(x => searchMatches(f, x.username, x.displayName, x.email)) : S.admins;
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Administrators</h1>' +
+    '<div><div class="page-kicker">Console / Administrators</div><h1 class="page-title">Administrators</h1>' +
     '<p class="page-desc">Manage who can access the console. Superadmins can add and remove admins.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-admin">' + ic('plus', 15) + ' Add admin</button></div>' +
   '</div>' +
@@ -1027,7 +1029,7 @@ function vCandidates() {
   const f = S.qFilters.search;
   const list = f ? S.candidates.filter(c => searchMatches(f, c.username, c.displayName, c.email)) : S.candidates;
   return '<div class="page-head">' +
-    '<div><h1 class="page-title">Candidates</h1>' +
+    '<div><div class="page-kicker">Console / Candidates</div><h1 class="page-title">Candidates</h1>' +
     '<p class="page-desc">Each candidate can sign in to the portal. They can take only the tests you assign.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
   '</div>' +

@@ -80,6 +80,7 @@ function vCandidateLogin() {
   return '<div class="auth-screen">' +
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
+      '<div class="page-kicker" style="margin-bottom:6px">Seeker / Candidate</div>' +
       '<h1 class="auth-title">Candidate sign in</h1>' +
       '<p class="auth-sub">Sign in with the account your recruiter created for you.</p>' +
       '<form id="candLoginForm" data-form="candidate-login" novalidate>' +
@@ -154,7 +155,7 @@ function vCandidateHome() {
   const tests = S.pubTests || [];
   const list = f ? tests.filter(t => searchMatches(f, t.name, t.description)) : tests;
   return '<div class="page-head" style="margin-top:34px">' +
-    '<div><h1 class="page-title" style="font-size:34px">Good to see you, ' + esc(name) + '</h1>' +
+    '<div><div class="page-kicker">Seeker / Tests</div><h1 class="page-title" style="font-size:32px">Good to see you, ' + esc(name) + '</h1>' +
     '<p class="page-desc">Select one of your assigned tests. Each test is timed and graded automatically.</p></div>' +
   '</div>' +
   (S.live ? resumeCardHTML() : '') +
@@ -168,7 +169,7 @@ function vCandidateHome() {
 function vCandidateResults() {
   const s = S.candStats;
   if (!s || !s.enabled) {
-    return '<div class="page-head" style="margin-top:34px"><div><h1 class="page-title" style="font-size:30px">My results</h1>' +
+    return '<div class="page-head" style="margin-top:34px"><div><div class="page-kicker">Seeker / Results</div><h1 class="page-title" style="font-size:28px">My results</h1>' +
       '<p class="page-desc">Your test results appear here when your administrator enables results access.</p></div></div>' +
       emptyState('chart', 'Results not available', 'Your administrator has not enabled results access for your account yet.', 'cand-nav', 'Back to tests', 'home');
   }
@@ -178,7 +179,7 @@ function vCandidateResults() {
   const passed = list.filter(a => a.passed);
   const failed = list.filter(a => !a.passed);
   return '<div class="page-head" style="margin-top:34px">' +
-    '<div><h1 class="page-title" style="font-size:30px">My results</h1>' +
+    '<div><div class="page-kicker">Seeker / Results</div><h1 class="page-title" style="font-size:28px">My results</h1>' +
     '<p class="page-desc">Your completed tests, grouped by outcome.</p></div>' +
   '</div>' +
   gReportHTML(s) +
@@ -315,7 +316,7 @@ function vCandidateProfile() {
   const initial = ((u.displayName || u.username || '?') + '').slice(0, 1).toUpperCase();
   const assigned = (u.tests || []).length;
   return '<div class="page-head" style="margin-top:34px">' +
-    '<div><h1 class="page-title" style="font-size:30px">My profile</h1>' +
+    '<div><div class="page-kicker">Seeker / Profile</div><h1 class="page-title" style="font-size:28px">My profile</h1>' +
     '<p class="page-desc">Your account details in the Seeker candidate portal.</p></div>' +
   '</div>' +
   '<div class="card card-pad" style="max-width:560px">' +
