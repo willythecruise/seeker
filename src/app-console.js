@@ -240,6 +240,50 @@ function vDashboard() {
       '</div>' : '');
 }
 
+/* ── Pagination helpers ────────────────────────────────────── */
+
+const PAGE_SIZE = 12;
+const _pg = {};
+
+function pgPage(key, len) {
+  const pages = Math.max(1, Math.ceil(len / PAGE_SIZE));
+  let p = _pg[key] || 0;
+  if (p >= pages) p = pages - 1;
+  _pg[key] = p;
+  return p;
+}
+
+function pgSlice(key, arr) {
+  const p = pgPage(key, arr.length);
+  return arr.slice(p * PAGE_SIZE, (p + 1) * PAGE_SIZE);
+}
+
+function pagerHTML(key, len) {
+  const pages = Math.max(1, Math.ceil(len / PAGE_SIZE));
+  const p = pgPage(key, len);
+  if (pages <= 1) return '';
+  const items = [];
+  for (let i = 0; i < pages; i++) {
+    const near = Math.abs(i - p) <= 1;
+    const edge = i === 0 || i === pages - 1;
+    if (!near && !edge) {
+      if (items[items.length - 1] !== '…') items.push('…');
+    } else {
+      items.push(i);
+    }
+  }
+  return '<div class="pager">' +
+    '<div class="pager-info">' + len + ' item' + (len === 1 ? '' : 's') + ' \u00b7 ' + PAGE_SIZE + ' per page</div>' +
+    '<div class="pager-btns">' +
+      '<button class="pager-btn" data-action="pg" data-key="' + key + '" data-pg="' + (p - 1) + '" ' + (p === 0 ? 'disabled' : '') + '>' + ic('arrowL', 14) + '</button>' +
+      items.map(b => b === '…'
+        ? '<span class="pager-dots">\u2026</span>'
+        : '<button class="pager-btn ' + (b === p ? 'active' : '') + '" data-action="pg" data-key="' + key + '" data-pg="' + b + '">' + (b + 1) + '</button>').join('') +
+      '<button class="pager-btn" data-action="pg" data-key="' + key + '" data-pg="' + (p + 1) + '" ' + (p >= pages - 1 ? 'disabled' : '') + '>' + ic('chevronR', 14) + '</button>' +
+    '</div>' +
+  '</div>';
+}
+
 /* ── Tests list ────────────────────────────────────────────── */
 
 function vTests() {
@@ -248,7 +292,7 @@ function vTests() {
     '<p class="page-desc">Build timed assessments from your question bank. Publish them to the candidate portal.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button></div>' +
   '</div>' +
-  (S.tests.length ? '<div class="card">' + S.tests.map(testRowHTML).join('') + '</div>'
+  (S.tests.length ? '<div class="card">' + pgSlice('tests', S.tests).map(testRowHTML).join('') + '</div>' + pagerHTML('tests', S.tests.length)
     : emptyState('doc', 'No tests yet', 'Create your first assessment to begin screening candidates.', 'new-test', 'Create a test'));
 }
 
@@ -486,7 +530,7 @@ function vQuestions() {
     '</div>' +
 
     '<div style="height:16px"></div>' +
-    (list.length ? '<div class="card">' + list.map(qRowHTML).join('') + '</div>'
+    (list.length ? '<div class="card">' + pgSlice('questions', list).map(qRowHTML).join('') + '</div>' + pagerHTML('questions', list.length)
       : emptyState('search', 'No matching questions', 'Adjust your filters or add a new question to the bank.', 'add-question', 'Add question'));
 }
 
@@ -760,10 +804,10 @@ function vResults() {
     statCard('clock', 'In progress', a.length - submitted.length, 'to review') +
   '</div>' +
   '<div style="height:16px"></div>' +
-  (a.length ? '<div class="card table-wrap"><table class="tbl">' +
+  (a.length ? '<div class="card"><div class="table-wrap"><table class="tbl">' +
     '<thead><tr><th>Candidate</th><th>Test</th><th>Status</th><th>Score</th><th>Time used</th><th>Started</th><th>IP</th><th>Switches</th><th></th></tr></thead><tbody>' +
-    a.map(attRowHTML).join('') +
-    '</tbody></table></div>'
+    pgSlice('results', a).map(attRowHTML).join('') +
+    '</tbody></table></div>' + pagerHTML('results', a.length) + '</div>'
     : emptyState('chart', 'No attempts yet', 'When candidates submit a test, results will appear here.'));
 }
 
@@ -851,10 +895,10 @@ function vActivity() {
     '<p class="page-desc">Each sign-in, test start, submit, and discard is recorded with IP and device data. Discards may indicate misuse.</p></div>' +
   '</div>' +
   '<div style="height:16px"></div>' +
-  (ev.length ? '<div class="card table-wrap"><table class="tbl">' +
+  (ev.length ? '<div class="card"><div class="table-wrap"><table class="tbl">' +
     '<thead><tr><th>Event</th><th>Candidate</th><th>Test</th><th>IP</th><th>Device</th><th>Switches</th><th>When</th></tr></thead><tbody>' +
-    ev.map(evRowHTML).join('') +
-    '</tbody></table></div>'
+    pgSlice('activity', ev).map(evRowHTML).join('') +
+    '</tbody></table></div>' + pagerHTML('activity', ev.length) + '</div>'
     : emptyState('clock', 'No activity yet', 'Events appear here when candidates sign in, start, submit, or discard tests.'));
 }
 
@@ -976,7 +1020,7 @@ function vCandidates() {
     '<p class="page-desc">Each candidate can sign in to the portal. They can take only the tests you assign.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
   '</div>' +
-  (S.candidates.length ? '<div class="card">' + S.candidates.map(candidateRowHTML).join('') + '</div>'
+  (S.candidates.length ? '<div class="card">' + pgSlice('candidates', S.candidates).map(candidateRowHTML).join('') + '</div>' + pagerHTML('candidates', S.candidates.length)
     : emptyState('users', 'No candidates yet', 'Create an account to give access. Assign the tests that the candidate can take.', 'add-candidate', 'Add candidate'));
 }
 
@@ -1013,7 +1057,7 @@ function candidateModalBody(d) {
       '<label class="switch"><input type="checkbox" id="candActive" ' + (d.active ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
     '</div>' +
     '<div class="field" style="margin-bottom:4px">' +
-      '<div class="field-label">Assigned tests <span class="field-help">' + d.tests.size + ' of ' + S.tests.length + ' selected</span></div>' +
+      '<div class="field-label">Assigned tests <span class="field-help" id="candTestCount">' + d.tests.size + ' of ' + S.tests.length + ' selected</span></div>' +
       '<div class="cand-tests">' +
         (S.tests.length ? S.tests.map(t => {
           const on = d.tests.has(t.id);
@@ -1071,9 +1115,13 @@ function rerenderCandidateModal() {
 
 function toggleCandidateTest(id) {
   if (!_candDraft) return;
-  captureCandDraftFromDOM();
-  if (_candDraft.tests.has(id)) _candDraft.tests.delete(id); else _candDraft.tests.add(id);
-  rerenderCandidateModal();
+  const box = $('input[data-action="cand-test-toggle"][data-value="' + id + '"]');
+  const on = box ? box.checked : _candDraft.tests.has(id);
+  if (on) _candDraft.tests.add(id); else _candDraft.tests.delete(id);
+  const lab = box ? box.closest('.cand-test') : null;
+  if (lab) lab.classList.toggle('on', on);
+  const cnt = $('#candTestCount');
+  if (cnt) cnt.textContent = _candDraft.tests.size + ' of ' + S.tests.length + ' selected';
 }
 
 async function saveCandidate() {
@@ -1126,9 +1174,7 @@ function openPreview(id) {
   const t = S.tests.find(x => x.id === id);
   if (!t) return;
   const cats = (t.categories || []).map(catOf);
-  const w = { beginner: 0.6, intermediate: 0.3, advanced: 0.1 }[t.diffFocus]
-        || { beginner: 0.34, intermediate: 0.33, advanced: 0.33 }
-        || { beginner: 0.1, intermediate: 0.3, advanced: 0.6 };
+  const w = (DIFF_WEIGHTS[t.diffFocus] || DIFF_WEIGHTS.balanced);
   const pool = S.questions.filter(q => (t.categories || []).includes(q.cat) && (w[q.diff] || 0) > 0);
   const sample = shuffle(pool).slice(0, Math.min(3, t.count));
   openModal({

@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
-<title>Seeker — Engineering Assessments</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%2315C05E'/%3E%3Ccircle cx='7.5' cy='7.5' r='2.6' fill='%23fff'/%3E%3Ccircle cx='12' cy='12' r='2.6' fill='%23fff'/%3E%3Ccircle cx='16.5' cy='16.5' r='2.6' fill='%23fff'/%3E%3C/svg%3E">
+<title>Seeker</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <script>try{var t=localStorage.getItem('orion.theme');if(t==='dark'||(!t&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.dataset.theme='dark';}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -528,6 +528,19 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 }
 .tbl td { padding: 16px 24px; border-bottom: 1px solid var(--hairline-soft); vertical-align: middle; }
 .tbl tr:last-child td { border-bottom: none; }
+
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 24px; border-top: 1px solid var(--hairline-soft); flex-wrap: wrap; }
+.pager-info { font-size: 12.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.pager-btns { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.pager-btn {
+  min-width: 30px; height: 30px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--gray-200); background: var(--surface); color: var(--gray-600);
+  border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.pager-btn:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--accent); }
+.pager-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pager-btn:disabled { opacity: 0.45; cursor: default; }
+.pager-dots { color: var(--text-3); padding: 0 2px; font-size: 13px; }
 .tbl tbody tr { transition: background 0.12s ease; }
 .tbl tbody tr:hover { background: var(--gray-50); }
 .tbl .num { font-variant-numeric: tabular-nums; }
@@ -1816,6 +1829,50 @@ function vDashboard() {
       '</div>' : '');
 }
 
+/* ── Pagination helpers ────────────────────────────────────── */
+
+const PAGE_SIZE = 12;
+const _pg = {};
+
+function pgPage(key, len) {
+  const pages = Math.max(1, Math.ceil(len / PAGE_SIZE));
+  let p = _pg[key] || 0;
+  if (p >= pages) p = pages - 1;
+  _pg[key] = p;
+  return p;
+}
+
+function pgSlice(key, arr) {
+  const p = pgPage(key, arr.length);
+  return arr.slice(p * PAGE_SIZE, (p + 1) * PAGE_SIZE);
+}
+
+function pagerHTML(key, len) {
+  const pages = Math.max(1, Math.ceil(len / PAGE_SIZE));
+  const p = pgPage(key, len);
+  if (pages <= 1) return '';
+  const items = [];
+  for (let i = 0; i < pages; i++) {
+    const near = Math.abs(i - p) <= 1;
+    const edge = i === 0 || i === pages - 1;
+    if (!near && !edge) {
+      if (items[items.length - 1] !== '…') items.push('…');
+    } else {
+      items.push(i);
+    }
+  }
+  return '<div class="pager">' +
+    '<div class="pager-info">' + len + ' item' + (len === 1 ? '' : 's') + ' \u00b7 ' + PAGE_SIZE + ' per page</div>' +
+    '<div class="pager-btns">' +
+      '<button class="pager-btn" data-action="pg" data-key="' + key + '" data-pg="' + (p - 1) + '" ' + (p === 0 ? 'disabled' : '') + '>' + ic('arrowL', 14) + '</button>' +
+      items.map(b => b === '…'
+        ? '<span class="pager-dots">\u2026</span>'
+        : '<button class="pager-btn ' + (b === p ? 'active' : '') + '" data-action="pg" data-key="' + key + '" data-pg="' + b + '">' + (b + 1) + '</button>').join('') +
+      '<button class="pager-btn" data-action="pg" data-key="' + key + '" data-pg="' + (p + 1) + '" ' + (p >= pages - 1 ? 'disabled' : '') + '>' + ic('chevronR', 14) + '</button>' +
+    '</div>' +
+  '</div>';
+}
+
 /* ── Tests list ────────────────────────────────────────────── */
 
 function vTests() {
@@ -1824,7 +1881,7 @@ function vTests() {
     '<p class="page-desc">Build timed assessments from your question bank. Publish them to the candidate portal.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button></div>' +
   '</div>' +
-  (S.tests.length ? '<div class="card">' + S.tests.map(testRowHTML).join('') + '</div>'
+  (S.tests.length ? '<div class="card">' + pgSlice('tests', S.tests).map(testRowHTML).join('') + '</div>' + pagerHTML('tests', S.tests.length)
     : emptyState('doc', 'No tests yet', 'Create your first assessment to begin screening candidates.', 'new-test', 'Create a test'));
 }
 
@@ -2062,7 +2119,7 @@ function vQuestions() {
     '</div>' +
 
     '<div style="height:16px"></div>' +
-    (list.length ? '<div class="card">' + list.map(qRowHTML).join('') + '</div>'
+    (list.length ? '<div class="card">' + pgSlice('questions', list).map(qRowHTML).join('') + '</div>' + pagerHTML('questions', list.length)
       : emptyState('search', 'No matching questions', 'Adjust your filters or add a new question to the bank.', 'add-question', 'Add question'));
 }
 
@@ -2336,10 +2393,10 @@ function vResults() {
     statCard('clock', 'In progress', a.length - submitted.length, 'to review') +
   '</div>' +
   '<div style="height:16px"></div>' +
-  (a.length ? '<div class="card table-wrap"><table class="tbl">' +
+  (a.length ? '<div class="card"><div class="table-wrap"><table class="tbl">' +
     '<thead><tr><th>Candidate</th><th>Test</th><th>Status</th><th>Score</th><th>Time used</th><th>Started</th><th>IP</th><th>Switches</th><th></th></tr></thead><tbody>' +
-    a.map(attRowHTML).join('') +
-    '</tbody></table></div>'
+    pgSlice('results', a).map(attRowHTML).join('') +
+    '</tbody></table></div>' + pagerHTML('results', a.length) + '</div>'
     : emptyState('chart', 'No attempts yet', 'When candidates submit a test, results will appear here.'));
 }
 
@@ -2427,10 +2484,10 @@ function vActivity() {
     '<p class="page-desc">Each sign-in, test start, submit, and discard is recorded with IP and device data. Discards may indicate misuse.</p></div>' +
   '</div>' +
   '<div style="height:16px"></div>' +
-  (ev.length ? '<div class="card table-wrap"><table class="tbl">' +
+  (ev.length ? '<div class="card"><div class="table-wrap"><table class="tbl">' +
     '<thead><tr><th>Event</th><th>Candidate</th><th>Test</th><th>IP</th><th>Device</th><th>Switches</th><th>When</th></tr></thead><tbody>' +
-    ev.map(evRowHTML).join('') +
-    '</tbody></table></div>'
+    pgSlice('activity', ev).map(evRowHTML).join('') +
+    '</tbody></table></div>' + pagerHTML('activity', ev.length) + '</div>'
     : emptyState('clock', 'No activity yet', 'Events appear here when candidates sign in, start, submit, or discard tests.'));
 }
 
@@ -2552,7 +2609,7 @@ function vCandidates() {
     '<p class="page-desc">Each candidate can sign in to the portal. They can take only the tests you assign.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
   '</div>' +
-  (S.candidates.length ? '<div class="card">' + S.candidates.map(candidateRowHTML).join('') + '</div>'
+  (S.candidates.length ? '<div class="card">' + pgSlice('candidates', S.candidates).map(candidateRowHTML).join('') + '</div>' + pagerHTML('candidates', S.candidates.length)
     : emptyState('users', 'No candidates yet', 'Create an account to give access. Assign the tests that the candidate can take.', 'add-candidate', 'Add candidate'));
 }
 
@@ -2589,7 +2646,7 @@ function candidateModalBody(d) {
       '<label class="switch"><input type="checkbox" id="candActive" ' + (d.active ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
     '</div>' +
     '<div class="field" style="margin-bottom:4px">' +
-      '<div class="field-label">Assigned tests <span class="field-help">' + d.tests.size + ' of ' + S.tests.length + ' selected</span></div>' +
+      '<div class="field-label">Assigned tests <span class="field-help" id="candTestCount">' + d.tests.size + ' of ' + S.tests.length + ' selected</span></div>' +
       '<div class="cand-tests">' +
         (S.tests.length ? S.tests.map(t => {
           const on = d.tests.has(t.id);
@@ -2647,9 +2704,13 @@ function rerenderCandidateModal() {
 
 function toggleCandidateTest(id) {
   if (!_candDraft) return;
-  captureCandDraftFromDOM();
-  if (_candDraft.tests.has(id)) _candDraft.tests.delete(id); else _candDraft.tests.add(id);
-  rerenderCandidateModal();
+  const box = $('input[data-action="cand-test-toggle"][data-value="' + id + '"]');
+  const on = box ? box.checked : _candDraft.tests.has(id);
+  if (on) _candDraft.tests.add(id); else _candDraft.tests.delete(id);
+  const lab = box ? box.closest('.cand-test') : null;
+  if (lab) lab.classList.toggle('on', on);
+  const cnt = $('#candTestCount');
+  if (cnt) cnt.textContent = _candDraft.tests.size + ' of ' + S.tests.length + ' selected';
 }
 
 async function saveCandidate() {
@@ -2702,9 +2763,7 @@ function openPreview(id) {
   const t = S.tests.find(x => x.id === id);
   if (!t) return;
   const cats = (t.categories || []).map(catOf);
-  const w = { beginner: 0.6, intermediate: 0.3, advanced: 0.1 }[t.diffFocus]
-        || { beginner: 0.34, intermediate: 0.33, advanced: 0.33 }
-        || { beginner: 0.1, intermediate: 0.3, advanced: 0.6 };
+  const w = (DIFF_WEIGHTS[t.diffFocus] || DIFF_WEIGHTS.balanced);
   const pool = S.questions.filter(q => (t.categories || []).includes(q.cat) && (w[q.diff] || 0) > 0);
   const sample = shuffle(pool).slice(0, Math.min(3, t.count));
   openModal({
@@ -3727,7 +3786,7 @@ function onClick(e) {
     case 'edit-question': openQuestionModal(id); break;
     case 'delete-question': confirmDeleteQuestion(id); break;
     case 'reseed': reseedBank(); break;
-    case 'qfilter': setQFilter(el.dataset.field, val); break;
+    case 'qfilter': _pg.questions = 0; setQFilter(el.dataset.field, val); break;
     case 'qdiff': setQDraft('diff', val); break;
     case 'qtype': setQDraft('type', val); break;
     case 'qcorrect': setQDraft('answer', +val); break;
@@ -3807,9 +3866,9 @@ function onClick(e) {
     /* console: candidates */
     case 'add-candidate': openAddCandidateModal(); break;
     case 'edit-candidate': openEditCandidateModal(id); break;
-    case 'cand-test-toggle': toggleCandidateTest(val); break;
     case 'save-candidate': saveCandidate(); break;
     case 'delete-candidate': confirmDeleteCandidate(id); break;
+    case 'pg': _pg[el.dataset.key] = +el.dataset.pg; render(); break;
 
     /* modals */
     case 'close-modal': closeModal(); break;
@@ -3845,12 +3904,13 @@ function onInput(e) {
   if (el.id === 'globalSearch') {
     S.qFilters.search = el.value.toLowerCase();
     S._focusSearch = 'global';
-    if (S.mode === 'console' && S.tab === 'questions') render();
+    if (S.mode === 'console' && S.tab === 'questions') { _pg.questions = 0; render(); }
     return;
   }
   if (el.id === 'qSearch') {
     S.qFilters.search = el.value.toLowerCase();
     S._focusSearch = 'local';
+    _pg.questions = 0;
     render();
     return;
   }
@@ -3873,6 +3933,7 @@ function onInput(e) {
 function onChange(e) {
   const el = e.target;
   if (el.dataset && el.dataset.action === 'toggle-publish') { togglePublish(el.dataset.id); return; }
+  if (el.dataset && el.dataset.action === 'cand-test-toggle') { toggleCandidateTest(el.dataset.value); return; }
   if (el.dataset && el.dataset.qdraft) { setQDraftField(el); return; }
   if (el.dataset && el.dataset.draft) { setDraft(el.dataset.draft, el.type === 'checkbox' ? el.checked : el.value); return; }
 }

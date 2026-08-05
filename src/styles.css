@@ -515,6 +515,19 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 }
 .tbl td { padding: 16px 24px; border-bottom: 1px solid var(--hairline-soft); vertical-align: middle; }
 .tbl tr:last-child td { border-bottom: none; }
+
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 24px; border-top: 1px solid var(--hairline-soft); flex-wrap: wrap; }
+.pager-info { font-size: 12.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.pager-btns { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.pager-btn {
+  min-width: 30px; height: 30px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--gray-200); background: var(--surface); color: var(--gray-600);
+  border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.pager-btn:hover:not(:disabled):not(.active) { border-color: var(--accent); color: var(--accent); }
+.pager-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pager-btn:disabled { opacity: 0.45; cursor: default; }
+.pager-dots { color: var(--text-3); padding: 0 2px; font-size: 13px; }
 .tbl tbody tr { transition: background 0.12s ease; }
 .tbl tbody tr:hover { background: var(--gray-50); }
 .tbl .num { font-variant-numeric: tabular-nums; }

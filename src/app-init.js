@@ -315,7 +315,7 @@ function onClick(e) {
     case 'edit-question': openQuestionModal(id); break;
     case 'delete-question': confirmDeleteQuestion(id); break;
     case 'reseed': reseedBank(); break;
-    case 'qfilter': setQFilter(el.dataset.field, val); break;
+    case 'qfilter': _pg.questions = 0; setQFilter(el.dataset.field, val); break;
     case 'qdiff': setQDraft('diff', val); break;
     case 'qtype': setQDraft('type', val); break;
     case 'qcorrect': setQDraft('answer', +val); break;
@@ -395,9 +395,9 @@ function onClick(e) {
     /* console: candidates */
     case 'add-candidate': openAddCandidateModal(); break;
     case 'edit-candidate': openEditCandidateModal(id); break;
-    case 'cand-test-toggle': toggleCandidateTest(val); break;
     case 'save-candidate': saveCandidate(); break;
     case 'delete-candidate': confirmDeleteCandidate(id); break;
+    case 'pg': _pg[el.dataset.key] = +el.dataset.pg; render(); break;
 
     /* modals */
     case 'close-modal': closeModal(); break;
@@ -433,12 +433,13 @@ function onInput(e) {
   if (el.id === 'globalSearch') {
     S.qFilters.search = el.value.toLowerCase();
     S._focusSearch = 'global';
-    if (S.mode === 'console' && S.tab === 'questions') render();
+    if (S.mode === 'console' && S.tab === 'questions') { _pg.questions = 0; render(); }
     return;
   }
   if (el.id === 'qSearch') {
     S.qFilters.search = el.value.toLowerCase();
     S._focusSearch = 'local';
+    _pg.questions = 0;
     render();
     return;
   }
@@ -461,6 +462,7 @@ function onInput(e) {
 function onChange(e) {
   const el = e.target;
   if (el.dataset && el.dataset.action === 'toggle-publish') { togglePublish(el.dataset.id); return; }
+  if (el.dataset && el.dataset.action === 'cand-test-toggle') { toggleCandidateTest(el.dataset.value); return; }
   if (el.dataset && el.dataset.qdraft) { setQDraftField(el); return; }
   if (el.dataset && el.dataset.draft) { setDraft(el.dataset.draft, el.type === 'checkbox' ? el.checked : el.value); return; }
 }
