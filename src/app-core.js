@@ -67,6 +67,7 @@ const S = {
   live: null,             // candidate in-progress attempt
   liveQuestions: {},      // qid -> sanitized question for the live attempt
   candResult: null,       // submitted attempt record (server-graded)
+  candStats: { enabled: false },  // candidate metrics (only when viewResults enabled)
   qIdx: 0,
   timerId: null,
   qFilters: { search: '', cat: 'all', diff: 'all', type: 'all' },
@@ -210,7 +211,8 @@ const ICONS = {
   trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>',
   moon: '<path d="M20.7 13.6A8.5 8.5 0 1 1 10.4 3.3a7 7 0 0 0 10.3 10.3z"/>',
-  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>'
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  bolt: '<path d="m13 2-8 12h6l-1 8 9-13h-6V2Z"/>'
 };
 
 function ic(name, size, cls) {
@@ -478,6 +480,11 @@ function diffSplitHTML(pool) {
   const a = pool.filter(q => q.diff === 'advanced').length;
   return '<span class="diff-split"><i class="d-b"></i><i class="d-i"></i><i class="d-a"></i></span>' +
     '<span class="num">' + b + ' · ' + i + ' · ' + a + '</span>';
+}
+
+function searchMatches(term, ...fields) {
+  if (!term) return true;
+  return fields.some(f => f != null && String(f).toLowerCase().indexOf(term) !== -1);
 }
 
 function breakdownHTML(byCat) {

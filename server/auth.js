@@ -70,6 +70,7 @@ function publicCandidate(c) {
     email: c.email,
     tests: (c.tests || []).map(t => t.toString()),
     active: c.active !== false,
+    viewResults: c.viewResults === true,
     createdAt: c.createdAt
   };
 }

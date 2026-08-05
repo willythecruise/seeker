@@ -31,6 +31,7 @@ const CandidateSchema = new Schema({
   passwordHash: { type: String, required: true },
   tests: { type: [Schema.Types.ObjectId], ref: 'Test', default: [] },  // granted tests
   active: { type: Boolean, default: true },
+  viewResults: { type: Boolean, default: false },  // candidate may see scores, pass rate, and attempt history
   createdAt: { type: Date, default: Date.now }
 }, { versionKey: false });
 CandidateSchema.set('toJSON', { virtuals: false, transform: (d, r) => {

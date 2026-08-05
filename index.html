@@ -745,7 +745,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 .breakdown-row + .breakdown-row { border-top: 1px solid var(--hairline-soft); }
 .breakdown-name { font-size: 13.5px; font-weight: 500; min-width: 180px; display: flex; align-items: center; gap: 9px; }
 .breakdown-bar { flex: 1; height: 7px; border-radius: 4px; background: var(--gray-100); overflow: hidden; }
-.breakdown-fill { height: 100%; border-radius: 4px; background: var(--accent); }
+.breakdown-fill { display: block; height: 100%; border-radius: 4px; background: var(--accent); transition: width .4s ease; }
 .breakdown-fill.low { background: var(--red); }
 .breakdown-fill.mid { background: var(--orange); }
 .breakdown-val { font-size: 12.5px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
@@ -922,6 +922,53 @@ kbd {
 .code-box-foot { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--gray-100); border-top: 1px solid var(--hairline-soft); }
 .code-out { font-size: 12.5px; font-weight: 600; color: var(--text-2); }
 
+/* Gamified results report (landing "Know exactly what to fix next" style) */
+.g-report { border: 1px solid var(--hairline); border-radius: 16px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); margin-top: 4px; }
+.g-chrome { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; background: var(--surface-3); border-bottom: 1px solid var(--hairline-soft); }
+.g-chrome .g-dots { display: flex; gap: 5px; }
+.g-chrome .g-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-400); }
+.g-chrome .g-dots i:nth-child(1) { background: #e86e59; }
+.g-chrome .g-dots i:nth-child(2) { background: #e3bd53; }
+.g-chrome .g-dots i:nth-child(3) { background: #76bd5b; }
+.g-chrome > span { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--text-3); }
+.g-share { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 650; color: var(--accent); }
+.g-share:hover { color: var(--accent-hover); }
+.g-body { padding: 18px; }
+.g-cards { display: grid; grid-template-columns: 1.55fr 1fr 1fr; gap: 14px; }
+.g-card { position: relative; border: 1px solid var(--hairline); border-radius: 13px; padding: 18px 20px; background: var(--surface); overflow: hidden; }
+.g-kicker, .g-sec-title span { font-family: var(--mono); font-size: 10px; font-weight: 650; letter-spacing: .1em; color: var(--text-3); }
+.g-score { display: flex; align-items: center; gap: 20px; }
+.g-score .g-big { display: flex; align-items: baseline; padding-right: 22px; border-right: 1px solid var(--hairline); }
+.g-score .g-big b { font-size: 52px; font-weight: 600; letter-spacing: -.06em; line-height: 1; }
+.g-score .g-big small { margin-left: 4px; font-family: var(--mono); font-size: 12px; color: var(--text-3); }
+.g-score p { margin: 10px 0 0; font-size: 13px; line-height: 1.55; color: var(--text-2); }
+.g-signal { display: inline-flex; padding: 4px 8px; border-radius: 6px; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .08em; }
+.g-signal.g-strong { color: var(--green-text); background: var(--green-soft); }
+.g-signal.g-good { color: var(--orange-text); background: var(--orange-soft); }
+.g-signal.g-growing { color: var(--red-text); background: var(--red-soft); }
+.g-signal.g-early { color: var(--text-3); background: var(--gray-100); }
+.g-rank strong, .g-streak strong { display: block; margin-top: 7px; font-size: 27px; font-weight: 620; letter-spacing: -.03em; line-height: 1.1; }
+.g-rank p, .g-streak p { margin: 3px 0 16px; font-size: 12px; color: var(--text-3); }
+.g-dots2 { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; max-width: 200px; }
+.g-dots2 i { height: 8px; border-radius: 3px; background: var(--accent); }
+.g-dots2 i.muted { background: var(--gray-200); }
+.g-streak .g-flame { position: absolute; right: 16px; bottom: 10px; color: var(--orange); opacity: .92; }
+.g-skills { margin-top: 14px; border: 1px solid var(--hairline); border-radius: 13px; padding: 18px 20px; background: var(--surface); }
+.g-sec-title h4 { margin: 5px 0 0; font-size: 15px; letter-spacing: -.02em; }
+.g-skill { display: grid; grid-template-columns: 170px 1fr 40px; align-items: center; gap: 12px; margin: 14px 0; font-size: 13px; color: var(--text-2); }
+.g-skill > div { height: 6px; border-radius: 9px; background: var(--gray-100); overflow: hidden; }
+.g-skill i { display: block; height: 100%; border-radius: inherit; }
+.g-skill b { text-align: right; font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.g-skill-none { font-size: 13px; color: var(--text-3); margin-top: 8px; }
+@media (max-width: 900px) {
+  .g-cards { grid-template-columns: 1fr; }
+  .g-score { flex-wrap: wrap; }
+}
+@media (max-width: 560px) {
+  .g-score .g-big { border-right: none; padding-right: 0; }
+  .g-chrome > span { display: none; }
+}
+
 </style>
 </head>
 <body>
@@ -997,6 +1044,7 @@ const S = {
   live: null,             // candidate in-progress attempt
   liveQuestions: {},      // qid -> sanitized question for the live attempt
   candResult: null,       // submitted attempt record (server-graded)
+  candStats: { enabled: false },  // candidate metrics (only when viewResults enabled)
   qIdx: 0,
   timerId: null,
   qFilters: { search: '', cat: 'all', diff: 'all', type: 'all' },
@@ -1140,7 +1188,8 @@ const ICONS = {
   trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>',
   moon: '<path d="M20.7 13.6A8.5 8.5 0 1 1 10.4 3.3a7 7 0 0 0 10.3 10.3z"/>',
-  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>'
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  bolt: '<path d="m13 2-8 12h6l-1 8 9-13h-6V2Z"/>'
 };
 
 function ic(name, size, cls) {
@@ -1408,6 +1457,11 @@ function diffSplitHTML(pool) {
   const a = pool.filter(q => q.diff === 'advanced').length;
   return '<span class="diff-split"><i class="d-b"></i><i class="d-i"></i><i class="d-a"></i></span>' +
     '<span class="num">' + b + ' · ' + i + ' · ' + a + '</span>';
+}
+
+function searchMatches(term, ...fields) {
+  if (!term) return true;
+  return fields.some(f => f != null && String(f).toLowerCase().indexOf(term) !== -1);
 }
 
 function breakdownHTML(byCat) {
@@ -1742,7 +1796,7 @@ function consoleShell() {
   if (!S.auth) return '<div class="auth-page">' + themeFabHTML() + (S.view === 'register' ? vRegister() : vLogin()) + modalHTML() + '</div>';
   const nav = [
     ['dashboard', 'Dashboard', 'dashboard'],
-    ['tests', 'Tests', 'doc'],
+    ['tests', 'Tests', 'layers'],
     ['questions', 'Questions', 'question'],
     ['results', 'Results', 'chart'],
     ['activity', 'Activity', 'clock'],
@@ -1792,7 +1846,7 @@ function vDashboard() {
 
     '<div class="stat-grid">' +
       statCard('question', 'Questions', total, 'seeded in MongoDB') +
-      statCard('doc', 'Tests', tests, published + ' published') +
+      statCard('layers', 'Tests', tests, published + ' published') +
       statCard('users', 'Attempts', attempts, st ? st.avgPct + '% average · ' + st.passRate + '% pass' : '') +
       statCard('clock', 'In progress', active, 'active sessions') +
     '</div>' +
@@ -1876,13 +1930,15 @@ function pagerHTML(key, len) {
 /* ── Tests list ────────────────────────────────────────────── */
 
 function vTests() {
+  const f = S.qFilters.search;
+  const list = f ? S.tests.filter(t => searchMatches(f, t.name, t.description)) : S.tests;
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Tests</h1>' +
     '<p class="page-desc">Build timed assessments from your question bank. Publish them to the candidate portal.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button></div>' +
   '</div>' +
-  (S.tests.length ? '<div class="card">' + pgSlice('tests', S.tests).map(testRowHTML).join('') + '</div>' + pagerHTML('tests', S.tests.length)
-    : emptyState('doc', 'No tests yet', 'Create your first assessment to begin screening candidates.', 'new-test', 'Create a test'));
+  (list.length ? '<div class="card">' + pgSlice('tests', list).map(testRowHTML).join('') + '</div>' + pagerHTML('tests', list.length)
+    : emptyState(f ? 'search' : 'doc', f ? 'No matching tests' : 'No tests yet', f ? 'No tests match your search.' : 'Create your first assessment to begin screening candidates.', 'new-test', 'Create a test'));
 }
 
 function testRowHTML(t) {
@@ -2378,26 +2434,28 @@ async function reseedBank() {
 /* ── Results (admin) ───────────────────────────────────────── */
 
 function vResults() {
-  const a = S.attempts;
-  const submitted = a.filter(x => x.status === 'submitted');
+  const all = S.attempts;
+  const submitted = all.filter(x => x.status === 'submitted');
   const avg = submitted.length ? Math.round(submitted.reduce((x, y) => x + (y.pct || 0), 0) / submitted.length) : 0;
   const passRate = submitted.length ? Math.round(submitted.filter(x => x.passed).length / submitted.length * 100) : 0;
+  const f = S.qFilters.search;
+  const a = f ? all.filter(x => searchMatches(f, x.candidate, x.email, x.testName)) : all;
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Results</h1>' +
     '<p class="page-desc">Every attempt submitted through the candidate portal.</p></div>' +
   '</div>' +
   '<div class="stat-grid">' +
-    statCard('users', 'Attempts', a.length, 'total') +
+    statCard('users', 'Attempts', all.length, 'total') +
     statCard('chart', 'Average score', avg + '%', 'submitted') +
     statCard('check', 'Pass rate', passRate + '%', 'at the pass mark') +
-    statCard('clock', 'In progress', a.length - submitted.length, 'to review') +
+    statCard('clock', 'In progress', all.length - submitted.length, 'to review') +
   '</div>' +
   '<div style="height:16px"></div>' +
   (a.length ? '<div class="card"><div class="table-wrap"><table class="tbl">' +
     '<thead><tr><th>Candidate</th><th>Test</th><th>Status</th><th>Score</th><th>Time used</th><th>Started</th><th>IP</th><th>Switches</th><th></th></tr></thead><tbody>' +
     pgSlice('results', a).map(attRowHTML).join('') +
     '</tbody></table></div>' + pagerHTML('results', a.length) + '</div>'
-    : emptyState('chart', 'No attempts yet', 'When candidates submit a test, results will appear here.'));
+    : emptyState('chart', 'No attempts yet', f ? 'No attempts match your search.' : 'When candidates submit a test, results will appear here.'));
 }
 
 function attRowHTML(x) {
@@ -2443,7 +2501,7 @@ async function openAttempt(id) {
           '</div>' : '') +
         '<div style="margin:18px 0 4px" class="section-label">By category</div>' +
         breakdownHTML(attempt.byCat) +
-        (done && attempt.showAnswers !== false ? '<div style="margin:18px 0 4px" class="section-label">Answer review</div>' + reviewHTML(attempt) : ''),
+        (done ? '<div style="margin:18px 0 4px" class="section-label">Answer review</div>' + reviewHTML(attempt) : ''),
       foot: '<button class="btn btn-secondary" data-action="close-modal">Close</button>',
       wide: true
     });
@@ -2479,16 +2537,18 @@ const _EV_META = {
 
 function vActivity() {
   const ev = S.events || [];
+  const f = S.qFilters.search;
+  const list = f ? ev.filter(e => searchMatches(f, e.candidate, e.email, e.testName, e.ip, e.kind)) : ev;
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Activity</h1>' +
     '<p class="page-desc">Each sign-in, test start, submit, and discard is recorded with IP and device data. Discards may indicate misuse.</p></div>' +
   '</div>' +
   '<div style="height:16px"></div>' +
-  (ev.length ? '<div class="card"><div class="table-wrap"><table class="tbl">' +
+  (list.length ? '<div class="card"><div class="table-wrap"><table class="tbl">' +
     '<thead><tr><th>Event</th><th>Candidate</th><th>Test</th><th>IP</th><th>Device</th><th>Switches</th><th>When</th></tr></thead><tbody>' +
-    pgSlice('activity', ev).map(evRowHTML).join('') +
-    '</tbody></table></div>' + pagerHTML('activity', ev.length) + '</div>'
-    : emptyState('clock', 'No activity yet', 'Events appear here when candidates sign in, start, submit, or discard tests.'));
+    pgSlice('activity', list).map(evRowHTML).join('') +
+    '</tbody></table></div>' + pagerHTML('activity', list.length) + '</div>'
+    : emptyState('clock', 'No activity yet', f ? 'No activity matches your search.' : 'Events appear here when candidates sign in, start, submit, or discard tests.'));
 }
 
 function evRowHTML(e) {
@@ -2508,13 +2568,15 @@ function evRowHTML(e) {
 /* ── Admins (superadmin) ───────────────────────────────────── */
 
 function vAdmins() {
+  const f = S.qFilters.search;
+  const list = f ? S.admins.filter(x => searchMatches(f, x.username, x.displayName, x.email)) : S.admins;
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Administrators</h1>' +
     '<p class="page-desc">Manage who can access the console. Superadmins can add and remove admins.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-admin">' + ic('plus', 15) + ' Add admin</button></div>' +
   '</div>' +
-  '<div class="card">' +
-    S.admins.map(x =>
+  (list.length ? '<div class="card">' +
+    list.map(x =>
       '<div class="row-item">' +
         '<span class="admin-avatar" style="width:34px;height:34px;font-size:14px">' + esc((x.displayName || x.username).slice(0, 1).toUpperCase()) + '</span>' +
         '<div class="row-main">' +
@@ -2529,7 +2591,8 @@ function vAdmins() {
             : '') +
         '</div>' +
       '</div>').join('') +
-  '</div>';
+  '</div>'
+  : emptyState('users', 'No administrators found', f ? 'No administrators match your search.' : 'No administrators yet.', 'add-admin', 'Add admin'));
 }
 
 function openAddAdminModal() {
@@ -2604,13 +2667,15 @@ async function loadCandidates() {
 }
 
 function vCandidates() {
+  const f = S.qFilters.search;
+  const list = f ? S.candidates.filter(c => searchMatches(f, c.username, c.displayName, c.email)) : S.candidates;
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Candidates</h1>' +
     '<p class="page-desc">Each candidate can sign in to the portal. They can take only the tests you assign.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
   '</div>' +
-  (S.candidates.length ? '<div class="card">' + pgSlice('candidates', S.candidates).map(candidateRowHTML).join('') + '</div>' + pagerHTML('candidates', S.candidates.length)
-    : emptyState('users', 'No candidates yet', 'Create an account to give access. Assign the tests that the candidate can take.', 'add-candidate', 'Add candidate'));
+  (list.length ? '<div class="card">' + pgSlice('candidates', list).map(candidateRowHTML).join('') + '</div>' + pagerHTML('candidates', list.length)
+    : emptyState('users', 'No candidates yet', f ? 'No candidates match your search.' : 'Create an account to give access. Assign the tests that the candidate can take.', 'add-candidate', 'Add candidate'));
 }
 
 function candidateRowHTML(c) {
@@ -2623,6 +2688,7 @@ function candidateRowHTML(c) {
     '</div>' +
     '<span class="badge ' + (c.active ? 'b-published' : 'b-fail') + '"><span class="dot"></span>' + (c.active ? 'Active' : 'Disabled') + '</span>' +
     '<span class="badge b-mcq">' + granted + ' test' + (granted === 1 ? '' : 's') + '</span>' +
+    '<span class="badge ' + (c.viewResults ? 'b-published' : 'b-draft') + '"><span class="dot"></span>' + (c.viewResults ? 'Results on' : 'Results off') + '</span>' +
     '<div class="row-actions">' +
       '<button class="btn btn-sm btn-secondary" data-action="edit-candidate" data-id="' + c.id + '">' + ic('key', 13) + ' Manage access</button>' +
       '<button class="btn-icon danger" data-action="delete-candidate" data-id="' + c.id + '" title="Remove candidate">' + ic('trash', 16) + '</button>' +
@@ -2644,6 +2710,10 @@ function candidateModalBody(d) {
     '<div class="setting-row">' +
       '<div><div class="setting-label">Active</div><div class="setting-sub">Disabled accounts can\u2019t sign in</div></div>' +
       '<label class="switch"><input type="checkbox" id="candActive" ' + (d.active ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+    '</div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Results access</div><div class="setting-sub">Candidates can see their score, pass rate, and attempt history after a test</div></div>' +
+      '<label class="switch"><input type="checkbox" id="candViewResults" ' + (d.viewResults ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
     '</div>' +
     '<div class="field" style="margin-bottom:4px">' +
       '<div class="field-label">Assigned tests <span class="field-help" id="candTestCount">' + d.tests.size + ' of ' + S.tests.length + ' selected</span></div>' +
@@ -2669,10 +2739,11 @@ function captureCandDraftFromDOM() {
   _candDraft.email = g('#candEmail');
   _candDraft.password = g('#candPass');
   _candDraft.active = !!((($('#candActive') || {}).checked));
+  _candDraft.viewResults = !!((($('#candViewResults') || {}).checked));
 }
 
 function openAddCandidateModal() {
-  _candDraft = { id: null, username: '', displayName: '', email: '', password: '', active: true, tests: new Set() };
+  _candDraft = { id: null, username: '', displayName: '', email: '', password: '', active: true, viewResults: false, tests: new Set() };
   rerenderCandidateModal();
 }
 
@@ -2686,6 +2757,7 @@ function openEditCandidateModal(id) {
     email: c.email || '',
     password: '',
     active: c.active !== false,
+    viewResults: c.viewResults === true,
     tests: new Set(c.tests || [])
   };
   rerenderCandidateModal();
@@ -2724,7 +2796,8 @@ async function saveCandidate() {
     displayName: d.displayName,
     email: d.email,
     tests: Array.from(d.tests),
-    active: d.active
+    active: d.active,
+    viewResults: d.viewResults
   };
   if (!d.id) { payload.username = d.username; payload.password = d.password; }
   else if (d.password) payload.password = d.password;
@@ -2759,6 +2832,27 @@ function confirmDeleteCandidate(id) {
 
 /* ── Preview modal ─────────────────────────────────────────── */
 
+function previewAnswerHTML(q) {
+  let answer = '';
+  if (q.type === 'mcq') {
+    answer = q.options[q.answer] != null ? LETTERS[q.answer] + '. ' + esc(q.options[q.answer]) : '';
+  } else if (q.type === 'multi') {
+    answer = (q.answer || []).map(i => LETTERS[i] + '. ' + esc(q.options[i])).join(' \u00B7 ');
+  } else if (q.type === 'matching') {
+    answer = (q.pairs || []).map(pr => esc(pr.l) + ' \u2192 ' + esc(pr.r)).join('<br>');
+  } else if (q.type === 'ordering') {
+    answer = (q.ordered || []).map(esc).join(' \u2192 ');
+  } else if (q.type === 'code') {
+    answer = (q.testCases || []).slice(0, 2)
+      .map(tc => esc(JSON.stringify(tc.args)) + ' \u2192 ' + esc(JSON.stringify(tc.expected)))
+      .join(' \u00B7 ');
+  } else {
+    answer = esc((q.answer || []).join(' / '));
+  }
+  if (!answer) return '';
+  return '<div class="review-line" style="margin-top:8px"><span class="lbl">Answer</span><span class="val val-correct">' + answer + '</span></div>';
+}
+
 function openPreview(id) {
   const t = S.tests.find(x => x.id === id);
   if (!t) return;
@@ -2771,7 +2865,7 @@ function openPreview(id) {
     body:
       '<div class="test-card-meta" style="margin-bottom:14px">' +
         '<span class="meta-pill">' + ic('clock', 13) + ' ' + t.durationMin + ' min</span>' +
-        '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
+        '<span class="meta-pill">' + ic('layers', 13) + ' ' + t.count + ' questions</span>' +
         '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
       '</div>' +
       '<div class="test-card-chips" style="margin-bottom:18px">' +
@@ -2781,6 +2875,7 @@ function openPreview(id) {
       sample.map(q => '<div style="padding:10px 0;border-top:1px solid var(--hairline-soft)">' +
         '<div style="font-size:13.5px;font-weight:600;line-height:1.45">' + esc(q.q) + '</div>' +
         (q.code ? '<pre class="q-code" style="margin-top:8px">' + esc(q.code) + '</pre>' : '') +
+        previewAnswerHTML(q) +
         '<div class="row-meta" style="margin-top:6px">' +
           '<span class="badge b-' + q.diff + '"><span class="dot"></span>' + diffOf(q.diff).name + '</span>' +
           '<span class="badge b-mcq">' + { mcq: 'Multiple choice', multi: 'Multi-select', fill: 'Fill in the blank', matching: 'Matching', ordering: 'Ordering', code: 'Coding' }[q.type] + '</span>' +
@@ -2810,6 +2905,7 @@ async function refreshCandidate() {
     S.pubTests = [];
     S.live = null;
     S.liveQuestions = {};
+    S.candStats = { enabled: false };
     render();
     return;
   }
@@ -2821,6 +2917,8 @@ async function refreshCandidate() {
     ]);
     S.candAuth = me.user;
     S.pubTests = tests;
+    if (S.candAuth.viewResults) await loadCandStats();
+    else S.candStats = { enabled: false };
     if (active.attempt) {
       S.live = normalizeAttempt(active.attempt);
       S.liveQuestions = active.questions || {};
@@ -2834,6 +2932,7 @@ async function refreshCandidate() {
     S.pubTests = [];
     S.live = null;
     S.liveQuestions = {};
+    S.candStats = { enabled: false };
     if (e.status === 401) {
       S.candAuth = null;
     } else {
@@ -2843,9 +2942,16 @@ async function refreshCandidate() {
   render();
 }
 
+function candidateNav() {
+  const nav = [['home', 'Tests', 'layers']];
+  if (S.candAuth && S.candAuth.viewResults) nav.push(['results', 'Results', 'chart']);
+  nav.push(['profile', 'Profile', 'user']);
+  return nav;
+}
+
 function candidateShell() {
   if (!S.candAuth) return '<div class="auth-page">' + themeFabHTML() + vCandidateLogin() + modalHTML() + '</div>';
-  return sidebarHTML([['home', 'Tests', 'doc']], 'candidate') +
+  return sidebarHTML(candidateNav(), 'candidate') +
     '<div class="app-main">' +
       '<header class="topbar">' + headerHTML('candidate') + '</header>' +
       '<main class="content"><div class="container">' + candidateView() + '</div></main>' +
@@ -2911,6 +3017,7 @@ async function candLogout() {
   S.live = null;
   S.liveQuestions = {};
   S.candResult = null;
+  S.candStats = { enabled: false };
   S.candView = 'home';
   render();
   toast('Signed out');
@@ -2919,6 +3026,8 @@ async function candLogout() {
 function candidateView() {
   if (S.candView === 'runner' && S.live) return vRunner();
   if (S.candView === 'result' && S.candResult) return vCandidateResult();
+  if (S.candView === 'results') return vCandidateResults();
+  if (S.candView === 'profile') return vCandidateProfile();
   return vCandidateHome();
 }
 
@@ -2926,13 +3035,205 @@ function candidateView() {
 
 function vCandidateHome() {
   const name = (S.candAuth && (S.candAuth.displayName || S.candAuth.username)) || 'there';
+  const f = S.qFilters.search;
+  const tests = S.pubTests || [];
+  const list = f ? tests.filter(t => searchMatches(f, t.name, t.description)) : tests;
   return '<div class="page-head" style="margin-top:34px">' +
     '<div><h1 class="page-title" style="font-size:34px">Good to see you, ' + esc(name) + '</h1>' +
     '<p class="page-desc">Select one of your assigned tests. Each test is timed and graded automatically.</p></div>' +
   '</div>' +
   (S.live ? resumeCardHTML() : '') +
-  (S.pubTests.length ? S.pubTests.map(candidateTestCardHTML).join('')
+  (tests.length
+    ? (list.length
+        ? pgSlice('candTests', list).map(candidateTestCardHTML).join('') + pagerHTML('candTests', list.length)
+        : emptyState('search', 'No matching tests', 'No assigned tests match your search.', null, ''))
     : emptyState('lock', 'No tests assigned yet', 'Your administrator has not assigned any tests to you yet.', 'cand-logout', 'Sign out'));
+}
+
+function vCandidateResults() {
+  const s = S.candStats;
+  if (!s || !s.enabled) {
+    return '<div class="page-head" style="margin-top:34px"><div><h1 class="page-title" style="font-size:30px">My results</h1>' +
+      '<p class="page-desc">Your test results appear here when your administrator enables results access.</p></div></div>' +
+      emptyState('chart', 'Results not available', 'Your administrator has not enabled results access for your account yet.', 'cand-nav', 'Back to tests', 'home');
+  }
+  const f = S.qFilters.search;
+  const attempts = s.attempts || [];
+  const list = f ? attempts.filter(a => searchMatches(f, a.testName)) : attempts;
+  const passed = list.filter(a => a.passed);
+  const failed = list.filter(a => !a.passed);
+  return '<div class="page-head" style="margin-top:34px">' +
+    '<div><h1 class="page-title" style="font-size:30px">My results</h1>' +
+    '<p class="page-desc">Your completed tests, grouped by outcome.</p></div>' +
+  '</div>' +
+  gReportHTML(s) +
+  (passed.length ? candResultGroupHTML('candPassed', 'Passed', passed) : '') +
+  (failed.length ? candResultGroupHTML('candFailed', 'Not passed', failed) : '') +
+  (f && !list.length ? emptyState('search', 'No matching results', 'No results match your search.', null, '') : '');
+}
+
+function gReportHTML(s) {
+  const name = (S.candAuth && (S.candAuth.displayName || S.candAuth.username)) || 'Candidate';
+  const total = s.total || 0;
+  const avg = s.avg || 0;
+  const pct = s.percentile;
+  const top = pct != null ? 100 - pct : null;
+  const streak = s.streak || 0;
+  const signal = avg >= 80 ? 'STRONG SIGNAL' : avg >= 60 ? 'GOOD SIGNAL' : avg >= 40 ? 'GROWING SIGNAL' : 'EARLY SIGNAL';
+  const signalCls = avg >= 80 ? 'g-strong' : avg >= 60 ? 'g-good' : avg >= 40 ? 'g-growing' : 'g-early';
+  const filled = pct != null ? Math.round(18 * pct / 100) : 0;
+  const dots = Array.from({ length: 18 }, (_, i) => '<i class="' + (i < filled ? '' : 'muted') + '"></i>').join('');
+  return '<div class="g-report">' +
+    '<div class="g-chrome">' +
+      '<div class="g-dots"><i></i><i></i><i></i></div>' +
+      '<span>seeker.dev / my-results</span>' +
+      '<button class="g-share" data-action="share-results" title="Copy your results summary">' + ic('link', 14) + ' Share result</button>' +
+    '</div>' +
+    '<div class="g-body">' +
+      '<div class="g-cards">' +
+        '<div class="g-card g-score">' +
+          '<div class="g-big"><b>' + (total ? avg : '\u2014') + '</b><small>/ 100</small></div>' +
+          '<div>' +
+            '<span class="g-signal ' + signalCls + '">' + signal + '</span>' +
+            '<p>' + (total ? esc(name) + ' has completed <b>' + total + '</b> test' + (total === 1 ? '' : 's') + ' with a <b>' + avg + '%</b> average' + (s.passRate ? ' and a <b>' + s.passRate + '%</b> pass rate' : '') + '. Keep practicing to grow the signal.' : 'Complete your first test to unlock your signal report.') + '</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="g-card g-rank">' +
+          '<span class="g-kicker">YOUR PERCENTILE</span>' +
+          '<strong>' + (top != null ? 'Top ' + top + '%' : '\u2014') + '</strong>' +
+          '<p>of all candidates on Seeker</p>' +
+          '<div class="g-dots2">' + dots + '</div>' +
+        '</div>' +
+        '<div class="g-card g-streak">' +
+          '<span class="g-kicker">PRACTICE STREAK</span>' +
+          '<strong>' + (streak ? streak + ' day' + (streak === 1 ? '' : 's') : '0 days') + '</strong>' +
+          '<p>' + (streak ? 'Keep the signal fresh \u2014 practice daily.' : 'Submit a test today to start a streak.') + '</p>' +
+          '<span class="g-flame">' + ic('bolt', 26) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="g-skills">' +
+        '<div class="g-sec-title"><div><span>SKILL BREAKDOWN</span><h4>Where your signal is strongest</h4></div></div>' +
+        gSkillBars(s.byCat) +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function gSkillBars(byCat) {
+  const cats = Object.keys(byCat || {});
+  if (!cats.length) return '<p class="g-skill-none">No data yet \u2014 complete a test to see your skill map.</p>';
+  return cats.map(cid => {
+    const b = byCat[cid];
+    const pct = b.t ? Math.round((b.c / b.t) * 100) : 0;
+    const color = pct >= 70 ? 'var(--accent)' : pct >= 40 ? 'var(--orange)' : 'var(--red)';
+    return '<div class="g-skill">' +
+      '<span>' + ic(catOf(cid).icon, 14) + ' ' + esc(catOf(cid).name) + '</span>' +
+      '<div><i style="width:' + pct + '%;background:' + color + '"></i></div>' +
+      '<b>' + pct + '%</b>' +
+    '</div>';
+  }).join('');
+}
+
+function copyText(txt) {
+  const done = () => toast('Copied to clipboard', 'success');
+  const fail = () => toast('Copy failed', 'error');
+  function legacyCopy() {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      ok ? done() : fail();
+    } catch (e) { fail(); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    let finished = false;
+    navigator.clipboard.writeText(txt).then(() => { if (!finished) { finished = true; done(); } })
+      .catch(() => { if (!finished) { finished = true; legacyCopy(); } });
+    setTimeout(() => { if (!finished) { finished = true; legacyCopy(); } }, 500);
+    return;
+  }
+  legacyCopy();
+}
+
+function shareResults() {
+  const s = S.candStats || {};
+  const name = (S.candAuth && (S.candAuth.displayName || S.candAuth.username)) || 'Candidate';
+  const bits = [name + ' on Seeker', (s.total || 0) + ' test' + ((s.total || 0) === 1 ? '' : 's') + ' completed'];
+  if (s.avg != null) bits.push(s.avg + '% average');
+  if (s.percentile != null) bits.push('top ' + (100 - s.percentile) + '% of candidates');
+  if (s.streak) bits.push(s.streak + '-day practice streak');
+  copyText(bits.join(' \u00B7 ') + ' \u2014 ' + location.origin + '/app');
+}
+
+function shareResult() {
+  const rec = S.candResult;
+  if (!rec) return;
+  copyText(rec.testName + ' \u2014 ' + rec.pct + '% (' + rec.correct + '/' + rec.total + ' correct) ' +
+    (rec.passed ? 'Passed' : 'Not passed') + ' \u00B7 Seeker \u2014 ' + location.origin + '/app');
+}
+
+function candAttemptRowHTML(a) {
+  return '<div class="row-item">' +
+    '<span class="admin-avatar" style="width:30px;height:30px;font-size:13px">' + ic(a.passed ? 'check' : 'x', 13) + '</span>' +
+    '<div class="row-main">' +
+      '<div class="row-title" style="font-weight:600">' + esc(a.testName) + '</div>' +
+      '<div class="row-meta">' + fmtDate(a.submittedAt) + ' \u00B7 ' + a.correct + '/' + a.total + ' correct</div>' +
+    '</div>' +
+    '<span class="badge ' + (a.passed ? 'b-published' : 'b-fail') + '"><span class="dot"></span>' + a.pct + '%</span>' +
+  '</div>';
+}
+
+function candResultGroupHTML(key, title, items) {
+  return '<div class="section-label" style="margin:24px 2px 10px">' + title +
+    ' <span style="color:var(--text-3);font-weight:500">(' + items.length + ')</span></div>' +
+    '<div class="card">' + pgSlice(key, items).map(candAttemptRowHTML).join('') + '</div>' +
+    pagerHTML(key, items.length);
+}
+
+function vCandidateProfile() {
+  const u = S.candAuth || {};
+  const initial = ((u.displayName || u.username || '?') + '').slice(0, 1).toUpperCase();
+  const assigned = (u.tests || []).length;
+  return '<div class="page-head" style="margin-top:34px">' +
+    '<div><h1 class="page-title" style="font-size:30px">My profile</h1>' +
+    '<p class="page-desc">Your account details in the Seeker candidate portal.</p></div>' +
+  '</div>' +
+  '<div class="card card-pad" style="max-width:560px">' +
+    '<div style="display:flex;align-items:center;gap:16px">' +
+      '<span class="user-avatar" style="width:54px;height:54px;font-size:22px">' + esc(initial) + '</span>' +
+      '<div>' +
+        '<div style="font-size:19px;font-weight:700">' + esc(u.displayName || u.username) + '</div>' +
+        '<div style="font-size:13px;color:var(--text-3)">@' + esc(u.username) + (u.email ? ' \u00B7 ' + esc(u.email) : '') + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="height:1px;background:var(--hairline-soft);margin:18px 0"></div>' +
+    '<div class="row-item" style="padding:12px 0">' +
+      '<span class="admin-avatar" style="width:30px;height:30px">' + ic('layers', 14) + '</span>' +
+      '<div class="row-main"><div class="row-title" style="font-weight:600">' + assigned + ' test' + (assigned === 1 ? '' : 's') + ' assigned</div><div class="row-meta">Assigned by your administrator</div></div>' +
+    '</div>' +
+    '<div class="row-item" style="padding:12px 0">' +
+      '<span class="admin-avatar" style="width:30px;height:30px">' + ic('clock', 14) + '</span>' +
+      '<div class="row-main"><div class="row-title" style="font-weight:600">Member since ' + (u.createdAt ? fmtDate(u.createdAt) : '\u2014') + '</div><div class="row-meta">Candidate account</div></div>' +
+    '</div>' +
+    '<div class="row-item" style="padding:12px 0">' +
+      '<span class="admin-avatar" style="width:30px;height:30px">' + ic(u.active ? 'check' : 'x', 14) + '</span>' +
+      '<div class="row-main"><div class="row-title" style="font-weight:600">' + (u.active ? 'Active' : 'Disabled') + '</div><div class="row-meta">' + (u.active ? 'You can take your assigned tests' : 'Contact your administrator to restore access') + '</div></div>' +
+    '</div>' +
+    '<div style="margin-top:18px"><button class="btn btn-danger-solid" data-action="cand-logout">' + ic('logout', 14) + ' Sign out</button></div>' +
+  '</div>';
+}
+
+async function loadCandStats() {
+  try {
+    S.candStats = await API.get('/api/candidate/stats');
+  } catch (e) {
+    S.candStats = { enabled: false };
+  }
 }
 
 function resumeCardHTML() {
@@ -2960,7 +3261,7 @@ function candidateTestCardHTML(t) {
     '</div>' +
     '<div class="test-card-meta">' +
       '<span class="meta-pill">' + ic('clock', 13) + ' ' + t.durationMin + ' min</span>' +
-      '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
+      '<span class="meta-pill">' + ic('layers', 13) + ' ' + t.count + ' questions</span>' +
       '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
     '</div>' +
     '<div class="test-card-chips">' +
@@ -2984,7 +3285,7 @@ function openStartModal(testId) {
     body:
       '<div class="test-card-meta" style="margin-bottom:16px">' +
         '<span class="meta-pill">' + ic('clock', 13) + ' ' + t.durationMin + ' min</span>' +
-        '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
+        '<span class="meta-pill">' + ic('layers', 13) + ' ' + t.count + ' questions</span>' +
         '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
       '</div>' +
       '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6">The timer starts when you begin. It cannot be paused during the test. The system records your attempt under ' +
@@ -3095,7 +3396,7 @@ function vRunner() {
 
   return '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin:20px 0 18px;flex-wrap:wrap">' +
     '<div>' +
-      '<div style="font-size:13px;color:var(--text-3);font-weight:650;display:flex;align-items:center;gap:7px">' + ic('doc', 13) + ' ' + esc(l.testName) + '</div>' +
+      '<div style="font-size:13px;color:var(--text-3);font-weight:650;display:flex;align-items:center;gap:7px">' + ic('layers', 13) + ' ' + esc(l.testName) + '</div>' +
       '<div style="font-size:12.5px;color:var(--text-3);margin-top:3px">Question ' + (idx + 1) + ' of ' + total + '</div>' +
     '</div>' +
     '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">' +
@@ -3394,14 +3695,19 @@ async function submitAttempt(auto) {
   const att = S.live;
   if (!att) return;
   try {
-    const { attempt, questions } = await API.post('/api/candidate/attempts/' + att.id + '/submit', { leaves: att.leaves || 0 });
-    S.candResult = normalizeAttempt(attempt);
+    const r = await API.post('/api/candidate/attempts/' + att.id + '/submit', { leaves: att.leaves || 0 });
     S.live = null;
     S.liveQuestions = {};
-    buildQPool(Object.values(questions || {}));
-    S.candView = 'result';
+    if (r.attempt) {
+      S.candResult = normalizeAttempt(r.attempt);
+      buildQPool(Object.values(r.questions || {}));
+      S.candView = 'result';
+    } else {
+      S.candView = 'home';
+    }
     render();
     toast(auto ? 'Time is up. Test submitted' : 'Test submitted', 'success');
+    if (S.candAuth && S.candAuth.viewResults) loadCandStats();
   } catch (e) {
     toast(e.message, 'error');
     if (e.status === 409) { S.live = null; S.candView = 'home'; render(); }
@@ -3436,6 +3742,7 @@ function vCandidateResult() {
     '</div>' +
     '<div style="margin-top:22px;display:flex;gap:10px;justify-content:center">' +
       '<button class="btn btn-secondary" data-action="back-home">' + ic('arrowL', 15) + ' All tests</button>' +
+      '<button class="btn btn-primary" data-action="share-result">' + ic('link', 14) + ' Share result</button>' +
     '</div>' +
   '</div>' +
 
@@ -3538,10 +3845,15 @@ function postRender() {
     positionSeg('#catSeg', '#catThumb', ci);
     positionSeg('#diffSeg2', '#diffThumb2', di);
     positionSeg('#typeSeg', '#typeThumb', ti);
-    if (S.qFilters.search) {
-      const inp = $(S._focusSearch === 'global' ? '#globalSearch' : '#qSearch');
+    if (S._focusSearch === 'local') {
+      const inp = $('#qSearch');
       if (inp) { inp.focus(); const l = inp.value.length; inp.setSelectionRange(l, l); }
     }
+  }
+  if (S._focusSearch === 'global') {
+    const inp = $('#globalSearch');
+    if (inp) { inp.focus(); const l = inp.value.length; inp.setSelectionRange(l, l); }
+    S._focusSearch = null;
   }
   if (S.modal && qDraft) {
     positionSeg('#qDiffSeg', '#qDiffThumb', Math.max(0, ['beginner', 'intermediate', 'advanced'].indexOf(qDraft.diff)));
@@ -3896,6 +4208,8 @@ function onClick(e) {
 
     /* candidate: results */
     case 'toggle-review': toggleReview(+el.dataset.idx); break;
+    case 'share-results': shareResults(); break;
+    case 'share-result': shareResult(); break;
   }
 }
 
@@ -3904,7 +4218,20 @@ function onInput(e) {
   if (el.id === 'globalSearch') {
     S.qFilters.search = el.value.toLowerCase();
     S._focusSearch = 'global';
-    if (S.mode === 'console' && S.tab === 'questions') { _pg.questions = 0; render(); }
+    if (S.mode === 'console') {
+      if (S.tab === 'editor') return;
+      if (S.tab === 'questions') _pg.questions = 0;
+      else if (S.tab === 'tests') _pg.tests = 0;
+      else if (S.tab === 'results') _pg.results = 0;
+      else if (S.tab === 'activity') _pg.activity = 0;
+      else if (S.tab === 'candidates') _pg.candidates = 0;
+      else if (S.tab === 'admins') _pg.admins = 0;
+      render();
+    } else if (S.mode === 'candidate') {
+      if (S.candView === 'runner') return;
+      _pg.candTests = 0; _pg.candPassed = 0; _pg.candFailed = 0;
+      render();
+    }
     return;
   }
   if (el.id === 'qSearch') {

@@ -153,7 +153,7 @@ function consoleShell() {
   if (!S.auth) return '<div class="auth-page">' + themeFabHTML() + (S.view === 'register' ? vRegister() : vLogin()) + modalHTML() + '</div>';
   const nav = [
     ['dashboard', 'Dashboard', 'dashboard'],
-    ['tests', 'Tests', 'doc'],
+    ['tests', 'Tests', 'layers'],
     ['questions', 'Questions', 'question'],
     ['results', 'Results', 'chart'],
     ['activity', 'Activity', 'clock'],
@@ -203,7 +203,7 @@ function vDashboard() {
 
     '<div class="stat-grid">' +
       statCard('question', 'Questions', total, 'seeded in MongoDB') +
-      statCard('doc', 'Tests', tests, published + ' published') +
+      statCard('layers', 'Tests', tests, published + ' published') +
       statCard('users', 'Attempts', attempts, st ? st.avgPct + '% average · ' + st.passRate + '% pass' : '') +
       statCard('clock', 'In progress', active, 'active sessions') +
     '</div>' +
@@ -287,13 +287,15 @@ function pagerHTML(key, len) {
 /* ── Tests list ────────────────────────────────────────────── */
 
 function vTests() {
+  const f = S.qFilters.search;
+  const list = f ? S.tests.filter(t => searchMatches(f, t.name, t.description)) : S.tests;
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Tests</h1>' +
     '<p class="page-desc">Build timed assessments from your question bank. Publish them to the candidate portal.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="new-test">' + ic('plus', 15) + ' New test</button></div>' +
   '</div>' +
-  (S.tests.length ? '<div class="card">' + pgSlice('tests', S.tests).map(testRowHTML).join('') + '</div>' + pagerHTML('tests', S.tests.length)
-    : emptyState('doc', 'No tests yet', 'Create your first assessment to begin screening candidates.', 'new-test', 'Create a test'));
+  (list.length ? '<div class="card">' + pgSlice('tests', list).map(testRowHTML).join('') + '</div>' + pagerHTML('tests', list.length)
+    : emptyState(f ? 'search' : 'doc', f ? 'No matching tests' : 'No tests yet', f ? 'No tests match your search.' : 'Create your first assessment to begin screening candidates.', 'new-test', 'Create a test'));
 }
 
 function testRowHTML(t) {
@@ -789,26 +791,28 @@ async function reseedBank() {
 /* ── Results (admin) ───────────────────────────────────────── */
 
 function vResults() {
-  const a = S.attempts;
-  const submitted = a.filter(x => x.status === 'submitted');
+  const all = S.attempts;
+  const submitted = all.filter(x => x.status === 'submitted');
   const avg = submitted.length ? Math.round(submitted.reduce((x, y) => x + (y.pct || 0), 0) / submitted.length) : 0;
   const passRate = submitted.length ? Math.round(submitted.filter(x => x.passed).length / submitted.length * 100) : 0;
+  const f = S.qFilters.search;
+  const a = f ? all.filter(x => searchMatches(f, x.candidate, x.email, x.testName)) : all;
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Results</h1>' +
     '<p class="page-desc">Every attempt submitted through the candidate portal.</p></div>' +
   '</div>' +
   '<div class="stat-grid">' +
-    statCard('users', 'Attempts', a.length, 'total') +
+    statCard('users', 'Attempts', all.length, 'total') +
     statCard('chart', 'Average score', avg + '%', 'submitted') +
     statCard('check', 'Pass rate', passRate + '%', 'at the pass mark') +
-    statCard('clock', 'In progress', a.length - submitted.length, 'to review') +
+    statCard('clock', 'In progress', all.length - submitted.length, 'to review') +
   '</div>' +
   '<div style="height:16px"></div>' +
   (a.length ? '<div class="card"><div class="table-wrap"><table class="tbl">' +
     '<thead><tr><th>Candidate</th><th>Test</th><th>Status</th><th>Score</th><th>Time used</th><th>Started</th><th>IP</th><th>Switches</th><th></th></tr></thead><tbody>' +
     pgSlice('results', a).map(attRowHTML).join('') +
     '</tbody></table></div>' + pagerHTML('results', a.length) + '</div>'
-    : emptyState('chart', 'No attempts yet', 'When candidates submit a test, results will appear here.'));
+    : emptyState('chart', 'No attempts yet', f ? 'No attempts match your search.' : 'When candidates submit a test, results will appear here.'));
 }
 
 function attRowHTML(x) {
@@ -854,7 +858,7 @@ async function openAttempt(id) {
           '</div>' : '') +
         '<div style="margin:18px 0 4px" class="section-label">By category</div>' +
         breakdownHTML(attempt.byCat) +
-        (done && attempt.showAnswers !== false ? '<div style="margin:18px 0 4px" class="section-label">Answer review</div>' + reviewHTML(attempt) : ''),
+        (done ? '<div style="margin:18px 0 4px" class="section-label">Answer review</div>' + reviewHTML(attempt) : ''),
       foot: '<button class="btn btn-secondary" data-action="close-modal">Close</button>',
       wide: true
     });
@@ -890,16 +894,18 @@ const _EV_META = {
 
 function vActivity() {
   const ev = S.events || [];
+  const f = S.qFilters.search;
+  const list = f ? ev.filter(e => searchMatches(f, e.candidate, e.email, e.testName, e.ip, e.kind)) : ev;
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Activity</h1>' +
     '<p class="page-desc">Each sign-in, test start, submit, and discard is recorded with IP and device data. Discards may indicate misuse.</p></div>' +
   '</div>' +
   '<div style="height:16px"></div>' +
-  (ev.length ? '<div class="card"><div class="table-wrap"><table class="tbl">' +
+  (list.length ? '<div class="card"><div class="table-wrap"><table class="tbl">' +
     '<thead><tr><th>Event</th><th>Candidate</th><th>Test</th><th>IP</th><th>Device</th><th>Switches</th><th>When</th></tr></thead><tbody>' +
-    pgSlice('activity', ev).map(evRowHTML).join('') +
-    '</tbody></table></div>' + pagerHTML('activity', ev.length) + '</div>'
-    : emptyState('clock', 'No activity yet', 'Events appear here when candidates sign in, start, submit, or discard tests.'));
+    pgSlice('activity', list).map(evRowHTML).join('') +
+    '</tbody></table></div>' + pagerHTML('activity', list.length) + '</div>'
+    : emptyState('clock', 'No activity yet', f ? 'No activity matches your search.' : 'Events appear here when candidates sign in, start, submit, or discard tests.'));
 }
 
 function evRowHTML(e) {
@@ -919,13 +925,15 @@ function evRowHTML(e) {
 /* ── Admins (superadmin) ───────────────────────────────────── */
 
 function vAdmins() {
+  const f = S.qFilters.search;
+  const list = f ? S.admins.filter(x => searchMatches(f, x.username, x.displayName, x.email)) : S.admins;
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Administrators</h1>' +
     '<p class="page-desc">Manage who can access the console. Superadmins can add and remove admins.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-admin">' + ic('plus', 15) + ' Add admin</button></div>' +
   '</div>' +
-  '<div class="card">' +
-    S.admins.map(x =>
+  (list.length ? '<div class="card">' +
+    list.map(x =>
       '<div class="row-item">' +
         '<span class="admin-avatar" style="width:34px;height:34px;font-size:14px">' + esc((x.displayName || x.username).slice(0, 1).toUpperCase()) + '</span>' +
         '<div class="row-main">' +
@@ -940,7 +948,8 @@ function vAdmins() {
             : '') +
         '</div>' +
       '</div>').join('') +
-  '</div>';
+  '</div>'
+  : emptyState('users', 'No administrators found', f ? 'No administrators match your search.' : 'No administrators yet.', 'add-admin', 'Add admin'));
 }
 
 function openAddAdminModal() {
@@ -1015,13 +1024,15 @@ async function loadCandidates() {
 }
 
 function vCandidates() {
+  const f = S.qFilters.search;
+  const list = f ? S.candidates.filter(c => searchMatches(f, c.username, c.displayName, c.email)) : S.candidates;
   return '<div class="page-head">' +
     '<div><h1 class="page-title">Candidates</h1>' +
     '<p class="page-desc">Each candidate can sign in to the portal. They can take only the tests you assign.</p></div>' +
     '<div class="page-actions"><button class="btn btn-primary" data-action="add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
   '</div>' +
-  (S.candidates.length ? '<div class="card">' + pgSlice('candidates', S.candidates).map(candidateRowHTML).join('') + '</div>' + pagerHTML('candidates', S.candidates.length)
-    : emptyState('users', 'No candidates yet', 'Create an account to give access. Assign the tests that the candidate can take.', 'add-candidate', 'Add candidate'));
+  (list.length ? '<div class="card">' + pgSlice('candidates', list).map(candidateRowHTML).join('') + '</div>' + pagerHTML('candidates', list.length)
+    : emptyState('users', 'No candidates yet', f ? 'No candidates match your search.' : 'Create an account to give access. Assign the tests that the candidate can take.', 'add-candidate', 'Add candidate'));
 }
 
 function candidateRowHTML(c) {
@@ -1034,6 +1045,7 @@ function candidateRowHTML(c) {
     '</div>' +
     '<span class="badge ' + (c.active ? 'b-published' : 'b-fail') + '"><span class="dot"></span>' + (c.active ? 'Active' : 'Disabled') + '</span>' +
     '<span class="badge b-mcq">' + granted + ' test' + (granted === 1 ? '' : 's') + '</span>' +
+    '<span class="badge ' + (c.viewResults ? 'b-published' : 'b-draft') + '"><span class="dot"></span>' + (c.viewResults ? 'Results on' : 'Results off') + '</span>' +
     '<div class="row-actions">' +
       '<button class="btn btn-sm btn-secondary" data-action="edit-candidate" data-id="' + c.id + '">' + ic('key', 13) + ' Manage access</button>' +
       '<button class="btn-icon danger" data-action="delete-candidate" data-id="' + c.id + '" title="Remove candidate">' + ic('trash', 16) + '</button>' +
@@ -1055,6 +1067,10 @@ function candidateModalBody(d) {
     '<div class="setting-row">' +
       '<div><div class="setting-label">Active</div><div class="setting-sub">Disabled accounts can\u2019t sign in</div></div>' +
       '<label class="switch"><input type="checkbox" id="candActive" ' + (d.active ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+    '</div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Results access</div><div class="setting-sub">Candidates can see their score, pass rate, and attempt history after a test</div></div>' +
+      '<label class="switch"><input type="checkbox" id="candViewResults" ' + (d.viewResults ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
     '</div>' +
     '<div class="field" style="margin-bottom:4px">' +
       '<div class="field-label">Assigned tests <span class="field-help" id="candTestCount">' + d.tests.size + ' of ' + S.tests.length + ' selected</span></div>' +
@@ -1080,10 +1096,11 @@ function captureCandDraftFromDOM() {
   _candDraft.email = g('#candEmail');
   _candDraft.password = g('#candPass');
   _candDraft.active = !!((($('#candActive') || {}).checked));
+  _candDraft.viewResults = !!((($('#candViewResults') || {}).checked));
 }
 
 function openAddCandidateModal() {
-  _candDraft = { id: null, username: '', displayName: '', email: '', password: '', active: true, tests: new Set() };
+  _candDraft = { id: null, username: '', displayName: '', email: '', password: '', active: true, viewResults: false, tests: new Set() };
   rerenderCandidateModal();
 }
 
@@ -1097,6 +1114,7 @@ function openEditCandidateModal(id) {
     email: c.email || '',
     password: '',
     active: c.active !== false,
+    viewResults: c.viewResults === true,
     tests: new Set(c.tests || [])
   };
   rerenderCandidateModal();
@@ -1135,7 +1153,8 @@ async function saveCandidate() {
     displayName: d.displayName,
     email: d.email,
     tests: Array.from(d.tests),
-    active: d.active
+    active: d.active,
+    viewResults: d.viewResults
   };
   if (!d.id) { payload.username = d.username; payload.password = d.password; }
   else if (d.password) payload.password = d.password;
@@ -1170,6 +1189,27 @@ function confirmDeleteCandidate(id) {
 
 /* ── Preview modal ─────────────────────────────────────────── */
 
+function previewAnswerHTML(q) {
+  let answer = '';
+  if (q.type === 'mcq') {
+    answer = q.options[q.answer] != null ? LETTERS[q.answer] + '. ' + esc(q.options[q.answer]) : '';
+  } else if (q.type === 'multi') {
+    answer = (q.answer || []).map(i => LETTERS[i] + '. ' + esc(q.options[i])).join(' \u00B7 ');
+  } else if (q.type === 'matching') {
+    answer = (q.pairs || []).map(pr => esc(pr.l) + ' \u2192 ' + esc(pr.r)).join('<br>');
+  } else if (q.type === 'ordering') {
+    answer = (q.ordered || []).map(esc).join(' \u2192 ');
+  } else if (q.type === 'code') {
+    answer = (q.testCases || []).slice(0, 2)
+      .map(tc => esc(JSON.stringify(tc.args)) + ' \u2192 ' + esc(JSON.stringify(tc.expected)))
+      .join(' \u00B7 ');
+  } else {
+    answer = esc((q.answer || []).join(' / '));
+  }
+  if (!answer) return '';
+  return '<div class="review-line" style="margin-top:8px"><span class="lbl">Answer</span><span class="val val-correct">' + answer + '</span></div>';
+}
+
 function openPreview(id) {
   const t = S.tests.find(x => x.id === id);
   if (!t) return;
@@ -1182,7 +1222,7 @@ function openPreview(id) {
     body:
       '<div class="test-card-meta" style="margin-bottom:14px">' +
         '<span class="meta-pill">' + ic('clock', 13) + ' ' + t.durationMin + ' min</span>' +
-        '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
+        '<span class="meta-pill">' + ic('layers', 13) + ' ' + t.count + ' questions</span>' +
         '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
       '</div>' +
       '<div class="test-card-chips" style="margin-bottom:18px">' +
@@ -1192,6 +1232,7 @@ function openPreview(id) {
       sample.map(q => '<div style="padding:10px 0;border-top:1px solid var(--hairline-soft)">' +
         '<div style="font-size:13.5px;font-weight:600;line-height:1.45">' + esc(q.q) + '</div>' +
         (q.code ? '<pre class="q-code" style="margin-top:8px">' + esc(q.code) + '</pre>' : '') +
+        previewAnswerHTML(q) +
         '<div class="row-meta" style="margin-top:6px">' +
           '<span class="badge b-' + q.diff + '"><span class="dot"></span>' + diffOf(q.diff).name + '</span>' +
           '<span class="badge b-mcq">' + { mcq: 'Multiple choice', multi: 'Multi-select', fill: 'Fill in the blank', matching: 'Matching', ordering: 'Ordering', code: 'Coding' }[q.type] + '</span>' +

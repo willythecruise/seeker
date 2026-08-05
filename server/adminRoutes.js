@@ -281,7 +281,7 @@ router.get('/candidates', async (req, res) => {
 });
 
 router.post('/candidates', async (req, res) => {
-  const { username, displayName, email, password, tests, active } = req.body || {};
+  const { username, displayName, email, password, tests, active, viewResults } = req.body || {};
   const uname = String(username || '').trim().toLowerCase();
   if (!/^[a-z0-9._-]{3,24}$/.test(uname)) return res.status(400).json({ error: 'Invalid username' });
   if (String(password || '').length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
@@ -293,7 +293,8 @@ router.post('/candidates', async (req, res) => {
     email: String(email || '').trim().toLowerCase(),
     passwordHash: hash,
     tests: parseTestIds(tests),
-    active: active !== false
+    active: active !== false,
+    viewResults: viewResults === true
   });
   res.status(201).json(publicCandidate(cand));
 });
@@ -301,10 +302,11 @@ router.post('/candidates', async (req, res) => {
 router.put('/candidates/:id', async (req, res) => {
   const cand = await Candidate.findById(req.params.id);
   if (!cand) return res.status(404).json({ error: 'Candidate not found' });
-  const { displayName, email, tests, active, password } = req.body || {};
+  const { displayName, email, tests, active, password, viewResults } = req.body || {};
   if (displayName !== undefined) cand.displayName = String(displayName).trim();
   if (email !== undefined) cand.email = String(email).trim().toLowerCase();
   if (active !== undefined) cand.active = !!active;
+  if (viewResults !== undefined) cand.viewResults = !!viewResults;
   if (tests !== undefined) cand.tests = parseTestIds(tests);
   if (password && String(password).length) {
     if (String(password).length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });

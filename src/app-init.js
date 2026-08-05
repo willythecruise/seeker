@@ -67,10 +67,15 @@ function postRender() {
     positionSeg('#catSeg', '#catThumb', ci);
     positionSeg('#diffSeg2', '#diffThumb2', di);
     positionSeg('#typeSeg', '#typeThumb', ti);
-    if (S.qFilters.search) {
-      const inp = $(S._focusSearch === 'global' ? '#globalSearch' : '#qSearch');
+    if (S._focusSearch === 'local') {
+      const inp = $('#qSearch');
       if (inp) { inp.focus(); const l = inp.value.length; inp.setSelectionRange(l, l); }
     }
+  }
+  if (S._focusSearch === 'global') {
+    const inp = $('#globalSearch');
+    if (inp) { inp.focus(); const l = inp.value.length; inp.setSelectionRange(l, l); }
+    S._focusSearch = null;
   }
   if (S.modal && qDraft) {
     positionSeg('#qDiffSeg', '#qDiffThumb', Math.max(0, ['beginner', 'intermediate', 'advanced'].indexOf(qDraft.diff)));
@@ -425,6 +430,8 @@ function onClick(e) {
 
     /* candidate: results */
     case 'toggle-review': toggleReview(+el.dataset.idx); break;
+    case 'share-results': shareResults(); break;
+    case 'share-result': shareResult(); break;
   }
 }
 
@@ -433,7 +440,20 @@ function onInput(e) {
   if (el.id === 'globalSearch') {
     S.qFilters.search = el.value.toLowerCase();
     S._focusSearch = 'global';
-    if (S.mode === 'console' && S.tab === 'questions') { _pg.questions = 0; render(); }
+    if (S.mode === 'console') {
+      if (S.tab === 'editor') return;
+      if (S.tab === 'questions') _pg.questions = 0;
+      else if (S.tab === 'tests') _pg.tests = 0;
+      else if (S.tab === 'results') _pg.results = 0;
+      else if (S.tab === 'activity') _pg.activity = 0;
+      else if (S.tab === 'candidates') _pg.candidates = 0;
+      else if (S.tab === 'admins') _pg.admins = 0;
+      render();
+    } else if (S.mode === 'candidate') {
+      if (S.candView === 'runner') return;
+      _pg.candTests = 0; _pg.candPassed = 0; _pg.candFailed = 0;
+      render();
+    }
     return;
   }
   if (el.id === 'qSearch') {

@@ -193,8 +193,61 @@ router.post('/attempts/:id/submit', async (req, res) => {
     ip, ua
   });
   const byIdOut = {};
-  questions.forEach(q => { byIdOut[q.qid] = sanitizeQuestion(q, att.optionOrder[q.qid], true); });
-  res.json({ attempt: att, questions: byIdOut });
+  if (req.candidate.viewResults === true) {
+    questions.forEach(q => { byIdOut[q.qid] = sanitizeQuestion(q, att.optionOrder[q.qid], true); });
+    return res.json({ attempt: att, questions: byIdOut });
+  }
+  res.json({ submitted: true });
+});
+
+/* GET /api/candidate/stats — metrics for candidates with results access enabled */
+router.get('/stats', async (req, res) => {
+  if (req.candidate.viewResults !== true) return res.json({ enabled: false });
+  const attempts = await Attempt.find({ candidateId: req.candidate._id, status: 'submitted' }).sort({ submittedAt: -1 }).lean();
+  const total = attempts.length;
+  const passed = attempts.filter(a => a.passed).length;
+  const pcts = attempts.map(a => a.pct || 0);
+  const byCat = {};
+  attempts.forEach(a => {
+    Object.entries(a.byCat || {}).forEach(([cat, v]) => {
+      if (!byCat[cat]) byCat[cat] = { t: 0, c: 0 };
+      byCat[cat].t += (v && v.t) || 0;
+      byCat[cat].c += (v && v.c) || 0;
+    });
+  });
+  const avg = total ? Math.round(pcts.reduce((s, p) => s + p, 0) / total) : 0;
+
+  const dayKey = d => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  const days = new Set(attempts.map(a => dayKey(new Date(a.submittedAt))));
+  let streak = 0;
+  const cur = new Date();
+  if (!days.has(dayKey(cur))) cur.setDate(cur.getDate() - 1);
+  while (days.has(dayKey(cur))) { streak++; cur.setDate(cur.getDate() - 1); }
+
+  const all = await Attempt.find({ status: 'submitted' }).select('pct').lean();
+  const below = all.filter(a => (a.pct || 0) < avg).length;
+  const percentile = total && all.length ? Math.round((below / all.length) * 100) : null;
+
+  res.json({
+    enabled: true,
+    total,
+    passed,
+    passRate: total ? Math.round((passed / total) * 100) : 0,
+    avg,
+    best: total ? Math.max(...pcts) : 0,
+    streak,
+    percentile,
+    byCat,
+    attempts: attempts.map(a => ({
+      id: a._id.toString(),
+      testName: a.testName,
+      pct: a.pct || 0,
+      passed: !!a.passed,
+      correct: a.correct || 0,
+      total: a.total || 0,
+      submittedAt: a.submittedAt
+    }))
+  });
 });
 
 /* POST /api/candidate/attempts/:id/discard */

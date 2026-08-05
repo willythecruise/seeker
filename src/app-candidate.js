@@ -20,6 +20,7 @@ async function refreshCandidate() {
     S.pubTests = [];
     S.live = null;
     S.liveQuestions = {};
+    S.candStats = { enabled: false };
     render();
     return;
   }
@@ -31,6 +32,8 @@ async function refreshCandidate() {
     ]);
     S.candAuth = me.user;
     S.pubTests = tests;
+    if (S.candAuth.viewResults) await loadCandStats();
+    else S.candStats = { enabled: false };
     if (active.attempt) {
       S.live = normalizeAttempt(active.attempt);
       S.liveQuestions = active.questions || {};
@@ -44,6 +47,7 @@ async function refreshCandidate() {
     S.pubTests = [];
     S.live = null;
     S.liveQuestions = {};
+    S.candStats = { enabled: false };
     if (e.status === 401) {
       S.candAuth = null;
     } else {
@@ -53,9 +57,16 @@ async function refreshCandidate() {
   render();
 }
 
+function candidateNav() {
+  const nav = [['home', 'Tests', 'layers']];
+  if (S.candAuth && S.candAuth.viewResults) nav.push(['results', 'Results', 'chart']);
+  nav.push(['profile', 'Profile', 'user']);
+  return nav;
+}
+
 function candidateShell() {
   if (!S.candAuth) return '<div class="auth-page">' + themeFabHTML() + vCandidateLogin() + modalHTML() + '</div>';
-  return sidebarHTML([['home', 'Tests', 'doc']], 'candidate') +
+  return sidebarHTML(candidateNav(), 'candidate') +
     '<div class="app-main">' +
       '<header class="topbar">' + headerHTML('candidate') + '</header>' +
       '<main class="content"><div class="container">' + candidateView() + '</div></main>' +
@@ -121,6 +132,7 @@ async function candLogout() {
   S.live = null;
   S.liveQuestions = {};
   S.candResult = null;
+  S.candStats = { enabled: false };
   S.candView = 'home';
   render();
   toast('Signed out');
@@ -129,6 +141,8 @@ async function candLogout() {
 function candidateView() {
   if (S.candView === 'runner' && S.live) return vRunner();
   if (S.candView === 'result' && S.candResult) return vCandidateResult();
+  if (S.candView === 'results') return vCandidateResults();
+  if (S.candView === 'profile') return vCandidateProfile();
   return vCandidateHome();
 }
 
@@ -136,13 +150,205 @@ function candidateView() {
 
 function vCandidateHome() {
   const name = (S.candAuth && (S.candAuth.displayName || S.candAuth.username)) || 'there';
+  const f = S.qFilters.search;
+  const tests = S.pubTests || [];
+  const list = f ? tests.filter(t => searchMatches(f, t.name, t.description)) : tests;
   return '<div class="page-head" style="margin-top:34px">' +
     '<div><h1 class="page-title" style="font-size:34px">Good to see you, ' + esc(name) + '</h1>' +
     '<p class="page-desc">Select one of your assigned tests. Each test is timed and graded automatically.</p></div>' +
   '</div>' +
   (S.live ? resumeCardHTML() : '') +
-  (S.pubTests.length ? S.pubTests.map(candidateTestCardHTML).join('')
+  (tests.length
+    ? (list.length
+        ? pgSlice('candTests', list).map(candidateTestCardHTML).join('') + pagerHTML('candTests', list.length)
+        : emptyState('search', 'No matching tests', 'No assigned tests match your search.', null, ''))
     : emptyState('lock', 'No tests assigned yet', 'Your administrator has not assigned any tests to you yet.', 'cand-logout', 'Sign out'));
+}
+
+function vCandidateResults() {
+  const s = S.candStats;
+  if (!s || !s.enabled) {
+    return '<div class="page-head" style="margin-top:34px"><div><h1 class="page-title" style="font-size:30px">My results</h1>' +
+      '<p class="page-desc">Your test results appear here when your administrator enables results access.</p></div></div>' +
+      emptyState('chart', 'Results not available', 'Your administrator has not enabled results access for your account yet.', 'cand-nav', 'Back to tests', 'home');
+  }
+  const f = S.qFilters.search;
+  const attempts = s.attempts || [];
+  const list = f ? attempts.filter(a => searchMatches(f, a.testName)) : attempts;
+  const passed = list.filter(a => a.passed);
+  const failed = list.filter(a => !a.passed);
+  return '<div class="page-head" style="margin-top:34px">' +
+    '<div><h1 class="page-title" style="font-size:30px">My results</h1>' +
+    '<p class="page-desc">Your completed tests, grouped by outcome.</p></div>' +
+  '</div>' +
+  gReportHTML(s) +
+  (passed.length ? candResultGroupHTML('candPassed', 'Passed', passed) : '') +
+  (failed.length ? candResultGroupHTML('candFailed', 'Not passed', failed) : '') +
+  (f && !list.length ? emptyState('search', 'No matching results', 'No results match your search.', null, '') : '');
+}
+
+function gReportHTML(s) {
+  const name = (S.candAuth && (S.candAuth.displayName || S.candAuth.username)) || 'Candidate';
+  const total = s.total || 0;
+  const avg = s.avg || 0;
+  const pct = s.percentile;
+  const top = pct != null ? 100 - pct : null;
+  const streak = s.streak || 0;
+  const signal = avg >= 80 ? 'STRONG SIGNAL' : avg >= 60 ? 'GOOD SIGNAL' : avg >= 40 ? 'GROWING SIGNAL' : 'EARLY SIGNAL';
+  const signalCls = avg >= 80 ? 'g-strong' : avg >= 60 ? 'g-good' : avg >= 40 ? 'g-growing' : 'g-early';
+  const filled = pct != null ? Math.round(18 * pct / 100) : 0;
+  const dots = Array.from({ length: 18 }, (_, i) => '<i class="' + (i < filled ? '' : 'muted') + '"></i>').join('');
+  return '<div class="g-report">' +
+    '<div class="g-chrome">' +
+      '<div class="g-dots"><i></i><i></i><i></i></div>' +
+      '<span>seeker.dev / my-results</span>' +
+      '<button class="g-share" data-action="share-results" title="Copy your results summary">' + ic('link', 14) + ' Share result</button>' +
+    '</div>' +
+    '<div class="g-body">' +
+      '<div class="g-cards">' +
+        '<div class="g-card g-score">' +
+          '<div class="g-big"><b>' + (total ? avg : '\u2014') + '</b><small>/ 100</small></div>' +
+          '<div>' +
+            '<span class="g-signal ' + signalCls + '">' + signal + '</span>' +
+            '<p>' + (total ? esc(name) + ' has completed <b>' + total + '</b> test' + (total === 1 ? '' : 's') + ' with a <b>' + avg + '%</b> average' + (s.passRate ? ' and a <b>' + s.passRate + '%</b> pass rate' : '') + '. Keep practicing to grow the signal.' : 'Complete your first test to unlock your signal report.') + '</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="g-card g-rank">' +
+          '<span class="g-kicker">YOUR PERCENTILE</span>' +
+          '<strong>' + (top != null ? 'Top ' + top + '%' : '\u2014') + '</strong>' +
+          '<p>of all candidates on Seeker</p>' +
+          '<div class="g-dots2">' + dots + '</div>' +
+        '</div>' +
+        '<div class="g-card g-streak">' +
+          '<span class="g-kicker">PRACTICE STREAK</span>' +
+          '<strong>' + (streak ? streak + ' day' + (streak === 1 ? '' : 's') : '0 days') + '</strong>' +
+          '<p>' + (streak ? 'Keep the signal fresh \u2014 practice daily.' : 'Submit a test today to start a streak.') + '</p>' +
+          '<span class="g-flame">' + ic('bolt', 26) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="g-skills">' +
+        '<div class="g-sec-title"><div><span>SKILL BREAKDOWN</span><h4>Where your signal is strongest</h4></div></div>' +
+        gSkillBars(s.byCat) +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function gSkillBars(byCat) {
+  const cats = Object.keys(byCat || {});
+  if (!cats.length) return '<p class="g-skill-none">No data yet \u2014 complete a test to see your skill map.</p>';
+  return cats.map(cid => {
+    const b = byCat[cid];
+    const pct = b.t ? Math.round((b.c / b.t) * 100) : 0;
+    const color = pct >= 70 ? 'var(--accent)' : pct >= 40 ? 'var(--orange)' : 'var(--red)';
+    return '<div class="g-skill">' +
+      '<span>' + ic(catOf(cid).icon, 14) + ' ' + esc(catOf(cid).name) + '</span>' +
+      '<div><i style="width:' + pct + '%;background:' + color + '"></i></div>' +
+      '<b>' + pct + '%</b>' +
+    '</div>';
+  }).join('');
+}
+
+function copyText(txt) {
+  const done = () => toast('Copied to clipboard', 'success');
+  const fail = () => toast('Copy failed', 'error');
+  function legacyCopy() {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      ok ? done() : fail();
+    } catch (e) { fail(); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    let finished = false;
+    navigator.clipboard.writeText(txt).then(() => { if (!finished) { finished = true; done(); } })
+      .catch(() => { if (!finished) { finished = true; legacyCopy(); } });
+    setTimeout(() => { if (!finished) { finished = true; legacyCopy(); } }, 500);
+    return;
+  }
+  legacyCopy();
+}
+
+function shareResults() {
+  const s = S.candStats || {};
+  const name = (S.candAuth && (S.candAuth.displayName || S.candAuth.username)) || 'Candidate';
+  const bits = [name + ' on Seeker', (s.total || 0) + ' test' + ((s.total || 0) === 1 ? '' : 's') + ' completed'];
+  if (s.avg != null) bits.push(s.avg + '% average');
+  if (s.percentile != null) bits.push('top ' + (100 - s.percentile) + '% of candidates');
+  if (s.streak) bits.push(s.streak + '-day practice streak');
+  copyText(bits.join(' \u00B7 ') + ' \u2014 ' + location.origin + '/app');
+}
+
+function shareResult() {
+  const rec = S.candResult;
+  if (!rec) return;
+  copyText(rec.testName + ' \u2014 ' + rec.pct + '% (' + rec.correct + '/' + rec.total + ' correct) ' +
+    (rec.passed ? 'Passed' : 'Not passed') + ' \u00B7 Seeker \u2014 ' + location.origin + '/app');
+}
+
+function candAttemptRowHTML(a) {
+  return '<div class="row-item">' +
+    '<span class="admin-avatar" style="width:30px;height:30px;font-size:13px">' + ic(a.passed ? 'check' : 'x', 13) + '</span>' +
+    '<div class="row-main">' +
+      '<div class="row-title" style="font-weight:600">' + esc(a.testName) + '</div>' +
+      '<div class="row-meta">' + fmtDate(a.submittedAt) + ' \u00B7 ' + a.correct + '/' + a.total + ' correct</div>' +
+    '</div>' +
+    '<span class="badge ' + (a.passed ? 'b-published' : 'b-fail') + '"><span class="dot"></span>' + a.pct + '%</span>' +
+  '</div>';
+}
+
+function candResultGroupHTML(key, title, items) {
+  return '<div class="section-label" style="margin:24px 2px 10px">' + title +
+    ' <span style="color:var(--text-3);font-weight:500">(' + items.length + ')</span></div>' +
+    '<div class="card">' + pgSlice(key, items).map(candAttemptRowHTML).join('') + '</div>' +
+    pagerHTML(key, items.length);
+}
+
+function vCandidateProfile() {
+  const u = S.candAuth || {};
+  const initial = ((u.displayName || u.username || '?') + '').slice(0, 1).toUpperCase();
+  const assigned = (u.tests || []).length;
+  return '<div class="page-head" style="margin-top:34px">' +
+    '<div><h1 class="page-title" style="font-size:30px">My profile</h1>' +
+    '<p class="page-desc">Your account details in the Seeker candidate portal.</p></div>' +
+  '</div>' +
+  '<div class="card card-pad" style="max-width:560px">' +
+    '<div style="display:flex;align-items:center;gap:16px">' +
+      '<span class="user-avatar" style="width:54px;height:54px;font-size:22px">' + esc(initial) + '</span>' +
+      '<div>' +
+        '<div style="font-size:19px;font-weight:700">' + esc(u.displayName || u.username) + '</div>' +
+        '<div style="font-size:13px;color:var(--text-3)">@' + esc(u.username) + (u.email ? ' \u00B7 ' + esc(u.email) : '') + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="height:1px;background:var(--hairline-soft);margin:18px 0"></div>' +
+    '<div class="row-item" style="padding:12px 0">' +
+      '<span class="admin-avatar" style="width:30px;height:30px">' + ic('layers', 14) + '</span>' +
+      '<div class="row-main"><div class="row-title" style="font-weight:600">' + assigned + ' test' + (assigned === 1 ? '' : 's') + ' assigned</div><div class="row-meta">Assigned by your administrator</div></div>' +
+    '</div>' +
+    '<div class="row-item" style="padding:12px 0">' +
+      '<span class="admin-avatar" style="width:30px;height:30px">' + ic('clock', 14) + '</span>' +
+      '<div class="row-main"><div class="row-title" style="font-weight:600">Member since ' + (u.createdAt ? fmtDate(u.createdAt) : '\u2014') + '</div><div class="row-meta">Candidate account</div></div>' +
+    '</div>' +
+    '<div class="row-item" style="padding:12px 0">' +
+      '<span class="admin-avatar" style="width:30px;height:30px">' + ic(u.active ? 'check' : 'x', 14) + '</span>' +
+      '<div class="row-main"><div class="row-title" style="font-weight:600">' + (u.active ? 'Active' : 'Disabled') + '</div><div class="row-meta">' + (u.active ? 'You can take your assigned tests' : 'Contact your administrator to restore access') + '</div></div>' +
+    '</div>' +
+    '<div style="margin-top:18px"><button class="btn btn-danger-solid" data-action="cand-logout">' + ic('logout', 14) + ' Sign out</button></div>' +
+  '</div>';
+}
+
+async function loadCandStats() {
+  try {
+    S.candStats = await API.get('/api/candidate/stats');
+  } catch (e) {
+    S.candStats = { enabled: false };
+  }
 }
 
 function resumeCardHTML() {
@@ -170,7 +376,7 @@ function candidateTestCardHTML(t) {
     '</div>' +
     '<div class="test-card-meta">' +
       '<span class="meta-pill">' + ic('clock', 13) + ' ' + t.durationMin + ' min</span>' +
-      '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
+      '<span class="meta-pill">' + ic('layers', 13) + ' ' + t.count + ' questions</span>' +
       '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
     '</div>' +
     '<div class="test-card-chips">' +
@@ -194,7 +400,7 @@ function openStartModal(testId) {
     body:
       '<div class="test-card-meta" style="margin-bottom:16px">' +
         '<span class="meta-pill">' + ic('clock', 13) + ' ' + t.durationMin + ' min</span>' +
-        '<span class="meta-pill">' + ic('doc', 13) + ' ' + t.count + ' questions</span>' +
+        '<span class="meta-pill">' + ic('layers', 13) + ' ' + t.count + ' questions</span>' +
         '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
       '</div>' +
       '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6">The timer starts when you begin. It cannot be paused during the test. The system records your attempt under ' +
@@ -305,7 +511,7 @@ function vRunner() {
 
   return '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin:20px 0 18px;flex-wrap:wrap">' +
     '<div>' +
-      '<div style="font-size:13px;color:var(--text-3);font-weight:650;display:flex;align-items:center;gap:7px">' + ic('doc', 13) + ' ' + esc(l.testName) + '</div>' +
+      '<div style="font-size:13px;color:var(--text-3);font-weight:650;display:flex;align-items:center;gap:7px">' + ic('layers', 13) + ' ' + esc(l.testName) + '</div>' +
       '<div style="font-size:12.5px;color:var(--text-3);margin-top:3px">Question ' + (idx + 1) + ' of ' + total + '</div>' +
     '</div>' +
     '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">' +
@@ -604,14 +810,19 @@ async function submitAttempt(auto) {
   const att = S.live;
   if (!att) return;
   try {
-    const { attempt, questions } = await API.post('/api/candidate/attempts/' + att.id + '/submit', { leaves: att.leaves || 0 });
-    S.candResult = normalizeAttempt(attempt);
+    const r = await API.post('/api/candidate/attempts/' + att.id + '/submit', { leaves: att.leaves || 0 });
     S.live = null;
     S.liveQuestions = {};
-    buildQPool(Object.values(questions || {}));
-    S.candView = 'result';
+    if (r.attempt) {
+      S.candResult = normalizeAttempt(r.attempt);
+      buildQPool(Object.values(r.questions || {}));
+      S.candView = 'result';
+    } else {
+      S.candView = 'home';
+    }
     render();
     toast(auto ? 'Time is up. Test submitted' : 'Test submitted', 'success');
+    if (S.candAuth && S.candAuth.viewResults) loadCandStats();
   } catch (e) {
     toast(e.message, 'error');
     if (e.status === 409) { S.live = null; S.candView = 'home'; render(); }
@@ -646,6 +857,7 @@ function vCandidateResult() {
     '</div>' +
     '<div style="margin-top:22px;display:flex;gap:10px;justify-content:center">' +
       '<button class="btn btn-secondary" data-action="back-home">' + ic('arrowL', 15) + ' All tests</button>' +
+      '<button class="btn btn-primary" data-action="share-result">' + ic('link', 14) + ' Share result</button>' +
     '</div>' +
   '</div>' +
 
