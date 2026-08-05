@@ -10,7 +10,7 @@ const candidateRouter = require('./server/candidateRoutes');
 
 const PORT = Number(process.env.PORT) || 3000;
 const MONGO_URI = process.env.MONGO_URI ||
-  'mongodb+srv://willythedev:poAAAi6hLZ55cEm6@cluster0.1umip.mongodb.net/?appName=Cluster0';
+  'mongodb://willythedev:poAAAi6hLZ55cEm6@cluster0-shard-00-00.1umip.mongodb.net:27017,cluster0-shard-00-01.1umip.mongodb.net:27017,cluster0-shard-00-02.1umip.mongodb.net:27017/?ssl=true&authSource=admin&retryWrites=true&w=majority&appName=Cluster0';
 
 async function main() {
   await connect(MONGO_URI, process.env.DB_NAME || 'orion');
