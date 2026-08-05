@@ -3982,14 +3982,20 @@ async function boot() {
   document.addEventListener('visibilitychange', onVisibility);
   window.addEventListener('blur', onWindowBlur);
 
-  const authed = await refreshAuth();
-  if (authed) {
+  if (API.candToken) {
+    S.mode = 'candidate';
     S.view = 'app';
-    await loadAdminData();
+    S.candView = 'home';
+    await refreshCandidate();
   } else {
-    S.view = 'login';
+    const authed = await refreshAuth();
+    if (authed) {
+      S.view = 'app';
+      await loadAdminData();
+    } else {
+      S.view = 'login';
+    }
   }
-  if (S.mode === 'candidate') await refreshCandidate();
   render();
 }
 
