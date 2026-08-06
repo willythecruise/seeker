@@ -110,6 +110,7 @@ function sanitizeQuestion(q, permutation, includeAnswer) {
     if (includeAnswer) out.correctOrder = (q.ordered || []).map(it => p.indexOf(it)); // shown-space indices of correct sequence
   }
   if (includeAnswer && q.type === 'fill') out.answer = q.answer;
+  if (includeAnswer) out.explain = q.explain || '';
   return out;
 }
 

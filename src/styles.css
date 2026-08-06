@@ -134,6 +134,7 @@ a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 svg.ic { display: block; flex: none; }
+svg.ic.brand-ic { display: inline-block; vertical-align: -0.12em; }
 
 /* ────────────────────────── Responsive helpers ────────────── */
 
@@ -953,6 +954,7 @@ kbd {
 .g-skills { margin-top: 14px; border: 1px solid var(--hairline); border-radius: 13px; padding: 18px 20px; background: var(--surface); }
 .g-sec-title h4 { margin: 5px 0 0; font-size: 15px; letter-spacing: -.02em; }
 .g-skill { display: grid; grid-template-columns: 170px 1fr 40px; align-items: center; gap: 12px; margin: 14px 0; font-size: 13px; color: var(--text-2); }
+.g-skill > span { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .g-skill > div { height: 6px; border-radius: 9px; background: var(--gray-100); overflow: hidden; }
 .g-skill i { display: block; height: 100%; border-radius: inherit; }
 .g-skill b { text-align: right; font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }

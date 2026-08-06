@@ -215,7 +215,7 @@ function vDashboard() {
         const t = c.total;
         const pct = total ? Math.round((t / total) * 100) : 0;
         return '<div class="coverage-row">' +
-          '<span class="coverage-icon">' + ic(catOf(c.cat).icon, 16) + '</span>' +
+          '<span class="coverage-icon">' + catIconHTML(catOf(c.cat), 16) + '</span>' +
           '<div style="min-width:190px"><div class="coverage-name">' + esc(catOf(c.cat).name) + '</div>' +
           '<div class="coverage-sub">' + c.beginner + ' beginner · ' + c.intermediate + ' intermediate · ' + c.advanced + ' advanced</div></div>' +
           '<span class="coverage-bar"><span class="coverage-fill" style="width:' + pct + '%"></span></span>' +
@@ -312,7 +312,7 @@ function testRowHTML(t) {
         '<span>' + diffFocusLabel(t.diffFocus) + '</span>' +
       '</div>' +
       '<div class="row-meta" style="margin-top:7px">' +
-        cats.map(c => '<span class="badge b-mcq">' + ic(c.icon, 11) + ' ' + esc(c.name) + '</span>').join('') +
+        cats.map(c => '<span class="badge b-mcq">' + catIconHTML(c, 11) + ' ' + esc(c.name) + '</span>').join('') +
       '</div>' +
     '</div>' +
     '<div class="row-actions">' +
@@ -419,7 +419,7 @@ function vEditor() {
           const n = S.questions.filter(q => q.cat === c.id).length;
           const on = d.cats.has(c.id);
           return '<button class="chip ' + (on ? 'active' : '') + '" data-action="toggle-cat" data-value="' + c.id + '" aria-pressed="' + on + '">' +
-            ic(c.icon, 14) + ' ' + esc(c.name) + '<span class="chip-count">' + n + '</span>' + ic('check', 12) + '</button>';
+            catIconHTML(c, 14) + ' ' + esc(c.name) + '<span class="chip-count">' + n + '</span>' + ic('check', 12) + '</button>';
         }).join('') +
       '</div>' +
     '</div>' +
@@ -512,7 +512,7 @@ function vQuestions() {
           '<input class="input" id="qSearch" placeholder="Search questions\u2026" value="' + esc(f.search) + '"></div>' +
         '<div class="seg-scroll"><div class="seg" id="catSeg">' +
           '<button class="seg-item ' + (f.cat === 'all' ? 'active' : '') + '" data-action="qfilter" data-field="cat" data-value="all">All</button>' +
-          CATS.map(c => '<button class="seg-item ' + (f.cat === c.id ? 'active' : '') + '" data-action="qfilter" data-field="cat" data-value="' + c.id + '" title="' + esc(c.name) + '">' + ic(c.icon, 13) + '</button>').join('') +
+          CATS.map(c => '<button class="seg-item ' + (f.cat === c.id ? 'active' : '') + '" data-action="qfilter" data-field="cat" data-value="' + c.id + '" title="' + esc(c.name) + '">' + catIconHTML(c, 13) + '</button>').join('') +
           '<span class="seg-thumb" id="catThumb"></span>' +
         '</div></div>' +
       '</div>' +
@@ -544,7 +544,7 @@ function qRowHTML(q) {
       '<div class="row-title">' + esc(q.q) + '</div>' +
       '<div class="row-meta">' +
         '<span class="badge b-' + q.diff + '"><span class="dot"></span>' + diffOf(q.diff).name + '</span>' +
-        '<span class="badge b-mcq">' + ic(c.icon, 11) + ' ' + esc(c.name) + '</span>' +
+        '<span class="badge b-mcq">' + catIconHTML(c, 11) + ' ' + esc(c.name) + '</span>' +
         '<span class="badge b-mcq">' + { mcq: 'Multiple choice', multi: 'Multi-select', fill: 'Fill in the blank', matching: 'Matching', ordering: 'Ordering', code: 'Coding' }[q.type] + '</span>' +
         (q.code ? '<span class="badge b-mcq">' + ic('code', 11) + ' Code</span>' : '') +
         (q.source === 'builtin' ? '<span class="badge b-fill" style="background:var(--surface-3)">Built-in</span>' : '') +
@@ -1226,7 +1226,7 @@ function openPreview(id) {
         '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
       '</div>' +
       '<div class="test-card-chips" style="margin-bottom:18px">' +
-        cats.map(c => '<span class="badge b-mcq">' + ic(c.icon, 11) + ' ' + esc(c.name) + '</span>').join('') +
+        cats.map(c => '<span class="badge b-mcq">' + catIconHTML(c, 11) + ' ' + esc(c.name) + '</span>').join('') +
       '</div>' +
       '<div class="section-label">Sample questions (first ' + sample.length + ' of ' + t.count + ')</div>' +
       sample.map(q => '<div style="padding:10px 0;border-top:1px solid var(--hairline-soft)">' +

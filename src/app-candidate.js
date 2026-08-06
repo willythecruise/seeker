@@ -242,7 +242,7 @@ function gSkillBars(byCat) {
     const pct = b.t ? Math.round((b.c / b.t) * 100) : 0;
     const color = pct >= 70 ? 'var(--accent)' : pct >= 40 ? 'var(--orange)' : 'var(--red)';
     return '<div class="g-skill">' +
-      '<span>' + ic(catOf(cid).icon, 14) + ' ' + esc(catOf(cid).name) + '</span>' +
+      '<span>' + catIconHTML(catOf(cid), 14) + ' ' + esc(catOf(cid).name) + '</span>' +
       '<div><i style="width:' + pct + '%;background:' + color + '"></i></div>' +
       '<b>' + pct + '%</b>' +
     '</div>';
@@ -380,7 +380,7 @@ function candidateTestCardHTML(t) {
       '<span class="meta-pill">' + ic('check', 13) + ' ' + t.passPct + '% to pass</span>' +
     '</div>' +
     '<div class="test-card-chips">' +
-      cats.map(c => '<span class="badge b-mcq">' + ic(c.icon, 11) + ' ' + esc(c.name) + '</span>').join('') +
+      cats.map(c => '<span class="badge b-mcq">' + catIconHTML(c, 11) + ' ' + esc(c.name) + '</span>').join('') +
     '</div>' +
     '<div class="test-card-foot">' +
       '<div style="font-size:12.5px;color:var(--text-3)">' + diffFocusLabel(t.diffFocus) + '</div>' +
@@ -526,7 +526,7 @@ function vRunner() {
       '<div class="q-head">' +
         '<div class="q-badges">' +
           '<span class="badge b-' + q.diff + '"><span class="dot"></span>' + diffOf(q.diff).name + '</span>' +
-          '<span class="badge b-mcq">' + ic(catOf(q.cat).icon, 11) + ' ' + esc(catOf(q.cat).name) + '</span>' +
+          '<span class="badge b-mcq">' + catIconHTML(catOf(q.cat), 11) + ' ' + esc(catOf(q.cat).name) + '</span>' +
           '<span class="badge ' + (q.type === 'mcq' ? 'b-mcq' : 'b-fill') + '">' + (q.type === 'mcq' ? 'Multiple choice' : 'Fill in the blank') + '</span>' +
         '</div>' +
         '<button class="flag-btn ' + (l.flagged[idx] ? 'flagged' : '') + '" id="flagBtn" data-action="flag">' + ic('flag', 14) + ' <span id="flagLabel">' + (l.flagged[idx] ? 'Flagged' : 'Flag for review') + '</span></button>' +
