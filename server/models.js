@@ -30,6 +30,7 @@ const CandidateSchema = new Schema({
   email: { type: String, trim: true, lowercase: true, default: '' },
   passwordHash: { type: String, required: true },
   tests: { type: [Schema.Types.ObjectId], ref: 'Test', default: [] },  // granted tests
+  org: { type: Schema.Types.ObjectId, ref: 'Organization', default: null },  // owning organization, if any
   active: { type: Boolean, default: true },
   viewResults: { type: Boolean, default: false },  // candidate may see scores, pass rate, and attempt history
   createdAt: { type: Date, default: Date.now }
@@ -37,6 +38,7 @@ const CandidateSchema = new Schema({
 CandidateSchema.set('toJSON', { virtuals: false, transform: (d, r) => {
   r.id = r._id.toString(); delete r._id; delete r.passwordHash;
   r.tests = (r.tests || []).map(t => t.toString());
+  r.org = r.org ? r.org.toString() : null;
   return r;
 } });
 
@@ -63,6 +65,31 @@ const SignupRequestSchema = new Schema({
 SignupRequestSchema.set('toJSON', { virtuals: false, transform: (d, r) => {
   r.id = r._id.toString(); delete r._id; return r;
 } });
+
+/* ── Organization (company / team that manages its own candidates) ── */
+const OrganizationSchema = new Schema({
+  name: { type: String, required: true, unique: true, trim: true },
+  email: { type: String, trim: true, lowercase: true, default: '' },
+  username: { type: String, required: true, unique: true, trim: true, lowercase: true },  // org login username
+  passwordHash: { type: String, required: true },
+  tests: { type: [Schema.Types.ObjectId], ref: 'Test', default: [] },  // tests this org may assign
+  active: { type: Boolean, default: true },
+  createdBy: { type: Schema.Types.ObjectId, ref: 'Admin' },
+  createdAt: { type: Date, default: Date.now }
+}, { versionKey: false });
+OrganizationSchema.set('toJSON', { virtuals: false, transform: (d, r) => {
+  r.id = r._id.toString(); delete r._id; delete r.passwordHash;
+  r.tests = (r.tests || []).map(t => t.toString());
+  return r;
+} });
+
+/* ── Organization session ──────────────────────────────────── */
+const OrganizationSessionSchema = new Schema({
+  token: { type: String, required: true, unique: true },
+  org: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, required: true }
+}, { versionKey: false });
 
 /* ── Question ──────────────────────────────────────────────── */
 const QuestionSchema = new Schema({
@@ -170,6 +197,8 @@ module.exports = {
   Candidate: mongoose.model('Candidate', CandidateSchema),
   CandidateSession: mongoose.model('CandidateSession', CandidateSessionSchema),
   SignupRequest: mongoose.model('SignupRequest', SignupRequestSchema),
+  Organization: mongoose.model('Organization', OrganizationSchema),
+  OrganizationSession: mongoose.model('OrganizationSession', OrganizationSessionSchema),
   Question: mongoose.model('Question', QuestionSchema),
   Test: mongoose.model('Test', TestSchema),
   Attempt: mongoose.model('Attempt', AttemptSchema),

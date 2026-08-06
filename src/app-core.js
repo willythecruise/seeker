@@ -24,7 +24,12 @@ const CATS = [
   { id: 'go',          name: 'Go', icon: 'compass', logo: 'go' },
   { id: 'rust',        name: 'Rust', icon: 'gear', logo: 'rust' },
   { id: 'dsa',          name: 'Data Structures & Algorithms', icon: 'tree' },
-  { id: 'backend-eng', name: 'Backend Engineering · C# / Java / Python', icon: 'server' }
+  { id: 'backend-eng', name: 'Backend Engineering · C# / Java / Python', icon: 'server' },
+  { id: 'product-design', name: 'Product Design', icon: 'pencil' },
+  { id: 'cybersecurity',   name: 'Cybersecurity', icon: 'shield' },
+  { id: 'data-science',    name: 'Data Science', icon: 'database' },
+  { id: 'data-analysis',   name: 'Data Analysis', icon: 'chart' },
+  { id: 'machine-learning', name: 'Machine Learning & AI', icon: 'bolt' }
 ];
 
 const DIFFS = [
@@ -50,13 +55,15 @@ const LETTERS = ['A', 'B', 'C', 'D'];
 /* ── State ─────────────────────────────────────────────────── */
 
 const S = {
-  mode: 'console',        // console | candidate
+  mode: 'console',        // console | candidate | org
   view: 'app',            // app | login (console requires auth)
-  tab: 'dashboard',       // dashboard | tests | editor | questions | results | admins
+  tab: 'dashboard',       // dashboard | tests | editor | questions | results | admins | orgs
   candView: 'home',       // home | runner | result
   candLoginView: 'login', // candidate login screen: login | request
+  orgView: 'dashboard',   // org portal: dashboard | candidates | attempts | profile
   auth: null,             // admin session
   candAuth: null,         // signed-in candidate account
+  orgAuth: null,          // signed-in organization account
   stats: null,            // dashboard stats from server
   questions: [],          // admin: full bank
   tests: [],
@@ -64,6 +71,10 @@ const S = {
   admins: [],
   candidates: [],         // admin: granted candidate accounts
   signupRequests: [],     // admin: pending signup requests
+  orgs: [],               // admin: organizations (superadmin)
+  orgCandidates: [],      // org: this org's candidates
+  orgTests: [],           // org: tests the org may assign
+  orgAttempts: [],        // org: attempts by this org's candidates
   pubTests: [],           // candidate: published tests
   qPool: {},              // qid -> question (rendering pool)
   live: null,             // candidate in-progress attempt
@@ -76,7 +87,8 @@ const S = {
   events: [],             // admin: proctoring / audit log
   modal: null,
   _pendingTestId: null,
-  _focusSearch: null
+  _focusSearch: null,
+  _smSearch: {}           // searchable multi-select: key -> lowercase query
 };
 
 /* draft objects for the editors (module-level so every module shares them) */
@@ -218,7 +230,8 @@ const ICONS = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>',
   moon: '<path d="M20.7 13.6A8.5 8.5 0 1 1 10.4 3.3a7 7 0 0 0 10.3 10.3z"/>',
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
-  bolt: '<path d="m13 2-8 12h6l-1 8 9-13h-6V2Z"/>'
+  bolt: '<path d="m13 2-8 12h6l-1 8 9-13h-6V2Z"/>',
+  building: '<rect x="4.5" y="3" width="15" height="18.5" rx="1.8"/><path d="M9.5 7.5h1.5M13 7.5h1.5M9.5 11.5h1.5M13 11.5h1.5M9.5 15.5h1.5M13 15.5h1.5"/><path d="M10 21.5v-3.5h4v3.5"/>'
 };
 
 function ic(name, size, cls) {
@@ -295,7 +308,7 @@ function themeFabHTML() {
 }
 
 function modeSeg() {
-  const opts = [['console', 'Console'], ['candidate', 'Candidate']];
+  const opts = [['console', 'Console'], ['candidate', 'Candidate'], ['org', 'Organization']];
   return '<div class="seg" id="modeSeg">' +
     opts.map(o => '<button class="seg-item ' + (S.mode === o[0] ? 'active' : '') + '" data-action="mode" data-value="' + o[0] + '">' + o[1] + '</button>').join('') +
     '<span class="seg-thumb" id="modeThumb"></span></div>';
@@ -313,8 +326,10 @@ function positionSeg(segSel, thumbSel, idx) {
 
 function sidebarHTML(nav, mode) {
   const isCand = mode === 'candidate';
-  const activeVal = isCand ? S.candView : S.tab;
-  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length, candidates: S.candidates.length, signups: S.signupRequests.length };
+  const isOrg = mode === 'org';
+  const navAction = isCand ? 'cand-nav' : isOrg ? 'org-nav' : 'tab';
+  const activeVal = isCand ? S.candView : isOrg ? S.orgView : S.tab;
+  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length, candidates: S.candidates.length, signups: S.signupRequests.length, orgs: S.orgs.length };
   return '<aside class="sidebar" id="sidebar">' +
     '<div class="sidebar-inner">' +
       '<div class="sidebar-head">' + brandHTML() +
@@ -323,7 +338,7 @@ function sidebarHTML(nav, mode) {
       '<nav class="sidebar-nav">' +
         nav.map(n => {
           const active = activeVal === n[0] || (n[0] === 'tests' && activeVal === 'editor');
-          return '<button class="nav-item ' + (active ? 'active' : '') + '" data-action="' + (isCand ? 'cand-nav' : 'tab') + '" data-value="' + n[0] + '">' +
+          return '<button class="nav-item ' + (active ? 'active' : '') + '" data-action="' + navAction + '" data-value="' + n[0] + '">' +
             ic(n[2], 18) +
             '<span class="nav-label">' + n[1] + '</span>' +
             (counts[n[0]] != null ? '<span class="nav-count">' + counts[n[0]] + '</span>' : '') +
@@ -340,9 +355,11 @@ function sidebarHTML(nav, mode) {
 
 function headerHTML(mode) {
   const isCand = mode === 'candidate';
+  const isOrg = mode === 'org';
   const inRunner = isCand && S.candView === 'runner' && S.live;
-  const inProgress = (!isCand && S.attempts) ? S.attempts.filter(a => a.status !== 'submitted').length : 0;
+  const inProgress = (!isCand && !isOrg && S.attempts) ? S.attempts.filter(a => a.status !== 'submitted').length : 0;
   const candUser = isCand && S.candAuth;
+  const orgUser = isOrg && S.orgAuth;
   return '<div class="topbar-inner">' +
     '<div class="topbar-left">' +
       '<button class="btn-icon hamburger hide-desktop" data-action="sidebar-open" aria-label="Open menu">' + ic('menu', 26) + '</button>' +
@@ -358,7 +375,7 @@ function headerHTML(mode) {
       (inRunner ? '<span class="timer" id="timerDisplay">' + ic('clock', 15) + ' ' + fmtClock(S.live.remaining) + '</span>' : '') +
       '<button class="btn-icon" data-action="theme-toggle" title="Toggle light / dark theme" aria-label="Toggle theme">' +
         ic(isDark() ? 'sun' : 'moon', 18) + '</button>' +
-      (!isCand ? '<button class="btn-icon bell-wrap" data-action="tab" data-value="results" title="In-progress attempts">' +
+      (!isCand && !isOrg ? '<button class="btn-icon bell-wrap" data-action="tab" data-value="results" title="In-progress attempts">' +
         ic('bell', 20) + (inProgress ? '<span class="bell-badge">' + inProgress + '</span>' : '') + '</button>' : '') +
       (candUser ? '<div class="user-menu-wrap">' +
         '<button class="user-chip" data-action="cand-user-menu" aria-expanded="false">' +
@@ -373,7 +390,21 @@ function headerHTML(mode) {
           '<button class="user-menu-item danger" data-action="cand-logout">' + ic('logout', 15) + ' Sign out</button>' +
         '</div>' +
       '</div>' : '') +
-      (!isCand ? '<div class="user-menu-wrap">' +
+      (orgUser ? '<div class="user-menu-wrap">' +
+        '<button class="user-chip" data-action="cand-user-menu" aria-expanded="false">' +
+          '<span class="user-avatar">' + esc((S.orgAuth.name || S.orgAuth.username || 'O').slice(0, 1).toUpperCase()) + '</span>' +
+          '<span class="user-info hide-mobile">' +
+            '<span class="user-name">' + esc(S.orgAuth.name || S.orgAuth.username) + '</span>' +
+            '<span class="user-role">Organization</span>' +
+          '</span>' +
+          ic('chevronD', 14) +
+        '</button>' +
+        '<div class="user-menu">' +
+          '<button class="user-menu-item" data-action="org-change-password">' + ic('key', 15) + ' Change password</button>' +
+          '<button class="user-menu-item danger" data-action="org-logout">' + ic('logout', 15) + ' Sign out</button>' +
+        '</div>' +
+      '</div>' : '') +
+      (!isCand && !isOrg ? '<div class="user-menu-wrap">' +
         '<button class="user-chip" data-action="user-menu" aria-expanded="false">' +
           '<span class="user-avatar">' + esc((S.auth.displayName || S.auth.username).slice(0, 1).toUpperCase()) + '</span>' +
           '<span class="user-info hide-mobile">' +
@@ -438,6 +469,44 @@ function modalHTML() {
       '<div class="modal-body">' + (m.body || '') + '</div>' +
       (m.foot ? '<div class="modal-foot">' + m.foot + '</div>' : '') +
     '</div></div>';
+}
+
+/* ── Searchable multi-select (used for test pickers) ───────── */
+
+const SM_STATE = {};   // key -> { selected: Set, rerender: fn, onChange: fn }
+
+function registerSM(key, selected, rerender, onChange) {
+  SM_STATE[key] = { selected: selected || new Set(), rerender: rerender || null, onChange: onChange || null };
+}
+
+/* Render a searchable checkbox list. items: [{ id, name, sub? }] */
+function searchMultiHTML(key, items, emptyMsg) {
+  const st = SM_STATE[key];
+  const sel = st ? st.selected : new Set();
+  const q = (S._smSearch && S._smSearch[key]) ? S._smSearch[key] : '';
+  const filtered = q ? items.filter(it => String(it.name).toLowerCase().indexOf(q) !== -1) : items;
+  return '<div class="sm-wrap">' +
+    '<div class="sm-search-wrap">' + ic('search', 14) +
+      '<input class="input sm-search" data-action="sm-search" data-key="' + key + '" placeholder="Search\u2026" value="' + esc(q) + '" autocomplete="off">' +
+    '</div>' +
+    '<div class="sm-list">' +
+      (filtered.length
+        ? filtered.map(it =>
+            '<label class="sm-item' + (sel.has(it.id) ? ' on' : '') + '">' +
+              '<input type="checkbox" data-action="sm-toggle" data-key="' + key + '" data-value="' + it.id + '" ' + (sel.has(it.id) ? 'checked' : '') + '>' +
+              '<span class="sm-name">' + esc(it.name) + '</span>' +
+              (it.sub ? '<span class="badge ' + (it.subCls || 'b-mcq') + '"><span class="dot"></span>' + it.sub + '</span>' : '') +
+              '<span class="sm-check">' + ic('check', 13) + '</span>' +
+            '</label>').join('')
+        : '<div class="sm-empty">' + (emptyMsg || 'No matching items') + '</div>') +
+    '</div>' +
+    '<div class="sm-count" data-smcount="' + key + '">' + sel.size + ' selected</div>';
+}
+
+function smUpdateCount(key) {
+  const st = SM_STATE[key];
+  const cnt = $('[data-smcount="' + key + '"]');
+  if (cnt && st) cnt.textContent = st.selected.size + ' selected';
 }
 
 /* ── Grading helpers (authoritative grading happens server-side) ── */

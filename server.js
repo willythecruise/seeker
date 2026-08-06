@@ -8,6 +8,7 @@ const { router: authRouter } = require('./server/auth');
 const adminRouter = require('./server/adminRoutes');
 const candidateRouter = require('./server/candidateRoutes');
 const signupRouter = require('./server/signupRoutes');
+const orgRouter = require('./server/orgRoutes');
 
 const PORT = Number(process.env.PORT) || 3000;
 const MONGO_URI = process.env.MONGO_URI ||
@@ -42,6 +43,7 @@ async function main() {
   app.use('/api/admin', adminRouter);
   app.use('/api/candidate', candidateRouter);
   app.use('/api/signup', signupRouter);
+  app.use('/api/org', orgRouter);
 
   // Landing page (built Vite app) at the root
   const landingDist = path.join(__dirname, 'landing', 'dist');

@@ -2,8 +2,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const { Question, Test, Attempt, Admin, Session, EventLog, Candidate, CandidateSession } = require('./models');
-const { requireAuth, requireSuperadmin, publicAdmin, publicCandidate } = require('./auth');
+const { Question, Test, Attempt, Admin, Session, EventLog, Candidate, CandidateSession, Organization, OrganizationSession } = require('./models');
+const { requireAuth, requireSuperadmin, publicAdmin, publicCandidate, publicOrg } = require('./auth');
 const { gradeAttempt, DIFF_WEIGHTS, sanitizeQuestion } = require('./lib');
 const { seedQuestions } = require('./seed');
 const { sendTestAssigned } = require('./mailer');
@@ -35,7 +35,7 @@ router.get('/stats', async (req, res) => {
         advanced: { $sum: { $cond: [{ $eq: ['$diff', 'advanced'] }, 1, 0] } }
     } }
   ]);
-  const CAT_ORDER = ['system-design', 'frontend', 'backend', 'db-mongodb', 'db-postgres', 'coding', 'devops', 'solutions', 'cs', 'java', 'python', 'dotnet', 'springboot', 'backend-eng', 'django', 'typescript', 'go', 'rust', 'dsa'];
+  const CAT_ORDER = ['system-design', 'frontend', 'backend', 'db-mongodb', 'db-postgres', 'coding', 'devops', 'solutions', 'cs', 'java', 'python', 'dotnet', 'springboot', 'backend-eng', 'django', 'typescript', 'go', 'rust', 'dsa', 'product-design', 'cybersecurity', 'data-science', 'data-analysis', 'machine-learning'];
   const byCatMap = {};
   grouped.forEach(g => { byCatMap[g._id] = g; });
   const coverage = CAT_ORDER.map(c => ({
@@ -311,18 +311,20 @@ router.get('/candidates', async (req, res) => {
 });
 
 router.post('/candidates', async (req, res) => {
-  const { username, displayName, email, password, tests, active, viewResults } = req.body || {};
+  const { username, displayName, email, password, tests, active, viewResults, org } = req.body || {};
   const uname = String(username || '').trim().toLowerCase();
   if (!/^[a-z0-9._-]{3,24}$/.test(uname)) return res.status(400).json({ error: 'Invalid username' });
   if (String(password || '').length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
   if (await Candidate.exists({ username: uname })) return res.status(409).json({ error: 'Username already taken' });
   const hash = await bcrypt.hash(String(password), 10);
+  const orgId = org && mongoose.Types.ObjectId.isValid(String(org)) ? String(org) : null;
   const cand = await Candidate.create({
     username: uname,
     displayName: String(displayName || '').trim(),
     email: String(email || '').trim().toLowerCase(),
     passwordHash: hash,
     tests: parseTestIds(tests),
+    org: orgId,
     active: active !== false,
     viewResults: viewResults === true
   });
@@ -333,11 +335,12 @@ router.post('/candidates', async (req, res) => {
 router.put('/candidates/:id', async (req, res) => {
   const cand = await Candidate.findById(req.params.id);
   if (!cand) return res.status(404).json({ error: 'Candidate not found' });
-  const { displayName, email, tests, active, password, viewResults } = req.body || {};
+  const { displayName, email, tests, active, password, viewResults, org } = req.body || {};
   if (displayName !== undefined) cand.displayName = String(displayName).trim();
   if (email !== undefined) cand.email = String(email).trim().toLowerCase();
   if (active !== undefined) cand.active = !!active;
   if (viewResults !== undefined) cand.viewResults = !!viewResults;
+  if (org !== undefined) cand.org = (org && mongoose.Types.ObjectId.isValid(String(org))) ? String(org) : null;
   if (tests !== undefined) {
     const before = (cand.tests || []).map(t => t.toString());
     cand.tests = parseTestIds(tests);
@@ -355,6 +358,83 @@ router.put('/candidates/:id', async (req, res) => {
 router.delete('/candidates/:id', async (req, res) => {
   await Candidate.deleteOne({ _id: req.params.id });
   await CandidateSession.deleteMany({ candidate: req.params.id });
+  res.json({ ok: true });
+});
+
+/* ── Organizations (superadmin) ────────────────────────────── */
+function orgTestIds(tests) {
+  if (!Array.isArray(tests)) return [];
+  return tests.map(t => {
+    try { return new mongoose.Types.ObjectId(String(t)); } catch (e) { return null; }
+  }).filter(Boolean);
+}
+
+/* GET /api/admin/orgs — every organization, with candidate counts */
+router.get('/orgs', requireSuperadmin, async (req, res) => {
+  const orgs = await Organization.find().sort({ createdAt: 1 }).lean();
+  const counts = await Candidate.aggregate([
+    { $match: { org: { $ne: null } } },
+    { $group: { _id: '$org', n: { $sum: 1 } } }
+  ]);
+  const countMap = {};
+  counts.forEach(c => { if (c._id) countMap[c._id.toString()] = c.n; });
+  res.json(orgs.map(o => ({ ...publicOrg(o), candidateCount: countMap[o._id.toString()] || 0 })));
+});
+
+/* POST /api/admin/orgs — create an organization */
+router.post('/orgs', requireSuperadmin, async (req, res) => {
+  const { name, email, username, password, tests, active } = req.body || {};
+  const orgName = String(name || '').trim();
+  const uname = String(username || '').trim().toLowerCase();
+  if (!orgName) return res.status(400).json({ error: 'Organization name is required' });
+  if (!/^[a-z0-9._-]{3,24}$/.test(uname)) return res.status(400).json({ error: 'Invalid login username' });
+  if (String(password || '').length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  if (await Organization.exists({ name: orgName })) return res.status(409).json({ error: 'Organization name already taken' });
+  if (await Organization.exists({ username: uname })) return res.status(409).json({ error: 'Login username already taken' });
+  const hash = await bcrypt.hash(String(password), 10);
+  const org = await Organization.create({
+    name: orgName,
+    email: String(email || '').trim().toLowerCase(),
+    username: uname,
+    passwordHash: hash,
+    tests: orgTestIds(tests),
+    active: active !== false,
+    createdBy: req.admin._id
+  });
+  res.status(201).json(publicOrg(org));
+});
+
+/* PUT /api/admin/orgs/:id — update name/email/password/tests/active */
+router.put('/orgs/:id', requireSuperadmin, async (req, res) => {
+  const org = await Organization.findById(req.params.id);
+  if (!org) return res.status(404).json({ error: 'Organization not found' });
+  const { name, email, password, tests, active } = req.body || {};
+  if (name !== undefined) {
+    const n = String(name).trim();
+    if (!n) return res.status(400).json({ error: 'Organization name is required' });
+    if (n.toLowerCase() !== org.name.toLowerCase() && await Organization.exists({ name: n })) {
+      return res.status(409).json({ error: 'Organization name already taken' });
+    }
+    org.name = n;
+  }
+  if (email !== undefined) org.email = String(email).trim().toLowerCase();
+  if (active !== undefined) org.active = !!active;
+  if (tests !== undefined) org.tests = orgTestIds(tests);
+  if (password && String(password).length) {
+    if (String(password).length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    org.passwordHash = await bcrypt.hash(String(password), 10);
+  }
+  await org.save();
+  res.json(publicOrg(org));
+});
+
+/* DELETE /api/admin/orgs/:id — delete the org and detach its candidates */
+router.delete('/orgs/:id', requireSuperadmin, async (req, res) => {
+  const org = await Organization.findById(req.params.id);
+  if (!org) return res.status(404).json({ error: 'Organization not found' });
+  await Candidate.updateMany({ org: org._id }, { $set: { org: null } });
+  await Organization.deleteOne({ _id: org._id });
+  await OrganizationSession.deleteMany({ org: org._id });
   res.json({ ok: true });
 });
 

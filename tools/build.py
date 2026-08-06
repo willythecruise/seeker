@@ -20,6 +20,7 @@ app = "".join(read(p) for p in [
     "app-api.js",
     "app-console.js",
     "app-candidate.js",
+    "app-org.js",
     "app-init.js",
 ])
 

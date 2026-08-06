@@ -587,6 +587,29 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 
 .temp-pass-box { margin-top: 12px; padding: 12px 14px; border: 1px dashed var(--accent-soft, rgba(99,102,241,.35)); border-radius: 10px; background: var(--bg-soft, rgba(99,102,241,.08)); font-family: var(--font-mono, ui-monospace, "Cascadia Code", Consolas, monospace); font-size: 15px; font-weight: 650; letter-spacing: .04em; color: var(--text); text-align: center; }
 
+/* ── Searchable multi-select ───────────────────────────────── */
+
+.sm-wrap { border: 1px solid var(--gray-200); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.sm-search-wrap { position: relative; border-bottom: 1px solid var(--gray-100); }
+.sm-search-wrap .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
+.sm-search-wrap .input.sm-search { border: none; padding-left: 38px; border-radius: 0; box-shadow: none; background: transparent; }
+.sm-list { max-height: 240px; overflow-y: auto; padding: 4px; }
+.sm-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px;
+  font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.12s ease;
+}
+.sm-item:hover { background: var(--gray-50); }
+.sm-item input { position: absolute; opacity: 0; pointer-events: none; }
+.sm-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sm-check {
+  flex: none; width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--gray-300);
+  display: grid; place-items: center; color: #fff; opacity: 0; transform: scale(0.7); transition: all 0.12s ease;
+}
+.sm-item.on .sm-check { background: var(--green, #16a34a); border-color: var(--green, #16a34a); opacity: 1; transform: none; }
+.sm-item.on .sm-name { font-weight: 600; }
+.sm-empty { padding: 14px 12px; font-size: 13px; color: var(--text-3); text-align: center; }
+.sm-count { padding: 8px 12px; border-top: 1px solid var(--gray-100); font-size: 12px; color: var(--text-3); font-weight: 500; }
+
 .form-hint { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12.5px; font-weight: 500; }
 .form-hint.ok { color: #16a34a; }
 .form-hint.err { color: #dc2626; }
@@ -1024,7 +1047,12 @@ const CATS = [
   { id: 'go',          name: 'Go', icon: 'compass', logo: 'go' },
   { id: 'rust',        name: 'Rust', icon: 'gear', logo: 'rust' },
   { id: 'dsa',          name: 'Data Structures & Algorithms', icon: 'tree' },
-  { id: 'backend-eng', name: 'Backend Engineering · C# / Java / Python', icon: 'server' }
+  { id: 'backend-eng', name: 'Backend Engineering · C# / Java / Python', icon: 'server' },
+  { id: 'product-design', name: 'Product Design', icon: 'pencil' },
+  { id: 'cybersecurity',   name: 'Cybersecurity', icon: 'shield' },
+  { id: 'data-science',    name: 'Data Science', icon: 'database' },
+  { id: 'data-analysis',   name: 'Data Analysis', icon: 'chart' },
+  { id: 'machine-learning', name: 'Machine Learning & AI', icon: 'bolt' }
 ];
 
 const DIFFS = [
@@ -1050,13 +1078,15 @@ const LETTERS = ['A', 'B', 'C', 'D'];
 /* ── State ─────────────────────────────────────────────────── */
 
 const S = {
-  mode: 'console',        // console | candidate
+  mode: 'console',        // console | candidate | org
   view: 'app',            // app | login (console requires auth)
-  tab: 'dashboard',       // dashboard | tests | editor | questions | results | admins
+  tab: 'dashboard',       // dashboard | tests | editor | questions | results | admins | orgs
   candView: 'home',       // home | runner | result
   candLoginView: 'login', // candidate login screen: login | request
+  orgView: 'dashboard',   // org portal: dashboard | candidates | attempts | profile
   auth: null,             // admin session
   candAuth: null,         // signed-in candidate account
+  orgAuth: null,          // signed-in organization account
   stats: null,            // dashboard stats from server
   questions: [],          // admin: full bank
   tests: [],
@@ -1064,6 +1094,10 @@ const S = {
   admins: [],
   candidates: [],         // admin: granted candidate accounts
   signupRequests: [],     // admin: pending signup requests
+  orgs: [],               // admin: organizations (superadmin)
+  orgCandidates: [],      // org: this org's candidates
+  orgTests: [],           // org: tests the org may assign
+  orgAttempts: [],        // org: attempts by this org's candidates
   pubTests: [],           // candidate: published tests
   qPool: {},              // qid -> question (rendering pool)
   live: null,             // candidate in-progress attempt
@@ -1076,7 +1110,8 @@ const S = {
   events: [],             // admin: proctoring / audit log
   modal: null,
   _pendingTestId: null,
-  _focusSearch: null
+  _focusSearch: null,
+  _smSearch: {}           // searchable multi-select: key -> lowercase query
 };
 
 /* draft objects for the editors (module-level so every module shares them) */
@@ -1218,7 +1253,8 @@ const ICONS = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>',
   moon: '<path d="M20.7 13.6A8.5 8.5 0 1 1 10.4 3.3a7 7 0 0 0 10.3 10.3z"/>',
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
-  bolt: '<path d="m13 2-8 12h6l-1 8 9-13h-6V2Z"/>'
+  bolt: '<path d="m13 2-8 12h6l-1 8 9-13h-6V2Z"/>',
+  building: '<rect x="4.5" y="3" width="15" height="18.5" rx="1.8"/><path d="M9.5 7.5h1.5M13 7.5h1.5M9.5 11.5h1.5M13 11.5h1.5M9.5 15.5h1.5M13 15.5h1.5"/><path d="M10 21.5v-3.5h4v3.5"/>'
 };
 
 function ic(name, size, cls) {
@@ -1295,7 +1331,7 @@ function themeFabHTML() {
 }
 
 function modeSeg() {
-  const opts = [['console', 'Console'], ['candidate', 'Candidate']];
+  const opts = [['console', 'Console'], ['candidate', 'Candidate'], ['org', 'Organization']];
   return '<div class="seg" id="modeSeg">' +
     opts.map(o => '<button class="seg-item ' + (S.mode === o[0] ? 'active' : '') + '" data-action="mode" data-value="' + o[0] + '">' + o[1] + '</button>').join('') +
     '<span class="seg-thumb" id="modeThumb"></span></div>';
@@ -1313,8 +1349,10 @@ function positionSeg(segSel, thumbSel, idx) {
 
 function sidebarHTML(nav, mode) {
   const isCand = mode === 'candidate';
-  const activeVal = isCand ? S.candView : S.tab;
-  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length, candidates: S.candidates.length, signups: S.signupRequests.length };
+  const isOrg = mode === 'org';
+  const navAction = isCand ? 'cand-nav' : isOrg ? 'org-nav' : 'tab';
+  const activeVal = isCand ? S.candView : isOrg ? S.orgView : S.tab;
+  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length, candidates: S.candidates.length, signups: S.signupRequests.length, orgs: S.orgs.length };
   return '<aside class="sidebar" id="sidebar">' +
     '<div class="sidebar-inner">' +
       '<div class="sidebar-head">' + brandHTML() +
@@ -1323,7 +1361,7 @@ function sidebarHTML(nav, mode) {
       '<nav class="sidebar-nav">' +
         nav.map(n => {
           const active = activeVal === n[0] || (n[0] === 'tests' && activeVal === 'editor');
-          return '<button class="nav-item ' + (active ? 'active' : '') + '" data-action="' + (isCand ? 'cand-nav' : 'tab') + '" data-value="' + n[0] + '">' +
+          return '<button class="nav-item ' + (active ? 'active' : '') + '" data-action="' + navAction + '" data-value="' + n[0] + '">' +
             ic(n[2], 18) +
             '<span class="nav-label">' + n[1] + '</span>' +
             (counts[n[0]] != null ? '<span class="nav-count">' + counts[n[0]] + '</span>' : '') +
@@ -1340,9 +1378,11 @@ function sidebarHTML(nav, mode) {
 
 function headerHTML(mode) {
   const isCand = mode === 'candidate';
+  const isOrg = mode === 'org';
   const inRunner = isCand && S.candView === 'runner' && S.live;
-  const inProgress = (!isCand && S.attempts) ? S.attempts.filter(a => a.status !== 'submitted').length : 0;
+  const inProgress = (!isCand && !isOrg && S.attempts) ? S.attempts.filter(a => a.status !== 'submitted').length : 0;
   const candUser = isCand && S.candAuth;
+  const orgUser = isOrg && S.orgAuth;
   return '<div class="topbar-inner">' +
     '<div class="topbar-left">' +
       '<button class="btn-icon hamburger hide-desktop" data-action="sidebar-open" aria-label="Open menu">' + ic('menu', 26) + '</button>' +
@@ -1358,7 +1398,7 @@ function headerHTML(mode) {
       (inRunner ? '<span class="timer" id="timerDisplay">' + ic('clock', 15) + ' ' + fmtClock(S.live.remaining) + '</span>' : '') +
       '<button class="btn-icon" data-action="theme-toggle" title="Toggle light / dark theme" aria-label="Toggle theme">' +
         ic(isDark() ? 'sun' : 'moon', 18) + '</button>' +
-      (!isCand ? '<button class="btn-icon bell-wrap" data-action="tab" data-value="results" title="In-progress attempts">' +
+      (!isCand && !isOrg ? '<button class="btn-icon bell-wrap" data-action="tab" data-value="results" title="In-progress attempts">' +
         ic('bell', 20) + (inProgress ? '<span class="bell-badge">' + inProgress + '</span>' : '') + '</button>' : '') +
       (candUser ? '<div class="user-menu-wrap">' +
         '<button class="user-chip" data-action="cand-user-menu" aria-expanded="false">' +
@@ -1373,7 +1413,21 @@ function headerHTML(mode) {
           '<button class="user-menu-item danger" data-action="cand-logout">' + ic('logout', 15) + ' Sign out</button>' +
         '</div>' +
       '</div>' : '') +
-      (!isCand ? '<div class="user-menu-wrap">' +
+      (orgUser ? '<div class="user-menu-wrap">' +
+        '<button class="user-chip" data-action="cand-user-menu" aria-expanded="false">' +
+          '<span class="user-avatar">' + esc((S.orgAuth.name || S.orgAuth.username || 'O').slice(0, 1).toUpperCase()) + '</span>' +
+          '<span class="user-info hide-mobile">' +
+            '<span class="user-name">' + esc(S.orgAuth.name || S.orgAuth.username) + '</span>' +
+            '<span class="user-role">Organization</span>' +
+          '</span>' +
+          ic('chevronD', 14) +
+        '</button>' +
+        '<div class="user-menu">' +
+          '<button class="user-menu-item" data-action="org-change-password">' + ic('key', 15) + ' Change password</button>' +
+          '<button class="user-menu-item danger" data-action="org-logout">' + ic('logout', 15) + ' Sign out</button>' +
+        '</div>' +
+      '</div>' : '') +
+      (!isCand && !isOrg ? '<div class="user-menu-wrap">' +
         '<button class="user-chip" data-action="user-menu" aria-expanded="false">' +
           '<span class="user-avatar">' + esc((S.auth.displayName || S.auth.username).slice(0, 1).toUpperCase()) + '</span>' +
           '<span class="user-info hide-mobile">' +
@@ -1438,6 +1492,44 @@ function modalHTML() {
       '<div class="modal-body">' + (m.body || '') + '</div>' +
       (m.foot ? '<div class="modal-foot">' + m.foot + '</div>' : '') +
     '</div></div>';
+}
+
+/* ── Searchable multi-select (used for test pickers) ───────── */
+
+const SM_STATE = {};   // key -> { selected: Set, rerender: fn, onChange: fn }
+
+function registerSM(key, selected, rerender, onChange) {
+  SM_STATE[key] = { selected: selected || new Set(), rerender: rerender || null, onChange: onChange || null };
+}
+
+/* Render a searchable checkbox list. items: [{ id, name, sub? }] */
+function searchMultiHTML(key, items, emptyMsg) {
+  const st = SM_STATE[key];
+  const sel = st ? st.selected : new Set();
+  const q = (S._smSearch && S._smSearch[key]) ? S._smSearch[key] : '';
+  const filtered = q ? items.filter(it => String(it.name).toLowerCase().indexOf(q) !== -1) : items;
+  return '<div class="sm-wrap">' +
+    '<div class="sm-search-wrap">' + ic('search', 14) +
+      '<input class="input sm-search" data-action="sm-search" data-key="' + key + '" placeholder="Search\u2026" value="' + esc(q) + '" autocomplete="off">' +
+    '</div>' +
+    '<div class="sm-list">' +
+      (filtered.length
+        ? filtered.map(it =>
+            '<label class="sm-item' + (sel.has(it.id) ? ' on' : '') + '">' +
+              '<input type="checkbox" data-action="sm-toggle" data-key="' + key + '" data-value="' + it.id + '" ' + (sel.has(it.id) ? 'checked' : '') + '>' +
+              '<span class="sm-name">' + esc(it.name) + '</span>' +
+              (it.sub ? '<span class="badge ' + (it.subCls || 'b-mcq') + '"><span class="dot"></span>' + it.sub + '</span>' : '') +
+              '<span class="sm-check">' + ic('check', 13) + '</span>' +
+            '</label>').join('')
+        : '<div class="sm-empty">' + (emptyMsg || 'No matching items') + '</div>') +
+    '</div>' +
+    '<div class="sm-count" data-smcount="' + key + '">' + sel.size + ' selected</div>';
+}
+
+function smUpdateCount(key) {
+  const st = SM_STATE[key];
+  const cnt = $('[data-smcount="' + key + '"]');
+  if (cnt && st) cnt.textContent = st.selected.size + ' selected';
 }
 
 /* ── Grading helpers (authoritative grading happens server-side) ── */
@@ -1653,12 +1745,14 @@ function reviewBodyHTML(q, v, res) {
 const API = (() => {
   let token = store.get('orion.token', null);
   let candToken = store.get('orion.candToken', null);
+  let orgToken = store.get('orion.orgToken', null);
 
   async function req(method, path, body) {
     const opts = { method, headers: {} };
     if (body !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
     const isCandidate = path.startsWith('/api/candidate/');
-    const t = isCandidate ? candToken : token;
+    const isOrg = path.startsWith('/api/org/');
+    const t = isCandidate ? candToken : isOrg ? orgToken : token;
     if (t) opts.headers['Authorization'] = 'Bearer ' + t;
     let res;
     try {
@@ -1674,6 +1768,7 @@ const API = (() => {
       err.data = data;
       if (res.status === 401) {
         if (isCandidate) { setCandToken(null); S.candAuth = null; }
+        else if (isOrg) { setOrgToken(null); S.orgAuth = null; }
         else if (!path.startsWith('/api/auth/')) { setToken(null); S.auth = null; }
       }
       throw err;
@@ -1691,11 +1786,18 @@ const API = (() => {
     if (t) store.set('orion.candToken', t); else store.del('orion.candToken');
   }
 
+  function setOrgToken(t) {
+    orgToken = t || null;
+    if (t) store.set('orion.orgToken', t); else store.del('orion.orgToken');
+  }
+
   return {
     setToken,
     setCandToken,
+    setOrgToken,
     get token() { return token; },
     get candToken() { return candToken; },
+    get orgToken() { return orgToken; },
     get: p => req('GET', p),
     post: (p, b) => req('POST', p, b || {}),
     put: (p, b) => req('PUT', p, b || {}),
@@ -1865,6 +1967,7 @@ function consoleShell() {
     ['candidates', 'Candidates', 'users'],
     ['signups', 'Signups', 'inbox']
   ];
+  if (S.auth.role === 'superadmin') nav.push(['orgs', 'Organizations', 'building']);
   if (S.auth.role === 'superadmin') nav.push(['admins', 'Admins', 'users']);
   return sidebarHTML(nav, 'console') +
     '<div class="app-main">' +
@@ -1875,6 +1978,9 @@ function consoleShell() {
 }
 
 function consoleView() {
+  if (S.tab === 'orgs' && !(S.auth && S.auth.role === 'superadmin')) {
+    S.tab = 'dashboard';
+  }
   if (S.tab === 'admins' && !(S.auth && S.auth.role === 'superadmin')) {
     S.tab = 'dashboard';   // non-superadmins never see the admins view
   }
@@ -1885,6 +1991,7 @@ function consoleView() {
   if (S.tab === 'activity') return vActivity();
   if (S.tab === 'candidates') return vCandidates();
   if (S.tab === 'signups') return vSignups();
+  if (S.tab === 'orgs') return vOrganizations();
   if (S.tab === 'admins') return vAdmins();
   return vDashboard();
 }
@@ -2758,6 +2865,140 @@ function confirmDeleteAdmin(id) {
         await API.del('/api/admin/admins/' + id);
         await loadAdminData();
         toast('Administrator removed');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
+/* ── Organizations (superadmin) ────────────────────────────── */
+
+async function loadOrgs() {
+  try {
+    S.orgs = await API.get('/api/admin/orgs');
+  } catch (e) {
+    S.orgs = [];
+    toast(e.message, 'error');
+  }
+  render();
+}
+
+function vOrganizations() {
+  const f = S.qFilters.search;
+  const list = f ? S.orgs.filter(o => searchMatches(f, o.name, o.username, o.email)) : S.orgs;
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Organizations</h1>' +
+    '<p class="page-desc">Organizations get their own portal where they manage their team\u2019s candidates. Assign them the tests they may offer.</p></div>' +
+    '<div class="page-actions"><button class="btn btn-primary" data-action="add-org">' + ic('plus', 15) + ' Add organization</button></div>' +
+  '</div>' +
+  (list.length ? '<div class="card">' +
+    list.map(o => {
+      const granted = (o.tests || []).length;
+      const cands = o.candidateCount || 0;
+      return '<div class="row-item">' +
+        '<span class="admin-avatar" style="width:34px;height:34px;font-size:14px">' + esc((o.name || o.username || 'O').slice(0, 1).toUpperCase()) + '</span>' +
+        '<div class="row-main">' +
+          '<div class="row-title">' + esc(o.name || o.username) + '</div>' +
+          '<div class="row-meta">@' + esc(o.username) + (o.email ? ' \u00B7 ' + esc(o.email) : '') + ' \u00B7 created ' + fmtDate(o.createdAt) + '</div>' +
+        '</div>' +
+        '<span class="badge ' + (o.active ? 'b-published' : 'b-fail') + '"><span class="dot"></span>' + (o.active ? 'Active' : 'Disabled') + '</span>' +
+        '<span class="badge b-mcq">' + cands + ' candidate' + (cands === 1 ? '' : 's') + '</span>' +
+        '<span class="badge b-intermediate">' + granted + ' test' + (granted === 1 ? '' : 's') + '</span>' +
+        '<div class="row-actions">' +
+          '<button class="btn btn-sm btn-secondary" data-action="edit-org" data-id="' + o.id + '">' + ic('gear', 13) + ' Edit</button>' +
+          '<button class="btn-icon danger" data-action="delete-org" data-id="' + o.id + '" title="Remove organization">' + ic('trash', 16) + '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('') +
+  '</div>'
+  : emptyState('building', 'No organizations yet', f ? 'No organizations match your search.' : 'Create an organization to give a team their own candidate portal.', 'add-org', 'Add organization'));
+}
+
+let _orgDraft = null;
+
+function orgModalBody(d) {
+  return '<div class="field"><label class="field-label">Name</label>' +
+      '<input class="input" id="orgName" placeholder="e.g., Acme Corp" autocomplete="off" value="' + esc(d.name) + '"></div>' +
+    '<div class="field"><label class="field-label">Username <span class="field-help">For the organization sign-in</span></label>' +
+      '<input class="input" id="orgUser" placeholder="e.g., acme" autocomplete="off" value="' + esc(d.username) + '"' + (d.id ? ' disabled' : '') + '></div>' +
+    '<div class="field"><label class="field-label">Email <span class="field-help">Optional</span></label>' +
+      '<input class="input" id="orgEmail" type="email" placeholder="admin@acme.com" autocomplete="off" value="' + esc(d.email) + '"></div>' +
+    '<div class="field"><label class="field-label">Password <span class="field-help">' + (d.id ? 'Leave blank to keep the current one' : 'Min. 6 characters') + '</span></label>' +
+      '<input class="input" id="orgPass" type="password" placeholder="' + (d.id ? 'Unchanged' : 'Min. 6 characters') + '" autocomplete="new-password"></div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Active</div><div class="setting-sub">Disabled organizations can\u2019t sign in</div></div>' +
+      '<label class="switch"><input type="checkbox" id="orgActive" ' + (d.active ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+    '</div>' +
+    '<div class="field" style="margin-bottom:4px">' +
+      '<div class="field-label">Assigned tests <span class="field-help">The org may only assign these</span></div>' +
+      searchMultiHTML('org-tests', S.tests.map(t => ({ id: t.id, name: t.name, sub: t.published ? 'Published' : 'Draft', subCls: t.published ? 'b-published' : 'b-draft' })), 'No tests yet \u2014 create a test first.') +
+    '</div>';
+}
+
+function rerenderOrgModal() {
+  if (!_orgDraft) return;
+  openModal({
+    title: _orgDraft.id ? 'Edit organization' : 'Add organization',
+    body: orgModalBody(_orgDraft),
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="save-org">' + ic('check', 14) + ' ' + (_orgDraft.id ? 'Save changes' : 'Create organization') + '</button>',
+    wide: true
+  });
+}
+
+function openOrgModal(id) {
+  const src = id ? S.orgs.find(o => o.id === id) : null;
+  _orgDraft = {
+    id: src ? src.id : null,
+    name: src ? (src.name || '') : '',
+    username: src ? src.username : '',
+    email: src ? (src.email || '') : '',
+    password: '',
+    active: src ? src.active !== false : true,
+    tests: new Set(src ? (src.tests || []) : [])
+  };
+  registerSM('org-tests', _orgDraft.tests, rerenderOrgModal, null);
+  rerenderOrgModal();
+}
+
+async function saveOrg() {
+  if (!_orgDraft) return;
+  const g = sel => (($(sel) || {}).value || '');
+  const d = _orgDraft;
+  d.name = g('#orgName');
+  d.username = g('#orgUser');
+  d.email = g('#orgEmail');
+  d.password = g('#orgPass');
+  d.active = !!((($('#orgActive') || {}).checked));
+  if (!d.name.trim()) { toast('Organization name is required', 'error'); return; }
+  if (!d.id && !/^[a-z0-9._-]{3,24}$/i.test(d.username.trim())) { toast('Username must be 3\u201324 letters, digits, dots, dashes or underscores', 'error'); return; }
+  if (d.password && d.password.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+  const payload = { name: d.name, email: d.email, tests: Array.from(d.tests), active: d.active };
+  if (!d.id) { payload.username = d.username; payload.password = d.password; }
+  else if (d.password) payload.password = d.password;
+  try {
+    if (d.id) await API.put('/api/admin/orgs/' + d.id, payload);
+    else await API.post('/api/admin/orgs', payload);
+    _orgDraft = null;
+    closeModal();
+    await loadAdminData();
+    toast(d.id ? 'Organization updated' : 'Organization created', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function confirmDeleteOrg(id) {
+  const o = S.orgs.find(x => x.id === id);
+  if (!o) return;
+  confirmModal({
+    title: 'Remove organization?',
+    body: '@' + esc(o.username) + ' and its portal will be removed. Its candidates keep their accounts but lose their organization and assigned tests.',
+    confirmLabel: 'Remove',
+    danger: true,
+    onConfirm: async () => {
+      closeModal();
+      try {
+        await API.del('/api/admin/orgs/' + id);
+        await loadAdminData();
+        toast('Organization removed');
       } catch (e) { toast(e.message, 'error'); }
     }
   });
@@ -4140,6 +4381,377 @@ function animateScore() {
   requestAnimationFrame(step);
 }
 /* ============================================================
+   Orion — organization portal: org login, candidate management,
+   assigned tests, and result overview
+   ============================================================ */
+
+function orgNav() {
+  return [
+    ['dashboard', 'Dashboard', 'dashboard'],
+    ['candidates', 'Candidates', 'users'],
+    ['attempts', 'Results', 'chart'],
+    ['profile', 'Profile', 'user']
+  ];
+}
+
+function orgShell() {
+  if (!S.orgAuth) return '<div class="auth-page">' + themeFabHTML() + vOrgLogin() + modalHTML() + '</div>';
+  return sidebarHTML(orgNav(), 'org') +
+    '<div class="app-main">' +
+      '<header class="topbar">' + headerHTML('org') + '</header>' +
+      '<main class="content"><div class="container">' + orgView() + '</div></main>' +
+    '</div>' +
+    modalHTML();
+}
+
+/* ── Org sign in ───────────────────────────────────────────── */
+
+function vOrgLogin() {
+  return '<div class="auth-screen">' +
+    '<div class="auth-card card">' +
+      '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
+      '<h1 class="auth-title">Organization sign in</h1>' +
+      '<p class="auth-sub">Sign in to manage your team\u2019s candidates and assigned tests.</p>' +
+      '<form id="orgLoginForm" data-form="org-login" novalidate>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="orgUser">Username</label>' +
+          '<div class="auth-input">' + ic('user', 15) +
+            '<input class="input" id="orgUser" autocomplete="username" placeholder="your org username" required>' +
+          '</div>' +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="orgPass">Password</label>' +
+          '<div class="auth-input">' + ic('key', 15) +
+            '<input class="input" id="orgPass" type="password" autocomplete="current-password" placeholder="••••••••" required>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn btn-primary btn-lg" style="width:100%" type="submit">' + ic('arrowL', 15, 'rot-180') + ' Sign in</button>' +
+      '</form>' +
+      '<div class="auth-divider"></div>' +
+      '<button class="auth-link" data-action="go-console">' + ic('gear', 15) + ' Back to console</button>' +
+    '</div>' +
+  '</div>';
+}
+
+async function orgLogin() {
+  const u = $('#orgUser'), p = $('#orgPass');
+  const btn = u ? $('button[type="submit"]', u.closest('form')) : null;
+  if (!u || !p) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in\u2026'; }
+  try {
+    const r = await API.post('/api/org/login', { username: u.value, password: p.value });
+    API.setOrgToken(r.token);
+    S.orgAuth = r.org;
+    S.orgView = 'dashboard';
+    await refreshOrg();
+    toast('Welcome, ' + (r.org.name || r.org.username), 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+    S.orgAuth = null;
+    render();
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function orgLogout() {
+  try { await API.post('/api/org/logout'); } catch (e) {}
+  API.setOrgToken(null);
+  S.orgAuth = null;
+  S.orgCandidates = [];
+  S.orgTests = [];
+  S.orgAttempts = [];
+  S.orgView = 'dashboard';
+  render();
+  toast('Signed out');
+}
+
+async function refreshOrg() {
+  if (!API.orgToken) {
+    S.orgAuth = null;
+    S.orgCandidates = [];
+    S.orgTests = [];
+    S.orgAttempts = [];
+    render();
+    return;
+  }
+  try {
+    const [me, tests, candidates, attempts] = await Promise.all([
+      API.get('/api/org/me'),
+      API.get('/api/org/tests'),
+      API.get('/api/org/candidates'),
+      API.get('/api/org/attempts')
+    ]);
+    S.orgAuth = me.org;
+    S.orgTests = tests || [];
+    S.orgCandidates = candidates || [];
+    S.orgAttempts = attempts || [];
+  } catch (e) {
+    S.orgCandidates = [];
+    S.orgTests = [];
+    S.orgAttempts = [];
+    if (e.status !== 401) toast(e.message, 'error');
+  }
+  render();
+}
+
+/* ── Org password change ───────────────────────────────────── */
+
+function openOrgPasswordModal() {
+  S.modal = {
+    title: 'Change password',
+    body:
+      '<div class="field"><label class="field-label">Current password</label>' +
+        '<input class="input" id="pwCurrent" type="password" autocomplete="current-password"></div>' +
+      '<div class="field" style="margin-bottom:4px"><label class="field-label">New password</label>' +
+        '<input class="input" id="pwNext" type="password" autocomplete="new-password" placeholder="Min. 6 characters"></div>',
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="save-org-password">' + ic('check', 14) + ' Update password</button>'
+  };
+  render();
+}
+
+async function saveOrgPassword() {
+  const cur = $('#pwCurrent'), nxt = $('#pwNext');
+  if (!cur || !nxt) return;
+  try {
+    await API.post('/api/org/password', { current: cur.value, next: nxt.value });
+    closeModal();
+    toast('Password updated', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+/* ── Org views ─────────────────────────────────────────────── */
+
+function orgView() {
+  if (S.orgView === 'candidates') return vOrgCandidates();
+  if (S.orgView === 'attempts') return vOrgAttempts();
+  if (S.orgView === 'profile') return vOrgProfile();
+  return vOrgDashboard();
+}
+
+function vOrgDashboard() {
+  const org = S.orgAuth || {};
+  const tests = S.orgTests || [];
+  const cands = S.orgCandidates || [];
+  const atts = S.orgAttempts || [];
+  const submitted = atts.filter(a => a.status === 'submitted');
+  const passed = submitted.filter(a => a.passed);
+  const passRate = submitted.length ? Math.round((passed.length / submitted.length) * 100) : 0;
+  const recent = submitted.slice(0, 5);
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Welcome, ' + esc(org.name || org.username || '') + '</h1>' +
+    '<p class="page-desc">Manage your team\u2019s candidates and the tests they can take.</p></div>' +
+    '<div class="page-actions"><button class="btn btn-primary" data-action="org-add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
+  '</div>' +
+  '<div class="stat-grid">' +
+    statCard('users', 'Candidates', cands.length, 'in your organization') +
+    statCard('layers', 'Assigned tests', tests.length, 'available to assign') +
+    statCard('chart', 'Submitted', submitted.length, passRate + '% pass rate') +
+    statCard('clock', 'In progress', atts.length - submitted.length, 'active sessions') +
+  '</div>' +
+  (recent.length ? '<div style="height:16px"></div>' +
+    '<div class="card card-pad">' +
+      '<div class="section-label">Recent results</div>' +
+      recent.map(a =>
+        '<div class="coverage-row">' +
+          '<span class="coverage-icon">' + ic('users', 15) + '</span>' +
+          '<div style="flex:1;min-width:0"><div class="coverage-name">' + esc(a.candidate) + ' <span style="color:var(--text-3);font-weight:500">\u00B7 ' + esc(a.testName) + '</span></div>' +
+          '<div class="coverage-sub">' + fmtDate(a.submittedAt) + '</div></div>' +
+          '<span class="badge ' + (a.passed ? 'b-pass' : 'b-fail') + '">' + (a.pct != null ? a.pct + '%' : '—') + '</span>' +
+        '</div>').join('') +
+    '</div>' : '');
+}
+
+function vOrgCandidates() {
+  const f = S.qFilters.search;
+  const list = f ? S.orgCandidates.filter(c => searchMatches(f, c.username, c.displayName, c.email)) : S.orgCandidates;
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Candidates</h1>' +
+    '<p class="page-desc">Add your team members and assign them the tests your organization can offer.</p></div>' +
+    '<div class="page-actions"><button class="btn btn-primary" data-action="org-add-candidate">' + ic('plus', 15) + ' Add candidate</button></div>' +
+  '</div>' +
+  (list.length ? '<div class="card">' + pgSlice('orgCandidates', list).map(orgCandidateRowHTML).join('') + '</div>' + pagerHTML('orgCandidates', list.length)
+    : emptyState('users', 'No candidates yet', f ? 'No candidates match your search.' : 'Add a candidate to give them access to your assigned tests.', 'org-add-candidate', 'Add candidate'));
+}
+
+function orgCandidateRowHTML(c) {
+  const granted = (c.tests || []).length;
+  return '<div class="row-item">' +
+    '<span class="admin-avatar" style="width:34px;height:34px;font-size:14px">' + esc((c.displayName || c.username).slice(0, 1).toUpperCase()) + '</span>' +
+    '<div class="row-main">' +
+      '<div class="row-title">' + esc(c.displayName || c.username) + '</div>' +
+      '<div class="row-meta">@' + esc(c.username) + (c.email ? ' \u00B7 ' + esc(c.email) : '') + ' \u00B7 joined ' + fmtDate(c.createdAt) + '</div>' +
+    '</div>' +
+    '<span class="badge ' + (c.active ? 'b-published' : 'b-fail') + '"><span class="dot"></span>' + (c.active ? 'Active' : 'Disabled') + '</span>' +
+    '<span class="badge b-mcq">' + granted + ' test' + (granted === 1 ? '' : 's') + '</span>' +
+    '<div class="row-actions">' +
+      '<button class="btn btn-sm btn-secondary" data-action="org-edit-candidate" data-id="' + c.id + '">' + ic('key', 13) + ' Manage access</button>' +
+      '<button class="btn-icon danger" data-action="org-delete-candidate" data-id="' + c.id + '" title="Remove candidate">' + ic('trash', 16) + '</button>' +
+    '</div>' +
+  '</div>';
+}
+
+let _orgCandDraft = null;
+
+function orgCandidateModalBody(d) {
+  return '<div class="field"><label class="field-label">Username</label>' +
+      '<input class="input" id="orgCandUser" placeholder="e.g., ada.lovelace" autocomplete="off" ' + (d.id ? 'disabled' : '') + ' value="' + esc(d.username) + '"></div>' +
+    '<div class="field"><label class="field-label">Display name <span class="field-help">Shown on the candidate\u2019s tests</span></label>' +
+      '<input class="input" id="orgCandName" placeholder="e.g., Ada Lovelace" autocomplete="off" value="' + esc(d.displayName) + '"></div>' +
+    '<div class="field"><label class="field-label">Email <span class="field-help">Optional</span></label>' +
+      '<input class="input" id="orgCandEmail" type="email" placeholder="ada@company.com" autocomplete="off" value="' + esc(d.email) + '"></div>' +
+    '<div class="field"><label class="field-label">Password <span class="field-help">' + (d.id ? 'Leave blank to keep the current one' : 'Min. 6 characters') + '</span></label>' +
+      '<input class="input" id="orgCandPass" type="password" placeholder="' + (d.id ? 'Unchanged' : 'Min. 6 characters') + '" autocomplete="new-password"></div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Active</div><div class="setting-sub">Disabled accounts can\u2019t sign in</div></div>' +
+      '<label class="switch"><input type="checkbox" id="orgCandActive" ' + (d.active ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+    '</div>' +
+    '<div class="field" style="margin-bottom:4px">' +
+      '<div class="field-label">Assigned tests <span class="field-help">Only your organization\u2019s tests</span></div>' +
+      (S.orgTests.length ? searchMultiHTML('orgcand-tests', S.orgTests.map(t => ({ id: t.id, name: t.name, sub: t.published ? 'Published' : 'Draft', subCls: t.published ? 'b-published' : 'b-draft' })), 'No tests available for your organization.')
+        : '<p style="color:var(--text-3);font-size:13px">No tests assigned to your organization yet \u2014 contact the admin.</p>') +
+    '</div>';
+}
+
+function rerenderOrgCandidateModal() {
+  if (!_orgCandDraft) return;
+  openModal({
+    title: _orgCandDraft.id ? 'Manage access' : 'Add candidate',
+    body: orgCandidateModalBody(_orgCandDraft),
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="org-save-candidate">' + ic('check', 14) + ' ' + (_orgCandDraft.id ? 'Save changes' : 'Create candidate') + '</button>',
+    wide: true
+  });
+}
+
+function openOrgAddCandidateModal() {
+  _orgCandDraft = { id: null, username: '', displayName: '', email: '', password: '', active: true, tests: new Set() };
+  registerSM('orgcand-tests', _orgCandDraft.tests, rerenderOrgCandidateModal, null);
+  rerenderOrgCandidateModal();
+}
+
+function openOrgEditCandidateModal(id) {
+  const c = S.orgCandidates.find(x => x.id === id);
+  if (!c) return;
+  _orgCandDraft = {
+    id: c.id,
+    username: c.username,
+    displayName: c.displayName || '',
+    email: c.email || '',
+    password: '',
+    active: c.active !== false,
+    tests: new Set(c.tests || [])
+  };
+  registerSM('orgcand-tests', _orgCandDraft.tests, rerenderOrgCandidateModal, null);
+  rerenderOrgCandidateModal();
+}
+
+async function saveOrgCandidate() {
+  if (!_orgCandDraft) return;
+  const g = sel => (($(sel) || {}).value || '');
+  const d = _orgCandDraft;
+  d.username = g('#orgCandUser');
+  d.displayName = g('#orgCandName');
+  d.email = g('#orgCandEmail');
+  d.password = g('#orgCandPass');
+  d.active = !!((($('#orgCandActive') || {}).checked));
+  if (!d.id && !/^[a-z0-9._-]{3,24}$/i.test(d.username.trim())) { toast('Username must be 3\u201324 letters, digits, dots, dashes or underscores', 'error'); return; }
+  if (d.password && d.password.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+  const payload = {
+    displayName: d.displayName,
+    email: d.email,
+    tests: Array.from(d.tests),
+    active: d.active
+  };
+  if (!d.id) { payload.username = d.username; payload.password = d.password; }
+  else if (d.password) payload.password = d.password;
+  try {
+    if (d.id) await API.put('/api/org/candidates/' + d.id, payload);
+    else await API.post('/api/org/candidates', payload);
+    _orgCandDraft = null;
+    closeModal();
+    await refreshOrg();
+    toast(d.id ? 'Candidate updated' : 'Candidate created', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function confirmDeleteOrgCandidate(id) {
+  const c = S.orgCandidates.find(x => x.id === id);
+  if (!c) return;
+  confirmModal({
+    title: 'Remove candidate?',
+    body: '@' + esc(c.username) + ' will lose access to the candidate portal immediately. Their submitted attempts are kept.',
+    confirmLabel: 'Remove',
+    danger: true,
+    onConfirm: async () => {
+      closeModal();
+      try {
+        await API.del('/api/org/candidates/' + id);
+        await refreshOrg();
+        toast('Candidate removed');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
+function vOrgAttempts() {
+  const f = S.qFilters.search;
+  const list = f ? S.orgAttempts.filter(a => searchMatches(f, a.candidate, a.email, a.testName)) : S.orgAttempts;
+  const submitted = list.filter(a => a.status === 'submitted');
+  const passed = submitted.filter(a => a.passed);
+  const passRate = submitted.length ? Math.round((passed.length / submitted.length) * 100) : 0;
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Results</h1>' +
+    '<p class="page-desc">Attempts by your candidates, newest first.</p></div>' +
+  '</div>' +
+  '<div style="height:16px"></div>' +
+  (submitted.length ? '<div class="card"><div class="table-wrap"><table class="tbl">' +
+    '<thead><tr><th>Candidate</th><th>Test</th><th>Score</th><th>Status</th><th>Submitted</th></tr></thead><tbody>' +
+    pgSlice('orgAttempts', submitted).map(orgAttemptRowHTML).join('') +
+    '</tbody></table></div>' + pagerHTML('orgAttempts', submitted.length) + '</div>'
+    : emptyState('chart', 'No results yet', f ? 'No results match your search.' : 'When your candidates submit a test, scores will appear here.', null, ''));
+}
+
+function orgAttemptRowHTML(a) {
+  return '<tr>' +
+    '<td style="font-weight:600">' + esc(a.candidate || '\u2014') +
+      (a.email ? '<div style="font-weight:400;font-size:12px;color:var(--text-3)">' + esc(a.email) + '</div>' : '') + '</td>' +
+    '<td style="font-size:13px">' + esc(a.testName || '\u2014') + '</td>' +
+    '<td class="num"><span class="badge ' + (a.passed ? 'b-pass' : 'b-fail') + '">' + (a.pct != null ? a.pct + '%' : '—') + '</span></td>' +
+    '<td><span class="badge ' + (a.passed ? 'b-published' : 'b-draft') + '"><span class="dot"></span>' + (a.passed ? 'Passed' : 'Not passed') + '</span></td>' +
+    '<td class="num" style="color:var(--text-2)">' + fmtDate(a.submittedAt) + '</td>' +
+  '</tr>';
+}
+
+function vOrgProfile() {
+  const o = S.orgAuth || {};
+  const initial = ((o.name || o.username || 'O') + '').slice(0, 1).toUpperCase();
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title" style="font-size:28px">Organization profile</h1>' +
+    '<p class="page-desc">Your organization\u2019s details in the Seeker portal.</p></div>' +
+  '</div>' +
+  '<div class="card card-pad" style="max-width:560px">' +
+    '<div style="display:flex;align-items:center;gap:16px">' +
+      '<span class="user-avatar" style="width:54px;height:54px;font-size:22px">' + esc(initial) + '</span>' +
+      '<div>' +
+        '<div style="font-size:19px;font-weight:700">' + esc(o.name || o.username) + '</div>' +
+        '<div style="font-size:13px;color:var(--text-3)">' + esc(o.username) + (o.email ? ' \u00B7 ' + esc(o.email) : '') + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="height:1px;background:var(--hairline-soft);margin:18px 0"></div>' +
+    '<div class="row-item" style="padding:12px 0">' +
+      '<span class="admin-avatar" style="width:30px;height:30px">' + ic('layers', 14) + '</span>' +
+      '<div class="row-main"><div class="row-title">' + (o.tests || []).length + ' test' + ((o.tests || []).length === 1 ? '' : 's') + ' available</div><div class="row-meta">Tests the admin assigned to your organization</div></div>' +
+    '</div>' +
+    '<div class="row-item" style="padding:12px 0">' +
+      '<span class="admin-avatar" style="width:30px;height:30px">' + ic('clock', 14) + '</span>' +
+      '<div class="row-main"><div class="row-title">Member since ' + (o.createdAt ? fmtDate(o.createdAt) : '\u2014') + '</div><div class="row-meta">Organization account</div></div>' +
+    '</div>' +
+    '<div style="margin-top:18px"><button class="btn btn-danger-solid" data-action="org-logout">' + ic('logout', 14) + ' Sign out</button></div>' +
+  '</div>';
+}
+/* ============================================================
    Orion — init: boot, data loading, event delegation
    ============================================================ */
 
@@ -4169,6 +4781,7 @@ async function loadAdminData() {
     buildQPool(questions);
     if (S.auth && S.auth.role === 'superadmin') {
       try { S.admins = await API.get('/api/admin/admins'); } catch (e) { S.admins = []; }
+      try { S.orgs = await API.get('/api/admin/orgs'); } catch (e) { S.orgs = []; }
     }
     try { S.candidates = await API.get('/api/admin/candidates'); } catch (e) { S.candidates = []; }
     try { S.signupRequests = await API.get('/api/signup/requests'); } catch (e) { S.signupRequests = []; }
@@ -4188,12 +4801,12 @@ async function loadAdminData() {
 function render() {
   const app = $('#app');
   if (!app) return;
-  app.innerHTML = S.mode === 'candidate' ? candidateShell() : consoleShell();
+  app.innerHTML = S.mode === 'candidate' ? candidateShell() : S.mode === 'org' ? orgShell() : consoleShell();
   postRender();
 }
 
 function postRender() {
-  positionSeg('#modeSeg', '#modeThumb', S.mode === 'candidate' ? 1 : 0);
+  positionSeg('#modeSeg', '#modeThumb', ['console', 'candidate', 'org'].indexOf(S.mode));
 
   if (S.mode === 'console' && !S.auth) {
     checkBootstrap();
@@ -4240,13 +4853,21 @@ function postRender() {
 
 async function setMode(m) {
   if (S.mode === m) return;
+  if (S.live && S.candView === 'runner') stopTimer();
   if (m === 'candidate') {
-    if (S.live && S.candView === 'runner') stopTimer();
     S.mode = m;
     S.candView = 'home';
     S.candLoginView = 'login';
     render();
     await refreshCandidate();
+  } else if (m === 'org') {
+    S.mode = m;
+    S.orgView = 'dashboard';
+    if (!S.orgAuth) {
+      render();
+    } else {
+      await refreshOrg();
+    }
   } else {
     S.mode = m;
     S.candView = 'home';
@@ -4274,6 +4895,7 @@ function setTab(t) {
   if (t === 'activity') loadEvents();
   if (t === 'candidates') loadCandidates();
   if (t === 'signups') loadSignupRequests();
+  if (t === 'orgs') loadOrgs();
   render();
 }
 
@@ -4437,7 +5059,11 @@ function onClick(e) {
     case 'mode': setMode(val); break;
     case 'tab': setTab(val); break;
     case 'cand-nav': S.candView = val; render(); break;
+    case 'org-nav': S.orgView = val; render(); break;
     case 'logout': logout(); break;
+    case 'org-logout': orgLogout(); break;
+    case 'org-change-password': openOrgPasswordModal(); break;
+    case 'save-org-password': saveOrgPassword(); break;
     case 'change-password': openPasswordModal(); break;
     case 'save-password': savePassword(); break;
     case 'sidebar-open':
@@ -4462,6 +5088,7 @@ function onClick(e) {
     case 'go-console': S.mode = 'console'; S.view = S.auth ? 'app' : 'login'; render(); break;
     case 'show-signup': S.candLoginView = 'request'; render(); break;
     case 'back-login': S.candLoginView = 'login'; render(); break;
+    case 'go-org': setMode('org'); break;
     case 'signup-cat': toggleSignupCat(val); break;
     case 'cand-logout': candLogout(); break;
     case 'theme-toggle': toggleTheme(); break;
@@ -4578,6 +5205,18 @@ function onClick(e) {
     case 'delete-candidate': confirmDeleteCandidate(id); break;
     case 'pg': _pg[el.dataset.key] = +el.dataset.pg; render(); break;
 
+    /* console: organizations */
+    case 'add-org': openOrgModal(); break;
+    case 'edit-org': openOrgModal(id); break;
+    case 'save-org': saveOrg(); break;
+    case 'delete-org': confirmDeleteOrg(id); break;
+
+    /* org portal: candidates */
+    case 'org-add-candidate': openOrgAddCandidateModal(); break;
+    case 'org-edit-candidate': openOrgEditCandidateModal(id); break;
+    case 'org-save-candidate': saveOrgCandidate(); break;
+    case 'org-delete-candidate': confirmDeleteOrgCandidate(id); break;
+
     /* console: signup requests */
     case 'approve-signup': confirmApproveSignup(id); break;
     case 'reject-signup': confirmRejectSignup(id, true); break;
@@ -4637,6 +5276,10 @@ function onInput(e) {
       if (S.candView === 'runner') return;
       _pg.candTests = 0; _pg.candPassed = 0; _pg.candFailed = 0;
       render();
+    } else if (S.mode === 'org') {
+      if (S.orgView === 'candidates') _pg.orgCandidates = 0;
+      if (S.orgView === 'attempts') _pg.orgAttempts = 0;
+      render();
     }
     return;
   }
@@ -4645,6 +5288,16 @@ function onInput(e) {
     S._focusSearch = 'local';
     _pg.questions = 0;
     render();
+    return;
+  }
+  if (el.dataset && (el.dataset.action === 'sm-search')) {
+    const key = el.dataset.key;
+    if (key) {
+      if (!S._smSearch) S._smSearch = {};
+      S._smSearch[key] = el.value.toLowerCase();
+      const st = SM_STATE[key];
+      if (st && st.rerender) st.rerender();
+    }
     return;
   }
   if (el.dataset && (el.dataset.action === 'pair-l' || el.dataset.action === 'pair-r' || el.dataset.action === 'order-item' || el.dataset.action === 'code-stub' || el.dataset.action === 'py-stub' || el.dataset.action === 'tc-args' || el.dataset.action === 'tc-expected')) {
@@ -4666,6 +5319,19 @@ function onInput(e) {
 
 function onChange(e) {
   const el = e.target;
+  if (el.dataset && el.dataset.action === 'sm-toggle') {
+    const key = el.dataset.key;
+    const st = SM_STATE[key];
+    if (st) {
+      const id = el.dataset.value;
+      if (el.checked) st.selected.add(id); else st.selected.delete(id);
+      const lab = el.closest('.sm-item');
+      if (lab) lab.classList.toggle('on', el.checked);
+      smUpdateCount(key);
+      if (st.onChange) st.onChange();
+    }
+    return;
+  }
   if (el.dataset && el.dataset.action === 'toggle-publish') { togglePublish(el.dataset.id); return; }
   if (el.dataset && el.dataset.action === 'cand-test-toggle') { toggleCandidateTest(el.dataset.value); return; }
   if (el.dataset && el.dataset.qdraft) { setQDraftField(el); return; }
@@ -4678,6 +5344,7 @@ function onSubmit(e) {
   else if (form.dataset.form === 'register') { e.preventDefault(); doRegister(e); }
   else if (form.dataset.form === 'candidate-login') { e.preventDefault(); candLogin(); }
   else if (form.dataset.form === 'candidate-signup') { e.preventDefault(); candSignupRequest(); }
+  else if (form.dataset.form === 'org-login') { e.preventDefault(); orgLogin(); }
 }
 
 function onKey(e) {
@@ -4717,7 +5384,11 @@ async function boot() {
   document.addEventListener('visibilitychange', onVisibility);
   window.addEventListener('blur', onWindowBlur);
 
-  if (API.candToken) {
+  if (API.orgToken) {
+    S.mode = 'org';
+    S.orgView = 'dashboard';
+    await refreshOrg();
+  } else if (API.candToken) {
     S.mode = 'candidate';
     S.view = 'app';
     S.candView = 'home';

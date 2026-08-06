@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { Admin, Session, Candidate, CandidateSession } = require('./models');
+const { Admin, Session, Candidate, CandidateSession, Organization, OrganizationSession } = require('./models');
 const { newToken } = require('./lib');
 
 const router = express.Router();
@@ -69,9 +69,44 @@ function publicCandidate(c) {
     displayName: c.displayName,
     email: c.email,
     tests: (c.tests || []).map(t => t.toString()),
+    org: c.org ? c.org.toString() : null,
     active: c.active !== false,
     viewResults: c.viewResults === true,
     createdAt: c.createdAt
+  };
+}
+
+async function requireOrg(req, res, next) {
+  const h = req.headers.authorization || '';
+  const token = h.startsWith('Bearer ') ? h.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'Authentication required' });
+  const session = await OrganizationSession.findOne({ token, expiresAt: { $gt: new Date() } });
+  if (!session) return res.status(401).json({ error: 'Session expired. Sign in again' });
+  const org = await Organization.findById(session.org);
+  if (!org || org.active === false) return res.status(401).json({ error: 'Account not found or disabled' });
+  req.org = org;
+  req.orgSession = session;
+  next();
+}
+
+async function createOrganizationSession(org) {
+  const token = newToken();
+  await OrganizationSession.create({ token, org: org._id, expiresAt: new Date(Date.now() + SESSION_DAYS * 864e5) });
+  await OrganizationSession.deleteMany({ expiresAt: { $lt: new Date() } });
+  const old = await OrganizationSession.find({ org: org._id }).sort({ createdAt: -1 }).skip(10).select('_id').lean();
+  if (old.length) await OrganizationSession.deleteMany({ _id: { $in: old.map(s => s._id) } });
+  return token;
+}
+
+function publicOrg(o) {
+  return {
+    id: o._id.toString(),
+    name: o.name,
+    email: o.email,
+    username: o.username,
+    tests: (o.tests || []).map(t => t.toString()),
+    active: o.active !== false,
+    createdAt: o.createdAt
   };
 }
 
@@ -119,4 +154,4 @@ router.get('/me', requireAuth, async (req, res) => {
   res.json({ admin: publicAdmin(req.admin) });
 });
 
-module.exports = { router, requireAuth, requireSuperadmin, publicAdmin, requireCandidate, createCandidateSession, publicCandidate };
+module.exports = { router, requireAuth, requireSuperadmin, publicAdmin, requireCandidate, createCandidateSession, publicCandidate, requireOrg, createOrganizationSession, publicOrg };

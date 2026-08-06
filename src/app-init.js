@@ -28,6 +28,7 @@ async function loadAdminData() {
     buildQPool(questions);
     if (S.auth && S.auth.role === 'superadmin') {
       try { S.admins = await API.get('/api/admin/admins'); } catch (e) { S.admins = []; }
+      try { S.orgs = await API.get('/api/admin/orgs'); } catch (e) { S.orgs = []; }
     }
     try { S.candidates = await API.get('/api/admin/candidates'); } catch (e) { S.candidates = []; }
     try { S.signupRequests = await API.get('/api/signup/requests'); } catch (e) { S.signupRequests = []; }
@@ -47,12 +48,12 @@ async function loadAdminData() {
 function render() {
   const app = $('#app');
   if (!app) return;
-  app.innerHTML = S.mode === 'candidate' ? candidateShell() : consoleShell();
+  app.innerHTML = S.mode === 'candidate' ? candidateShell() : S.mode === 'org' ? orgShell() : consoleShell();
   postRender();
 }
 
 function postRender() {
-  positionSeg('#modeSeg', '#modeThumb', S.mode === 'candidate' ? 1 : 0);
+  positionSeg('#modeSeg', '#modeThumb', ['console', 'candidate', 'org'].indexOf(S.mode));
 
   if (S.mode === 'console' && !S.auth) {
     checkBootstrap();
@@ -99,13 +100,21 @@ function postRender() {
 
 async function setMode(m) {
   if (S.mode === m) return;
+  if (S.live && S.candView === 'runner') stopTimer();
   if (m === 'candidate') {
-    if (S.live && S.candView === 'runner') stopTimer();
     S.mode = m;
     S.candView = 'home';
     S.candLoginView = 'login';
     render();
     await refreshCandidate();
+  } else if (m === 'org') {
+    S.mode = m;
+    S.orgView = 'dashboard';
+    if (!S.orgAuth) {
+      render();
+    } else {
+      await refreshOrg();
+    }
   } else {
     S.mode = m;
     S.candView = 'home';
@@ -133,6 +142,7 @@ function setTab(t) {
   if (t === 'activity') loadEvents();
   if (t === 'candidates') loadCandidates();
   if (t === 'signups') loadSignupRequests();
+  if (t === 'orgs') loadOrgs();
   render();
 }
 
@@ -296,7 +306,11 @@ function onClick(e) {
     case 'mode': setMode(val); break;
     case 'tab': setTab(val); break;
     case 'cand-nav': S.candView = val; render(); break;
+    case 'org-nav': S.orgView = val; render(); break;
     case 'logout': logout(); break;
+    case 'org-logout': orgLogout(); break;
+    case 'org-change-password': openOrgPasswordModal(); break;
+    case 'save-org-password': saveOrgPassword(); break;
     case 'change-password': openPasswordModal(); break;
     case 'save-password': savePassword(); break;
     case 'sidebar-open':
@@ -321,6 +335,7 @@ function onClick(e) {
     case 'go-console': S.mode = 'console'; S.view = S.auth ? 'app' : 'login'; render(); break;
     case 'show-signup': S.candLoginView = 'request'; render(); break;
     case 'back-login': S.candLoginView = 'login'; render(); break;
+    case 'go-org': setMode('org'); break;
     case 'signup-cat': toggleSignupCat(val); break;
     case 'cand-logout': candLogout(); break;
     case 'theme-toggle': toggleTheme(); break;
@@ -437,6 +452,18 @@ function onClick(e) {
     case 'delete-candidate': confirmDeleteCandidate(id); break;
     case 'pg': _pg[el.dataset.key] = +el.dataset.pg; render(); break;
 
+    /* console: organizations */
+    case 'add-org': openOrgModal(); break;
+    case 'edit-org': openOrgModal(id); break;
+    case 'save-org': saveOrg(); break;
+    case 'delete-org': confirmDeleteOrg(id); break;
+
+    /* org portal: candidates */
+    case 'org-add-candidate': openOrgAddCandidateModal(); break;
+    case 'org-edit-candidate': openOrgEditCandidateModal(id); break;
+    case 'org-save-candidate': saveOrgCandidate(); break;
+    case 'org-delete-candidate': confirmDeleteOrgCandidate(id); break;
+
     /* console: signup requests */
     case 'approve-signup': confirmApproveSignup(id); break;
     case 'reject-signup': confirmRejectSignup(id, true); break;
@@ -496,6 +523,10 @@ function onInput(e) {
       if (S.candView === 'runner') return;
       _pg.candTests = 0; _pg.candPassed = 0; _pg.candFailed = 0;
       render();
+    } else if (S.mode === 'org') {
+      if (S.orgView === 'candidates') _pg.orgCandidates = 0;
+      if (S.orgView === 'attempts') _pg.orgAttempts = 0;
+      render();
     }
     return;
   }
@@ -504,6 +535,16 @@ function onInput(e) {
     S._focusSearch = 'local';
     _pg.questions = 0;
     render();
+    return;
+  }
+  if (el.dataset && (el.dataset.action === 'sm-search')) {
+    const key = el.dataset.key;
+    if (key) {
+      if (!S._smSearch) S._smSearch = {};
+      S._smSearch[key] = el.value.toLowerCase();
+      const st = SM_STATE[key];
+      if (st && st.rerender) st.rerender();
+    }
     return;
   }
   if (el.dataset && (el.dataset.action === 'pair-l' || el.dataset.action === 'pair-r' || el.dataset.action === 'order-item' || el.dataset.action === 'code-stub' || el.dataset.action === 'py-stub' || el.dataset.action === 'tc-args' || el.dataset.action === 'tc-expected')) {
@@ -525,6 +566,19 @@ function onInput(e) {
 
 function onChange(e) {
   const el = e.target;
+  if (el.dataset && el.dataset.action === 'sm-toggle') {
+    const key = el.dataset.key;
+    const st = SM_STATE[key];
+    if (st) {
+      const id = el.dataset.value;
+      if (el.checked) st.selected.add(id); else st.selected.delete(id);
+      const lab = el.closest('.sm-item');
+      if (lab) lab.classList.toggle('on', el.checked);
+      smUpdateCount(key);
+      if (st.onChange) st.onChange();
+    }
+    return;
+  }
   if (el.dataset && el.dataset.action === 'toggle-publish') { togglePublish(el.dataset.id); return; }
   if (el.dataset && el.dataset.action === 'cand-test-toggle') { toggleCandidateTest(el.dataset.value); return; }
   if (el.dataset && el.dataset.qdraft) { setQDraftField(el); return; }
@@ -537,6 +591,7 @@ function onSubmit(e) {
   else if (form.dataset.form === 'register') { e.preventDefault(); doRegister(e); }
   else if (form.dataset.form === 'candidate-login') { e.preventDefault(); candLogin(); }
   else if (form.dataset.form === 'candidate-signup') { e.preventDefault(); candSignupRequest(); }
+  else if (form.dataset.form === 'org-login') { e.preventDefault(); orgLogin(); }
 }
 
 function onKey(e) {
@@ -576,7 +631,11 @@ async function boot() {
   document.addEventListener('visibilitychange', onVisibility);
   window.addEventListener('blur', onWindowBlur);
 
-  if (API.candToken) {
+  if (API.orgToken) {
+    S.mode = 'org';
+    S.orgView = 'dashboard';
+    await refreshOrg();
+  } else if (API.candToken) {
     S.mode = 'candidate';
     S.view = 'app';
     S.candView = 'home';

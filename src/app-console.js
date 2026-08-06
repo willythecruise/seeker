@@ -160,6 +160,7 @@ function consoleShell() {
     ['candidates', 'Candidates', 'users'],
     ['signups', 'Signups', 'inbox']
   ];
+  if (S.auth.role === 'superadmin') nav.push(['orgs', 'Organizations', 'building']);
   if (S.auth.role === 'superadmin') nav.push(['admins', 'Admins', 'users']);
   return sidebarHTML(nav, 'console') +
     '<div class="app-main">' +
@@ -170,6 +171,9 @@ function consoleShell() {
 }
 
 function consoleView() {
+  if (S.tab === 'orgs' && !(S.auth && S.auth.role === 'superadmin')) {
+    S.tab = 'dashboard';
+  }
   if (S.tab === 'admins' && !(S.auth && S.auth.role === 'superadmin')) {
     S.tab = 'dashboard';   // non-superadmins never see the admins view
   }
@@ -180,6 +184,7 @@ function consoleView() {
   if (S.tab === 'activity') return vActivity();
   if (S.tab === 'candidates') return vCandidates();
   if (S.tab === 'signups') return vSignups();
+  if (S.tab === 'orgs') return vOrganizations();
   if (S.tab === 'admins') return vAdmins();
   return vDashboard();
 }
@@ -1053,6 +1058,140 @@ function confirmDeleteAdmin(id) {
         await API.del('/api/admin/admins/' + id);
         await loadAdminData();
         toast('Administrator removed');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
+/* ── Organizations (superadmin) ────────────────────────────── */
+
+async function loadOrgs() {
+  try {
+    S.orgs = await API.get('/api/admin/orgs');
+  } catch (e) {
+    S.orgs = [];
+    toast(e.message, 'error');
+  }
+  render();
+}
+
+function vOrganizations() {
+  const f = S.qFilters.search;
+  const list = f ? S.orgs.filter(o => searchMatches(f, o.name, o.username, o.email)) : S.orgs;
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Organizations</h1>' +
+    '<p class="page-desc">Organizations get their own portal where they manage their team\u2019s candidates. Assign them the tests they may offer.</p></div>' +
+    '<div class="page-actions"><button class="btn btn-primary" data-action="add-org">' + ic('plus', 15) + ' Add organization</button></div>' +
+  '</div>' +
+  (list.length ? '<div class="card">' +
+    list.map(o => {
+      const granted = (o.tests || []).length;
+      const cands = o.candidateCount || 0;
+      return '<div class="row-item">' +
+        '<span class="admin-avatar" style="width:34px;height:34px;font-size:14px">' + esc((o.name || o.username || 'O').slice(0, 1).toUpperCase()) + '</span>' +
+        '<div class="row-main">' +
+          '<div class="row-title">' + esc(o.name || o.username) + '</div>' +
+          '<div class="row-meta">@' + esc(o.username) + (o.email ? ' \u00B7 ' + esc(o.email) : '') + ' \u00B7 created ' + fmtDate(o.createdAt) + '</div>' +
+        '</div>' +
+        '<span class="badge ' + (o.active ? 'b-published' : 'b-fail') + '"><span class="dot"></span>' + (o.active ? 'Active' : 'Disabled') + '</span>' +
+        '<span class="badge b-mcq">' + cands + ' candidate' + (cands === 1 ? '' : 's') + '</span>' +
+        '<span class="badge b-intermediate">' + granted + ' test' + (granted === 1 ? '' : 's') + '</span>' +
+        '<div class="row-actions">' +
+          '<button class="btn btn-sm btn-secondary" data-action="edit-org" data-id="' + o.id + '">' + ic('gear', 13) + ' Edit</button>' +
+          '<button class="btn-icon danger" data-action="delete-org" data-id="' + o.id + '" title="Remove organization">' + ic('trash', 16) + '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('') +
+  '</div>'
+  : emptyState('building', 'No organizations yet', f ? 'No organizations match your search.' : 'Create an organization to give a team their own candidate portal.', 'add-org', 'Add organization'));
+}
+
+let _orgDraft = null;
+
+function orgModalBody(d) {
+  return '<div class="field"><label class="field-label">Name</label>' +
+      '<input class="input" id="orgName" placeholder="e.g., Acme Corp" autocomplete="off" value="' + esc(d.name) + '"></div>' +
+    '<div class="field"><label class="field-label">Username <span class="field-help">For the organization sign-in</span></label>' +
+      '<input class="input" id="orgUser" placeholder="e.g., acme" autocomplete="off" value="' + esc(d.username) + '"' + (d.id ? ' disabled' : '') + '></div>' +
+    '<div class="field"><label class="field-label">Email <span class="field-help">Optional</span></label>' +
+      '<input class="input" id="orgEmail" type="email" placeholder="admin@acme.com" autocomplete="off" value="' + esc(d.email) + '"></div>' +
+    '<div class="field"><label class="field-label">Password <span class="field-help">' + (d.id ? 'Leave blank to keep the current one' : 'Min. 6 characters') + '</span></label>' +
+      '<input class="input" id="orgPass" type="password" placeholder="' + (d.id ? 'Unchanged' : 'Min. 6 characters') + '" autocomplete="new-password"></div>' +
+    '<div class="setting-row">' +
+      '<div><div class="setting-label">Active</div><div class="setting-sub">Disabled organizations can\u2019t sign in</div></div>' +
+      '<label class="switch"><input type="checkbox" id="orgActive" ' + (d.active ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+    '</div>' +
+    '<div class="field" style="margin-bottom:4px">' +
+      '<div class="field-label">Assigned tests <span class="field-help">The org may only assign these</span></div>' +
+      searchMultiHTML('org-tests', S.tests.map(t => ({ id: t.id, name: t.name, sub: t.published ? 'Published' : 'Draft', subCls: t.published ? 'b-published' : 'b-draft' })), 'No tests yet \u2014 create a test first.') +
+    '</div>';
+}
+
+function rerenderOrgModal() {
+  if (!_orgDraft) return;
+  openModal({
+    title: _orgDraft.id ? 'Edit organization' : 'Add organization',
+    body: orgModalBody(_orgDraft),
+    foot: '<button class="btn btn-secondary" data-action="close-modal">Cancel</button>' +
+          '<button class="btn btn-primary" data-action="save-org">' + ic('check', 14) + ' ' + (_orgDraft.id ? 'Save changes' : 'Create organization') + '</button>',
+    wide: true
+  });
+}
+
+function openOrgModal(id) {
+  const src = id ? S.orgs.find(o => o.id === id) : null;
+  _orgDraft = {
+    id: src ? src.id : null,
+    name: src ? (src.name || '') : '',
+    username: src ? src.username : '',
+    email: src ? (src.email || '') : '',
+    password: '',
+    active: src ? src.active !== false : true,
+    tests: new Set(src ? (src.tests || []) : [])
+  };
+  registerSM('org-tests', _orgDraft.tests, rerenderOrgModal, null);
+  rerenderOrgModal();
+}
+
+async function saveOrg() {
+  if (!_orgDraft) return;
+  const g = sel => (($(sel) || {}).value || '');
+  const d = _orgDraft;
+  d.name = g('#orgName');
+  d.username = g('#orgUser');
+  d.email = g('#orgEmail');
+  d.password = g('#orgPass');
+  d.active = !!((($('#orgActive') || {}).checked));
+  if (!d.name.trim()) { toast('Organization name is required', 'error'); return; }
+  if (!d.id && !/^[a-z0-9._-]{3,24}$/i.test(d.username.trim())) { toast('Username must be 3\u201324 letters, digits, dots, dashes or underscores', 'error'); return; }
+  if (d.password && d.password.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+  const payload = { name: d.name, email: d.email, tests: Array.from(d.tests), active: d.active };
+  if (!d.id) { payload.username = d.username; payload.password = d.password; }
+  else if (d.password) payload.password = d.password;
+  try {
+    if (d.id) await API.put('/api/admin/orgs/' + d.id, payload);
+    else await API.post('/api/admin/orgs', payload);
+    _orgDraft = null;
+    closeModal();
+    await loadAdminData();
+    toast(d.id ? 'Organization updated' : 'Organization created', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function confirmDeleteOrg(id) {
+  const o = S.orgs.find(x => x.id === id);
+  if (!o) return;
+  confirmModal({
+    title: 'Remove organization?',
+    body: '@' + esc(o.username) + ' and its portal will be removed. Its candidates keep their accounts but lose their organization and assigned tests.',
+    confirmLabel: 'Remove',
+    danger: true,
+    onConfirm: async () => {
+      closeModal();
+      try {
+        await API.del('/api/admin/orgs/' + id);
+        await loadAdminData();
+        toast('Organization removed');
       } catch (e) { toast(e.message, 'error'); }
     }
   });

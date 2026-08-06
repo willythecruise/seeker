@@ -17,7 +17,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const KNOWN_CATS = new Set([
   'system-design', 'frontend', 'backend', 'db-mongodb', 'db-postgres', 'coding',
   'devops', 'solutions', 'cs', 'java', 'python', 'dotnet', 'springboot',
-  'django', 'typescript', 'go', 'rust', 'dsa', 'backend-eng'
+  'django', 'typescript', 'go', 'rust', 'dsa', 'backend-eng',
+  'product-design', 'cybersecurity', 'data-science', 'data-analysis', 'machine-learning'
 ]);
 
 /* ── Public ────────────────────────────────────────────────── */
