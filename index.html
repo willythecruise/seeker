@@ -585,6 +585,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 .modal-body { padding: 16px 24px 20px; overflow-y: auto; }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px 20px; border-top: 1px solid var(--hairline-soft); }
 
+.temp-pass-box { margin-top: 12px; padding: 12px 14px; border: 1px dashed var(--accent-soft, rgba(99,102,241,.35)); border-radius: 10px; background: var(--bg-soft, rgba(99,102,241,.08)); font-family: var(--font-mono, ui-monospace, "Cascadia Code", Consolas, monospace); font-size: 15px; font-weight: 650; letter-spacing: .04em; color: var(--text); text-align: center; }
+
+.form-hint { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12.5px; font-weight: 500; }
+.form-hint.ok { color: #16a34a; }
+.form-hint.err { color: #dc2626; }
+
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes riseIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
 
@@ -1048,6 +1054,7 @@ const S = {
   view: 'app',            // app | login (console requires auth)
   tab: 'dashboard',       // dashboard | tests | editor | questions | results | admins
   candView: 'home',       // home | runner | result
+  candLoginView: 'login', // candidate login screen: login | request
   auth: null,             // admin session
   candAuth: null,         // signed-in candidate account
   stats: null,            // dashboard stats from server
@@ -1056,6 +1063,7 @@ const S = {
   attempts: [],
   admins: [],
   candidates: [],         // admin: granted candidate accounts
+  signupRequests: [],     // admin: pending signup requests
   pubTests: [],           // candidate: published tests
   qPool: {},              // qid -> question (rendering pool)
   live: null,             // candidate in-progress attempt
@@ -1202,6 +1210,10 @@ const ICONS = {
   shield: '<path d="M12 2.5l7.5 3v5.5c0 4.8-3.2 8.4-7.5 10.5-4.3-2.1-7.5-5.7-7.5-10.5V5.5l7.5-3z"/>',
   bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  inbox: '<path d="M3 12.5V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6.5"/><path d="M3 12.5L6 7h12l3 5.5H16a2 2 0 0 1-4 2H12a2 2 0 0 1-4-2H3z"/><path d="M12 9v6M9.5 11.5L12 9l2.5 2.5"/>',
+  send: '<path d="M20.5 3.5L4 10.5l6 3M20.5 3.5L14 20.5l-4-7M20.5 3.5L10 13.5"/>',
+  at: '<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/>',
   trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>',
   moon: '<path d="M20.7 13.6A8.5 8.5 0 1 1 10.4 3.3a7 7 0 0 0 10.3 10.3z"/>',
@@ -1302,7 +1314,7 @@ function positionSeg(segSel, thumbSel, idx) {
 function sidebarHTML(nav, mode) {
   const isCand = mode === 'candidate';
   const activeVal = isCand ? S.candView : S.tab;
-  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length, candidates: S.candidates.length };
+  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length, candidates: S.candidates.length, signups: S.signupRequests.length };
   return '<aside class="sidebar" id="sidebar">' +
     '<div class="sidebar-inner">' +
       '<div class="sidebar-head">' + brandHTML() +
@@ -1611,15 +1623,18 @@ function reviewBodyHTML(q, v, res) {
     content = sel.map((_, i) => row(i)).join('') +
       '<div class="review-line" style="margin-top:8px"><span class="lbl">Correct</span><span class="val val-correct">' + esc(correctOrder.map(i => items[i]).join(' → ')) + '</span></div>';
   } else if (q.type === 'code') {
-    const passed = res.passed, total = res.total;
+    const dObj = res.detail && typeof res.detail === 'object' ? res.detail : null;
+    const passed = res.passed != null ? res.passed : (dObj ? dObj.passed : null);
+    const total = res.total != null ? res.total : (dObj ? dObj.total : null);
     const ans = v && typeof v === 'object' && !Array.isArray(v) ? v : { code: v || '', lang: (res.lang || q.codeLang || 'javascript') };
+    const detail = typeof res.detail === 'string' ? res.detail : (dObj && dObj.info ? dObj.info : '');
     content =
       '<div class="review-line"><span class="lbl">Status</span><span class="val ' + (res.correct === true ? 'val-correct' : res.correct === false ? 'val-wrong' : '') + '">' +
         (res.correct == null ? 'Not submitted' : (res.correct ? 'Passed all tests' : 'Tests failed')) +
         (passed != null && total != null ? ' — ' + passed + '/' + total + ' tests passed' : '') + '</span></div>' +
       '<div class="review-line"><span class="lbl">Language</span><span class="val">' + esc(ans.lang === 'python' ? 'Python' : 'JavaScript') + '</span></div>' +
       '<pre class="q-code" style="margin-top:8px;white-space:pre-wrap">' + esc(ans.code || '// no code submitted') + '</pre>' +
-      (res.detail && res.detail !== 'All tests passed' && res.correct === false ? '<div class="review-explain">' + ic('info', 14) + ' <span style="vertical-align:1px">' + esc(res.detail) + '</span></div>' : '');
+      (detail && detail !== 'All tests passed' && res.correct === false ? '<div class="review-explain">' + ic('info', 14) + ' <span style="vertical-align:1px">' + esc(detail) + '</span></div>' : '');
   } else {
     content =
       '<div class="review-line"><span class="lbl">Your answer</span><span class="val ' + (v ? 'val-correct' : 'val-wrong') + '">' +
@@ -1847,7 +1862,8 @@ function consoleShell() {
     ['questions', 'Questions', 'question'],
     ['results', 'Results', 'chart'],
     ['activity', 'Activity', 'clock'],
-    ['candidates', 'Candidates', 'users']
+    ['candidates', 'Candidates', 'users'],
+    ['signups', 'Signups', 'inbox']
   ];
   if (S.auth.role === 'superadmin') nav.push(['admins', 'Admins', 'users']);
   return sidebarHTML(nav, 'console') +
@@ -1868,6 +1884,7 @@ function consoleView() {
   if (S.tab === 'results') return vResults();
   if (S.tab === 'activity') return vActivity();
   if (S.tab === 'candidates') return vCandidates();
+  if (S.tab === 'signups') return vSignups();
   if (S.tab === 'admins') return vAdmins();
   return vDashboard();
 }
@@ -2922,6 +2939,93 @@ function confirmDeleteCandidate(id) {
   });
 }
 
+/* ── Signup requests (candidate account applications) ──────── */
+
+async function loadSignupRequests() {
+  try {
+    S.signupRequests = await API.get('/api/signup/requests');
+  } catch (e) {
+    S.signupRequests = [];
+    toast(e.message, 'error');
+  }
+  render();
+}
+
+function vSignups() {
+  const f = S.qFilters.search;
+  const list = f ? S.signupRequests.filter(r => searchMatches(f, r.username, r.displayName, r.email)) : S.signupRequests;
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Signup requests</h1>' +
+    '<p class="page-desc">People who requested an account from the candidate portal. Approve to create their account, or reject.</p></div>' +
+  '</div>' +
+  (list.length ? '<div class="card">' + pgSlice('signups', list).map(signupRequestRowHTML).join('') + '</div>' + pagerHTML('signups', list.length)
+    : emptyState('inbox', 'No pending requests', f ? 'No requests match your search.' : 'New requests from the candidate portal will appear here.', null, ''));
+}
+
+function signupRequestRowHTML(r) {
+  const cats = (r.categories || []).slice(0, 4).map(c => '<span class="badge b-draft">' + esc(catOf(c).name) + '</span>').join('');
+  const more = (r.categories || []).length > 4 ? '<span class="badge b-mcq">+' + ((r.categories || []).length - 4) + '</span>' : '';
+  return '<div class="row-item">' +
+    '<span class="admin-avatar" style="width:34px;height:34px;font-size:14px">' + esc((r.displayName || r.username).slice(0, 1).toUpperCase()) + '</span>' +
+    '<div class="row-main">' +
+      '<div class="row-title">' + esc(r.displayName || r.username) + '</div>' +
+      '<div class="row-meta">@' + esc(r.username) + ' · ' + esc(r.email) + ' · requested ' + fmtDate(r.createdAt) + '</div>' +
+      (cats ? '<div class="row-meta" style="margin-top:6px">' + cats + more + '</div>' : '') +
+    '</div>' +
+    '<div class="row-actions">' +
+      '<button class="btn btn-sm btn-primary" data-action="approve-signup" data-id="' + r.id + '">' + ic('check', 13) + ' Approve</button>' +
+      '<button class="btn btn-sm btn-secondary" data-action="reject-signup" data-id="' + r.id + '">' + ic('x', 13) + ' Reject</button>' +
+      '<button class="btn-icon danger" data-action="delete-signup" data-id="' + r.id + '" title="Remove without emailing">' + ic('trash', 16) + '</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function confirmApproveSignup(id) {
+  const r = S.signupRequests.find(x => x.id === id);
+  if (!r) return;
+  confirmModal({
+    title: 'Approve ' + (r.displayName || r.username) + '?',
+    body: 'This creates a candidate account for @' + esc(r.username) + ' with a temporary password. The candidate will be emailed their sign-in details.',
+    confirmLabel: 'Approve & create account',
+    onConfirm: async () => {
+      closeModal();
+      try {
+        const res = await API.post('/api/signup/requests/' + id + '/approve');
+        await loadSignupRequests();
+        openModal({
+          title: 'Account created',
+          body: '<p style="font-size:14.5px;color:var(--text-2);line-height:1.65">' +
+            '<strong>' + esc(res.candidate.displayName || res.candidate.username) + '</strong> (@' + esc(res.candidate.username) + ') can now sign in with:</p>' +
+            '<div class="temp-pass-box">' + esc(res.tempPassword) + '</div>' +
+            '<p style="font-size:13.5px;color:var(--text-3);margin:12px 0 0">This password is shown once. The candidate was also emailed their credentials.</p>',
+          foot: '<button class="btn btn-primary" data-action="close-modal">Done</button>'
+        });
+        toast('Candidate created', 'success');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
+function confirmRejectSignup(id, notify) {
+  const r = S.signupRequests.find(x => x.id === id);
+  if (!r) return;
+  const label = notify ? 'Reject & notify' : 'Delete request';
+  confirmModal({
+    title: (notify ? 'Reject ' : 'Delete ') + (r.displayName || r.username) + '?',
+    body: notify ? '@' + esc(r.username) + ' will be emailed that their request was not approved.' : 'Remove @' + esc(r.username) + '\u2019s request without sending an email.',
+    confirmLabel: label,
+    danger: true,
+    onConfirm: async () => {
+      closeModal();
+      try {
+        await API.post('/api/signup/requests/' + id + '/reject', { notify });
+        await loadSignupRequests();
+        toast(notify ? 'Request rejected' : 'Request removed');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
 /* ── Preview modal ─────────────────────────────────────────── */
 
 function previewAnswerHTML(q) {
@@ -3051,9 +3155,18 @@ function candidateShell() {
     modalHTML();
 }
 
-/* ── Candidate sign in ─────────────────────────────────────── */
+/* ── Candidate sign in / signup request ────────────────────── */
+
+const signupCats = new Set();
+let signupBusy = false;
+let signupDraft = { name: '', username: '', email: '' };
+let signupUsername = { checked: '', ok: null, input: '' };
 
 function vCandidateLogin() {
+  return S.candLoginView === 'request' ? vCandSignup() : vCandLoginForm();
+}
+
+function vCandLoginForm() {
   return '<div class="auth-screen">' +
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
@@ -3075,9 +3188,116 @@ function vCandidateLogin() {
         '<button class="btn btn-primary btn-lg" style="width:100%" type="submit">' + ic('arrowL', 15, 'rot-180') + ' Sign in</button>' +
       '</form>' +
       '<div class="auth-divider"></div>' +
+      '<button class="auth-link" data-action="show-signup">' + ic('plus', 15) + ' Request an account</button>' +
       '<button class="auth-link" data-action="go-console">' + ic('gear', 15) + ' Back to console</button>' +
     '</div>' +
   '</div>';
+}
+
+function vCandSignup() {
+  const chips = CATS.map(c => {
+    const on = signupCats.has(c.id);
+    return '<button type="button" class="chip ' + (on ? 'active' : '') + '" data-action="signup-cat" data-value="' + c.id + '" aria-pressed="' + on + '">' +
+      catIconHTML(c, 14) + ' ' + esc(c.name) + ic('check', 12) + '</button>';
+  }).join('');
+  const hint = signupUsername.checked && signupUsername.checked === signupUsername.input
+    ? (signupUsername.ok
+        ? '<div class="form-hint ok">' + ic('check', 13) + ' ' + esc(signupUsername.checked) + ' is available</div>'
+        : '<div class="form-hint err">' + ic('alert', 13) + ' That username is taken</div>')
+    : '';
+  return '<div class="auth-screen">' +
+    '<div class="auth-card card">' +
+      '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
+      '<h1 class="auth-title">Request an account</h1>' +
+      '<p class="auth-sub">Tell us a bit about yourself. An admin will review your request and email you a temporary password.</p>' +
+      '<form id="candSignupForm" data-form="candidate-signup" novalidate>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="signupName">Full name</label>' +
+          '<div class="auth-input">' + ic('user', 15) +
+            '<input class="input" id="signupName" autocomplete="name" placeholder="e.g., Ada Lovelace" value="' + esc(signupDraft.name) + '" required>' +
+          '</div>' +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="signupUser">Username</label>' +
+          '<div class="auth-input">' + ic('at', 15) +
+            '<input class="input" id="signupUser" autocomplete="username" placeholder="e.g., ada.lovelace" value="' + esc(signupDraft.username) + '" required>' +
+          '</div>' +
+          hint +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="signupEmail">Email</label>' +
+          '<div class="auth-input">' + ic('mail', 15) +
+            '<input class="input" id="signupEmail" type="email" autocomplete="email" placeholder="ada@company.com" value="' + esc(signupDraft.email) + '" required>' +
+          '</div>' +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label">Tech fields <span class="field-help">Pick all that apply</span></label>' +
+          '<div class="chip-row">' + chips + '</div>' +
+        '</div>' +
+        '<button class="btn btn-primary btn-lg" style="width:100%" type="submit" ' + (signupBusy ? 'disabled' : '') + '>' + ic('send', 15) + ' Request account</button>' +
+      '</form>' +
+      '<div class="auth-divider"></div>' +
+      '<button class="auth-link" data-action="back-login">' + ic('arrowL', 15, 'rot-180') + ' Back to sign in</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function toggleSignupCat(id) {
+  if (signupCats.has(id)) signupCats.delete(id); else signupCats.add(id);
+  render();
+}
+
+async function checkSignupUsername() {
+  const u = $('#signupUser');
+  if (!u) return;
+  const val = u.value.trim().toLowerCase();
+  if (!val) { signupUsername = { checked: '', ok: null, input: val }; render(); return; }
+  if (!/^[a-z0-9._-]{3,24}$/.test(val)) { signupUsername = { checked: val, ok: null, input: val }; render(); return; }
+  let ok = false;
+  try {
+    const r = await API.post('/api/signup/check-username', { username: val });
+    ok = r.available === true;
+  } catch (e) {
+    ok = null;
+  }
+  signupUsername = { checked: val, ok, input: val };
+  render();
+}
+
+async function candSignupRequest() {
+  if (signupBusy) return;
+  const n = $('#signupName'), u = $('#signupUser'), em = $('#signupEmail');
+  const btn = n ? $('button[type="submit"]', n.closest('form')) : null;
+  if (!n || !u || !em) return;
+  const username = u.value.trim().toLowerCase();
+  const displayName = n.value.trim();
+  const email = em.value.trim();
+  if (!displayName) { toast('Enter your full name', 'error'); return; }
+  if (!/^[a-z0-9._-]{3,24}$/.test(username)) { toast('Username must be 3–24 letters, digits, dots, dashes or underscores', 'error'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('Enter a valid email address', 'error'); return; }
+  if (!signupCats.size) { toast('Pick at least one tech field', 'error'); return; }
+  if (signupUsername.checked === username && signupUsername.ok === false) { toast('That username is taken', 'error'); return; }
+  signupBusy = true;
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  try {
+    await API.post('/api/signup/requests', { username, displayName, email, categories: Array.from(signupCats) });
+    signupCats.clear();
+    signupDraft = { name: '', username: '', email: '' };
+    signupUsername = { checked: '', ok: null, input: '' };
+    S.candLoginView = 'login';
+    render();
+    openModal({
+      title: 'Request sent',
+      body: '<p style="font-size:14.5px;color:var(--text-2);line-height:1.65">Thanks, ' + esc(displayName) + '! An admin will add you as soon as possible. Once approved you\u2019ll get an email with your temporary password.</p>',
+      foot: '<button class="btn btn-primary" data-action="close-modal">Got it</button>'
+    });
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    signupBusy = false;
+    if (btn) btn.disabled = false;
+    render();
+  }
 }
 
 async function candLogin() {
@@ -3951,6 +4171,7 @@ async function loadAdminData() {
       try { S.admins = await API.get('/api/admin/admins'); } catch (e) { S.admins = []; }
     }
     try { S.candidates = await API.get('/api/admin/candidates'); } catch (e) { S.candidates = []; }
+    try { S.signupRequests = await API.get('/api/signup/requests'); } catch (e) { S.signupRequests = []; }
   } catch (e) {
     if (e.status === 401) {
       S.auth = null;
@@ -4023,6 +4244,7 @@ async function setMode(m) {
     if (S.live && S.candView === 'runner') stopTimer();
     S.mode = m;
     S.candView = 'home';
+    S.candLoginView = 'login';
     render();
     await refreshCandidate();
   } else {
@@ -4051,6 +4273,7 @@ function setTab(t) {
   S.tab = t;
   if (t === 'activity') loadEvents();
   if (t === 'candidates') loadCandidates();
+  if (t === 'signups') loadSignupRequests();
   render();
 }
 
@@ -4237,6 +4460,9 @@ function onClick(e) {
     case 'back-to-login': S.view = 'login'; render(); break;
     case 'go-candidate': setMode('candidate'); break;
     case 'go-console': S.mode = 'console'; S.view = S.auth ? 'app' : 'login'; render(); break;
+    case 'show-signup': S.candLoginView = 'request'; render(); break;
+    case 'back-login': S.candLoginView = 'login'; render(); break;
+    case 'signup-cat': toggleSignupCat(val); break;
     case 'cand-logout': candLogout(); break;
     case 'theme-toggle': toggleTheme(); break;
 
@@ -4352,6 +4578,11 @@ function onClick(e) {
     case 'delete-candidate': confirmDeleteCandidate(id); break;
     case 'pg': _pg[el.dataset.key] = +el.dataset.pg; render(); break;
 
+    /* console: signup requests */
+    case 'approve-signup': confirmApproveSignup(id); break;
+    case 'reject-signup': confirmRejectSignup(id, true); break;
+    case 'delete-signup': confirmRejectSignup(id, false); break;
+
     /* modals */
     case 'close-modal': closeModal(); break;
     case 'modal-confirm': if (modalConfirmCb) modalConfirmCb(); break;
@@ -4386,6 +4617,9 @@ function onClick(e) {
 
 function onInput(e) {
   const el = e.target;
+  if (el.id === 'signupName') { signupDraft.name = el.value; return; }
+  if (el.id === 'signupEmail') { signupDraft.email = el.value; return; }
+  if (el.id === 'signupUser') { signupDraft.username = el.value; checkSignupUsername(); return; }
   if (el.id === 'globalSearch') {
     S.qFilters.search = el.value.toLowerCase();
     S._focusSearch = 'global';
@@ -4396,6 +4630,7 @@ function onInput(e) {
       else if (S.tab === 'results') _pg.results = 0;
       else if (S.tab === 'activity') _pg.activity = 0;
       else if (S.tab === 'candidates') _pg.candidates = 0;
+      else if (S.tab === 'signups') _pg.signups = 0;
       else if (S.tab === 'admins') _pg.admins = 0;
       render();
     } else if (S.mode === 'candidate') {
@@ -4442,6 +4677,7 @@ function onSubmit(e) {
   if (form.dataset.form === 'login') { e.preventDefault(); doLogin(e); }
   else if (form.dataset.form === 'register') { e.preventDefault(); doRegister(e); }
   else if (form.dataset.form === 'candidate-login') { e.preventDefault(); candLogin(); }
+  else if (form.dataset.form === 'candidate-signup') { e.preventDefault(); candSignupRequest(); }
 }
 
 function onKey(e) {

@@ -54,6 +54,7 @@ const S = {
   view: 'app',            // app | login (console requires auth)
   tab: 'dashboard',       // dashboard | tests | editor | questions | results | admins
   candView: 'home',       // home | runner | result
+  candLoginView: 'login', // candidate login screen: login | request
   auth: null,             // admin session
   candAuth: null,         // signed-in candidate account
   stats: null,            // dashboard stats from server
@@ -62,6 +63,7 @@ const S = {
   attempts: [],
   admins: [],
   candidates: [],         // admin: granted candidate accounts
+  signupRequests: [],     // admin: pending signup requests
   pubTests: [],           // candidate: published tests
   qPool: {},              // qid -> question (rendering pool)
   live: null,             // candidate in-progress attempt
@@ -208,6 +210,10 @@ const ICONS = {
   shield: '<path d="M12 2.5l7.5 3v5.5c0 4.8-3.2 8.4-7.5 10.5-4.3-2.1-7.5-5.7-7.5-10.5V5.5l7.5-3z"/>',
   bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  inbox: '<path d="M3 12.5V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6.5"/><path d="M3 12.5L6 7h12l3 5.5H16a2 2 0 0 1-4 2H12a2 2 0 0 1-4-2H3z"/><path d="M12 9v6M9.5 11.5L12 9l2.5 2.5"/>',
+  send: '<path d="M20.5 3.5L4 10.5l6 3M20.5 3.5L14 20.5l-4-7M20.5 3.5L10 13.5"/>',
+  at: '<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/>',
   trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>',
   moon: '<path d="M20.7 13.6A8.5 8.5 0 1 1 10.4 3.3a7 7 0 0 0 10.3 10.3z"/>',
@@ -308,7 +314,7 @@ function positionSeg(segSel, thumbSel, idx) {
 function sidebarHTML(nav, mode) {
   const isCand = mode === 'candidate';
   const activeVal = isCand ? S.candView : S.tab;
-  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length, candidates: S.candidates.length };
+  const counts = { tests: S.tests.length, questions: S.questions.length, results: S.attempts.length, admins: S.admins.length, candidates: S.candidates.length, signups: S.signupRequests.length };
   return '<aside class="sidebar" id="sidebar">' +
     '<div class="sidebar-inner">' +
       '<div class="sidebar-head">' + brandHTML() +
@@ -617,15 +623,18 @@ function reviewBodyHTML(q, v, res) {
     content = sel.map((_, i) => row(i)).join('') +
       '<div class="review-line" style="margin-top:8px"><span class="lbl">Correct</span><span class="val val-correct">' + esc(correctOrder.map(i => items[i]).join(' → ')) + '</span></div>';
   } else if (q.type === 'code') {
-    const passed = res.passed, total = res.total;
+    const dObj = res.detail && typeof res.detail === 'object' ? res.detail : null;
+    const passed = res.passed != null ? res.passed : (dObj ? dObj.passed : null);
+    const total = res.total != null ? res.total : (dObj ? dObj.total : null);
     const ans = v && typeof v === 'object' && !Array.isArray(v) ? v : { code: v || '', lang: (res.lang || q.codeLang || 'javascript') };
+    const detail = typeof res.detail === 'string' ? res.detail : (dObj && dObj.info ? dObj.info : '');
     content =
       '<div class="review-line"><span class="lbl">Status</span><span class="val ' + (res.correct === true ? 'val-correct' : res.correct === false ? 'val-wrong' : '') + '">' +
         (res.correct == null ? 'Not submitted' : (res.correct ? 'Passed all tests' : 'Tests failed')) +
         (passed != null && total != null ? ' — ' + passed + '/' + total + ' tests passed' : '') + '</span></div>' +
       '<div class="review-line"><span class="lbl">Language</span><span class="val">' + esc(ans.lang === 'python' ? 'Python' : 'JavaScript') + '</span></div>' +
       '<pre class="q-code" style="margin-top:8px;white-space:pre-wrap">' + esc(ans.code || '// no code submitted') + '</pre>' +
-      (res.detail && res.detail !== 'All tests passed' && res.correct === false ? '<div class="review-explain">' + ic('info', 14) + ' <span style="vertical-align:1px">' + esc(res.detail) + '</span></div>' : '');
+      (detail && detail !== 'All tests passed' && res.correct === false ? '<div class="review-explain">' + ic('info', 14) + ' <span style="vertical-align:1px">' + esc(detail) + '</span></div>' : '');
   } else {
     content =
       '<div class="review-line"><span class="lbl">Your answer</span><span class="val ' + (v ? 'val-correct' : 'val-wrong') + '">' +

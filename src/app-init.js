@@ -30,6 +30,7 @@ async function loadAdminData() {
       try { S.admins = await API.get('/api/admin/admins'); } catch (e) { S.admins = []; }
     }
     try { S.candidates = await API.get('/api/admin/candidates'); } catch (e) { S.candidates = []; }
+    try { S.signupRequests = await API.get('/api/signup/requests'); } catch (e) { S.signupRequests = []; }
   } catch (e) {
     if (e.status === 401) {
       S.auth = null;
@@ -102,6 +103,7 @@ async function setMode(m) {
     if (S.live && S.candView === 'runner') stopTimer();
     S.mode = m;
     S.candView = 'home';
+    S.candLoginView = 'login';
     render();
     await refreshCandidate();
   } else {
@@ -130,6 +132,7 @@ function setTab(t) {
   S.tab = t;
   if (t === 'activity') loadEvents();
   if (t === 'candidates') loadCandidates();
+  if (t === 'signups') loadSignupRequests();
   render();
 }
 
@@ -316,6 +319,9 @@ function onClick(e) {
     case 'back-to-login': S.view = 'login'; render(); break;
     case 'go-candidate': setMode('candidate'); break;
     case 'go-console': S.mode = 'console'; S.view = S.auth ? 'app' : 'login'; render(); break;
+    case 'show-signup': S.candLoginView = 'request'; render(); break;
+    case 'back-login': S.candLoginView = 'login'; render(); break;
+    case 'signup-cat': toggleSignupCat(val); break;
     case 'cand-logout': candLogout(); break;
     case 'theme-toggle': toggleTheme(); break;
 
@@ -431,6 +437,11 @@ function onClick(e) {
     case 'delete-candidate': confirmDeleteCandidate(id); break;
     case 'pg': _pg[el.dataset.key] = +el.dataset.pg; render(); break;
 
+    /* console: signup requests */
+    case 'approve-signup': confirmApproveSignup(id); break;
+    case 'reject-signup': confirmRejectSignup(id, true); break;
+    case 'delete-signup': confirmRejectSignup(id, false); break;
+
     /* modals */
     case 'close-modal': closeModal(); break;
     case 'modal-confirm': if (modalConfirmCb) modalConfirmCb(); break;
@@ -465,6 +476,9 @@ function onClick(e) {
 
 function onInput(e) {
   const el = e.target;
+  if (el.id === 'signupName') { signupDraft.name = el.value; return; }
+  if (el.id === 'signupEmail') { signupDraft.email = el.value; return; }
+  if (el.id === 'signupUser') { signupDraft.username = el.value; checkSignupUsername(); return; }
   if (el.id === 'globalSearch') {
     S.qFilters.search = el.value.toLowerCase();
     S._focusSearch = 'global';
@@ -475,6 +489,7 @@ function onInput(e) {
       else if (S.tab === 'results') _pg.results = 0;
       else if (S.tab === 'activity') _pg.activity = 0;
       else if (S.tab === 'candidates') _pg.candidates = 0;
+      else if (S.tab === 'signups') _pg.signups = 0;
       else if (S.tab === 'admins') _pg.admins = 0;
       render();
     } else if (S.mode === 'candidate') {
@@ -521,6 +536,7 @@ function onSubmit(e) {
   if (form.dataset.form === 'login') { e.preventDefault(); doLogin(e); }
   else if (form.dataset.form === 'register') { e.preventDefault(); doRegister(e); }
   else if (form.dataset.form === 'candidate-login') { e.preventDefault(); candLogin(); }
+  else if (form.dataset.form === 'candidate-signup') { e.preventDefault(); candSignupRequest(); }
 }
 
 function onKey(e) {

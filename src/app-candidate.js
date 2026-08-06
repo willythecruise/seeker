@@ -74,9 +74,18 @@ function candidateShell() {
     modalHTML();
 }
 
-/* ── Candidate sign in ─────────────────────────────────────── */
+/* ── Candidate sign in / signup request ────────────────────── */
+
+const signupCats = new Set();
+let signupBusy = false;
+let signupDraft = { name: '', username: '', email: '' };
+let signupUsername = { checked: '', ok: null, input: '' };
 
 function vCandidateLogin() {
+  return S.candLoginView === 'request' ? vCandSignup() : vCandLoginForm();
+}
+
+function vCandLoginForm() {
   return '<div class="auth-screen">' +
     '<div class="auth-card card">' +
       '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
@@ -98,9 +107,116 @@ function vCandidateLogin() {
         '<button class="btn btn-primary btn-lg" style="width:100%" type="submit">' + ic('arrowL', 15, 'rot-180') + ' Sign in</button>' +
       '</form>' +
       '<div class="auth-divider"></div>' +
+      '<button class="auth-link" data-action="show-signup">' + ic('plus', 15) + ' Request an account</button>' +
       '<button class="auth-link" data-action="go-console">' + ic('gear', 15) + ' Back to console</button>' +
     '</div>' +
   '</div>';
+}
+
+function vCandSignup() {
+  const chips = CATS.map(c => {
+    const on = signupCats.has(c.id);
+    return '<button type="button" class="chip ' + (on ? 'active' : '') + '" data-action="signup-cat" data-value="' + c.id + '" aria-pressed="' + on + '">' +
+      catIconHTML(c, 14) + ' ' + esc(c.name) + ic('check', 12) + '</button>';
+  }).join('');
+  const hint = signupUsername.checked && signupUsername.checked === signupUsername.input
+    ? (signupUsername.ok
+        ? '<div class="form-hint ok">' + ic('check', 13) + ' ' + esc(signupUsername.checked) + ' is available</div>'
+        : '<div class="form-hint err">' + ic('alert', 13) + ' That username is taken</div>')
+    : '';
+  return '<div class="auth-screen">' +
+    '<div class="auth-card card">' +
+      '<div class="auth-brand"><img class="auth-logo brand-logo-img" src="' + brandLogoImgSrc() + '" alt="Seeker" width="132" height="41"></div>' +
+      '<h1 class="auth-title">Request an account</h1>' +
+      '<p class="auth-sub">Tell us a bit about yourself. An admin will review your request and email you a temporary password.</p>' +
+      '<form id="candSignupForm" data-form="candidate-signup" novalidate>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="signupName">Full name</label>' +
+          '<div class="auth-input">' + ic('user', 15) +
+            '<input class="input" id="signupName" autocomplete="name" placeholder="e.g., Ada Lovelace" value="' + esc(signupDraft.name) + '" required>' +
+          '</div>' +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="signupUser">Username</label>' +
+          '<div class="auth-input">' + ic('at', 15) +
+            '<input class="input" id="signupUser" autocomplete="username" placeholder="e.g., ada.lovelace" value="' + esc(signupDraft.username) + '" required>' +
+          '</div>' +
+          hint +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label" for="signupEmail">Email</label>' +
+          '<div class="auth-input">' + ic('mail', 15) +
+            '<input class="input" id="signupEmail" type="email" autocomplete="email" placeholder="ada@company.com" value="' + esc(signupDraft.email) + '" required>' +
+          '</div>' +
+        '</div>' +
+        '<div class="auth-field">' +
+          '<label class="field-label">Tech fields <span class="field-help">Pick all that apply</span></label>' +
+          '<div class="chip-row">' + chips + '</div>' +
+        '</div>' +
+        '<button class="btn btn-primary btn-lg" style="width:100%" type="submit" ' + (signupBusy ? 'disabled' : '') + '>' + ic('send', 15) + ' Request account</button>' +
+      '</form>' +
+      '<div class="auth-divider"></div>' +
+      '<button class="auth-link" data-action="back-login">' + ic('arrowL', 15, 'rot-180') + ' Back to sign in</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function toggleSignupCat(id) {
+  if (signupCats.has(id)) signupCats.delete(id); else signupCats.add(id);
+  render();
+}
+
+async function checkSignupUsername() {
+  const u = $('#signupUser');
+  if (!u) return;
+  const val = u.value.trim().toLowerCase();
+  if (!val) { signupUsername = { checked: '', ok: null, input: val }; render(); return; }
+  if (!/^[a-z0-9._-]{3,24}$/.test(val)) { signupUsername = { checked: val, ok: null, input: val }; render(); return; }
+  let ok = false;
+  try {
+    const r = await API.post('/api/signup/check-username', { username: val });
+    ok = r.available === true;
+  } catch (e) {
+    ok = null;
+  }
+  signupUsername = { checked: val, ok, input: val };
+  render();
+}
+
+async function candSignupRequest() {
+  if (signupBusy) return;
+  const n = $('#signupName'), u = $('#signupUser'), em = $('#signupEmail');
+  const btn = n ? $('button[type="submit"]', n.closest('form')) : null;
+  if (!n || !u || !em) return;
+  const username = u.value.trim().toLowerCase();
+  const displayName = n.value.trim();
+  const email = em.value.trim();
+  if (!displayName) { toast('Enter your full name', 'error'); return; }
+  if (!/^[a-z0-9._-]{3,24}$/.test(username)) { toast('Username must be 3–24 letters, digits, dots, dashes or underscores', 'error'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('Enter a valid email address', 'error'); return; }
+  if (!signupCats.size) { toast('Pick at least one tech field', 'error'); return; }
+  if (signupUsername.checked === username && signupUsername.ok === false) { toast('That username is taken', 'error'); return; }
+  signupBusy = true;
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  try {
+    await API.post('/api/signup/requests', { username, displayName, email, categories: Array.from(signupCats) });
+    signupCats.clear();
+    signupDraft = { name: '', username: '', email: '' };
+    signupUsername = { checked: '', ok: null, input: '' };
+    S.candLoginView = 'login';
+    render();
+    openModal({
+      title: 'Request sent',
+      body: '<p style="font-size:14.5px;color:var(--text-2);line-height:1.65">Thanks, ' + esc(displayName) + '! An admin will add you as soon as possible. Once approved you\u2019ll get an email with your temporary password.</p>',
+      foot: '<button class="btn btn-primary" data-action="close-modal">Got it</button>'
+    });
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    signupBusy = false;
+    if (btn) btn.disabled = false;
+    render();
+  }
 }
 
 async function candLogin() {

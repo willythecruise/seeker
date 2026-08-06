@@ -7,6 +7,7 @@ const { seedQuestions, bootstrapAdmin } = require('./server/seed');
 const { router: authRouter } = require('./server/auth');
 const adminRouter = require('./server/adminRoutes');
 const candidateRouter = require('./server/candidateRoutes');
+const signupRouter = require('./server/signupRoutes');
 
 const PORT = Number(process.env.PORT) || 3000;
 const MONGO_URI = process.env.MONGO_URI ||
@@ -40,6 +41,7 @@ async function main() {
   app.use('/api/auth', authRouter);
   app.use('/api/admin', adminRouter);
   app.use('/api/candidate', candidateRouter);
+  app.use('/api/signup', signupRouter);
 
   // Landing page (built Vite app) at the root
   const landingDist = path.join(__dirname, 'landing', 'dist');

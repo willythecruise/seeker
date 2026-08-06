@@ -6,6 +6,7 @@ const { Question, Test, Attempt, Admin, Session, EventLog, Candidate, CandidateS
 const { requireAuth, requireSuperadmin, publicAdmin, publicCandidate } = require('./auth');
 const { gradeAttempt, DIFF_WEIGHTS, sanitizeQuestion } = require('./lib');
 const { seedQuestions } = require('./seed');
+const { sendTestAssigned } = require('./mailer');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -289,6 +290,21 @@ function parseTestIds(tests) {
   }).filter(Boolean);
 }
 
+/* Email the candidate about test(s) newly assigned to them. */
+async function notifyAssignedTests(candidate, addedIds) {
+  const ids = (addedIds || []).filter(Boolean);
+  if (!ids.length || !(candidate.email || '').trim()) return;
+  try {
+    const tests = await Test.find({ _id: { $in: ids } }).select('name').lean();
+    const names = tests.map(t => t.name);
+    if (names.length) {
+      sendTestAssigned({ email: candidate.email, name: candidate.displayName || candidate.username, tests: names });
+    }
+  } catch (e) {
+    console.error('[adminRoutes] notifyAssignedTests failed:', e.message);
+  }
+}
+
 router.get('/candidates', async (req, res) => {
   const list = await Candidate.find().sort({ createdAt: -1 }).lean();
   res.json(list.map(publicCandidate));
@@ -310,6 +326,7 @@ router.post('/candidates', async (req, res) => {
     active: active !== false,
     viewResults: viewResults === true
   });
+  notifyAssignedTests(cand, cand.tests);
   res.status(201).json(publicCandidate(cand));
 });
 
@@ -321,7 +338,12 @@ router.put('/candidates/:id', async (req, res) => {
   if (email !== undefined) cand.email = String(email).trim().toLowerCase();
   if (active !== undefined) cand.active = !!active;
   if (viewResults !== undefined) cand.viewResults = !!viewResults;
-  if (tests !== undefined) cand.tests = parseTestIds(tests);
+  if (tests !== undefined) {
+    const before = (cand.tests || []).map(t => t.toString());
+    cand.tests = parseTestIds(tests);
+    const after = (cand.tests || []).map(t => t.toString());
+    notifyAssignedTests(cand, after.filter(id => !before.includes(id)));
+  }
   if (password && String(password).length) {
     if (String(password).length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
     cand.passwordHash = await bcrypt.hash(String(password), 10);

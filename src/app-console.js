@@ -157,7 +157,8 @@ function consoleShell() {
     ['questions', 'Questions', 'question'],
     ['results', 'Results', 'chart'],
     ['activity', 'Activity', 'clock'],
-    ['candidates', 'Candidates', 'users']
+    ['candidates', 'Candidates', 'users'],
+    ['signups', 'Signups', 'inbox']
   ];
   if (S.auth.role === 'superadmin') nav.push(['admins', 'Admins', 'users']);
   return sidebarHTML(nav, 'console') +
@@ -178,6 +179,7 @@ function consoleView() {
   if (S.tab === 'results') return vResults();
   if (S.tab === 'activity') return vActivity();
   if (S.tab === 'candidates') return vCandidates();
+  if (S.tab === 'signups') return vSignups();
   if (S.tab === 'admins') return vAdmins();
   return vDashboard();
 }
@@ -1227,6 +1229,93 @@ function confirmDeleteCandidate(id) {
         await API.del('/api/admin/candidates/' + id);
         await loadCandidates();
         toast('Candidate removed');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
+/* ── Signup requests (candidate account applications) ──────── */
+
+async function loadSignupRequests() {
+  try {
+    S.signupRequests = await API.get('/api/signup/requests');
+  } catch (e) {
+    S.signupRequests = [];
+    toast(e.message, 'error');
+  }
+  render();
+}
+
+function vSignups() {
+  const f = S.qFilters.search;
+  const list = f ? S.signupRequests.filter(r => searchMatches(f, r.username, r.displayName, r.email)) : S.signupRequests;
+  return '<div class="page-head">' +
+    '<div><h1 class="page-title">Signup requests</h1>' +
+    '<p class="page-desc">People who requested an account from the candidate portal. Approve to create their account, or reject.</p></div>' +
+  '</div>' +
+  (list.length ? '<div class="card">' + pgSlice('signups', list).map(signupRequestRowHTML).join('') + '</div>' + pagerHTML('signups', list.length)
+    : emptyState('inbox', 'No pending requests', f ? 'No requests match your search.' : 'New requests from the candidate portal will appear here.', null, ''));
+}
+
+function signupRequestRowHTML(r) {
+  const cats = (r.categories || []).slice(0, 4).map(c => '<span class="badge b-draft">' + esc(catOf(c).name) + '</span>').join('');
+  const more = (r.categories || []).length > 4 ? '<span class="badge b-mcq">+' + ((r.categories || []).length - 4) + '</span>' : '';
+  return '<div class="row-item">' +
+    '<span class="admin-avatar" style="width:34px;height:34px;font-size:14px">' + esc((r.displayName || r.username).slice(0, 1).toUpperCase()) + '</span>' +
+    '<div class="row-main">' +
+      '<div class="row-title">' + esc(r.displayName || r.username) + '</div>' +
+      '<div class="row-meta">@' + esc(r.username) + ' · ' + esc(r.email) + ' · requested ' + fmtDate(r.createdAt) + '</div>' +
+      (cats ? '<div class="row-meta" style="margin-top:6px">' + cats + more + '</div>' : '') +
+    '</div>' +
+    '<div class="row-actions">' +
+      '<button class="btn btn-sm btn-primary" data-action="approve-signup" data-id="' + r.id + '">' + ic('check', 13) + ' Approve</button>' +
+      '<button class="btn btn-sm btn-secondary" data-action="reject-signup" data-id="' + r.id + '">' + ic('x', 13) + ' Reject</button>' +
+      '<button class="btn-icon danger" data-action="delete-signup" data-id="' + r.id + '" title="Remove without emailing">' + ic('trash', 16) + '</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function confirmApproveSignup(id) {
+  const r = S.signupRequests.find(x => x.id === id);
+  if (!r) return;
+  confirmModal({
+    title: 'Approve ' + (r.displayName || r.username) + '?',
+    body: 'This creates a candidate account for @' + esc(r.username) + ' with a temporary password. The candidate will be emailed their sign-in details.',
+    confirmLabel: 'Approve & create account',
+    onConfirm: async () => {
+      closeModal();
+      try {
+        const res = await API.post('/api/signup/requests/' + id + '/approve');
+        await loadSignupRequests();
+        openModal({
+          title: 'Account created',
+          body: '<p style="font-size:14.5px;color:var(--text-2);line-height:1.65">' +
+            '<strong>' + esc(res.candidate.displayName || res.candidate.username) + '</strong> (@' + esc(res.candidate.username) + ') can now sign in with:</p>' +
+            '<div class="temp-pass-box">' + esc(res.tempPassword) + '</div>' +
+            '<p style="font-size:13.5px;color:var(--text-3);margin:12px 0 0">This password is shown once. The candidate was also emailed their credentials.</p>',
+          foot: '<button class="btn btn-primary" data-action="close-modal">Done</button>'
+        });
+        toast('Candidate created', 'success');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+  });
+}
+
+function confirmRejectSignup(id, notify) {
+  const r = S.signupRequests.find(x => x.id === id);
+  if (!r) return;
+  const label = notify ? 'Reject & notify' : 'Delete request';
+  confirmModal({
+    title: (notify ? 'Reject ' : 'Delete ') + (r.displayName || r.username) + '?',
+    body: notify ? '@' + esc(r.username) + ' will be emailed that their request was not approved.' : 'Remove @' + esc(r.username) + '\u2019s request without sending an email.',
+    confirmLabel: label,
+    danger: true,
+    onConfirm: async () => {
+      closeModal();
+      try {
+        await API.post('/api/signup/requests/' + id + '/reject', { notify });
+        await loadSignupRequests();
+        toast(notify ? 'Request rejected' : 'Request removed');
       } catch (e) { toast(e.message, 'error'); }
     }
   });

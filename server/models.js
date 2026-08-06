@@ -48,6 +48,22 @@ const CandidateSessionSchema = new Schema({
   expiresAt: { type: Date, required: true }
 }, { versionKey: false });
 
+/* ── Signup request (candidate account application) ────────── */
+const SignupRequestSchema = new Schema({
+  username: { type: String, required: true, unique: true, trim: true, lowercase: true },
+  displayName: { type: String, trim: true, default: '' },
+  email: { type: String, required: true, trim: true, lowercase: true },
+  categories: { type: [String], default: [] },   // requested tech fields
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  note: { type: String, default: '' },
+  reviewedBy: { type: Schema.Types.ObjectId, ref: 'Admin' },
+  reviewedAt: { type: Date },
+  createdAt: { type: Date, default: Date.now }
+}, { versionKey: false });
+SignupRequestSchema.set('toJSON', { virtuals: false, transform: (d, r) => {
+  r.id = r._id.toString(); delete r._id; return r;
+} });
+
 /* ── Question ──────────────────────────────────────────────── */
 const QuestionSchema = new Schema({
   qid: { type: String, required: true, unique: true },   // 'b01' | 'c01' | 'c-<rand>'
@@ -153,6 +169,7 @@ module.exports = {
   Session: mongoose.model('Session', SessionSchema),
   Candidate: mongoose.model('Candidate', CandidateSchema),
   CandidateSession: mongoose.model('CandidateSession', CandidateSessionSchema),
+  SignupRequest: mongoose.model('SignupRequest', SignupRequestSchema),
   Question: mongoose.model('Question', QuestionSchema),
   Test: mongoose.model('Test', TestSchema),
   Attempt: mongoose.model('Attempt', AttemptSchema),
