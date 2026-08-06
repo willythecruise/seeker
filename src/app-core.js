@@ -88,7 +88,8 @@ const S = {
   modal: null,
   _pendingTestId: null,
   _focusSearch: null,
-  _smSearch: {}           // searchable multi-select: key -> lowercase query
+  _focusInput: null,        // id of an input to refocus after the next render ('sm:<key>' = sm-search input)
+  _smSearch: {}             // searchable multi-select: key -> lowercase query
 };
 
 /* draft objects for the editors (module-level so every module shares them) */

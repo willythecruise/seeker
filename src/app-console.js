@@ -28,7 +28,7 @@ function vLogin() {
       '</form>' +
       '<div id="bootstrapSlot" class="auth-bootstrap"></div>' +
       '<div class="auth-divider"></div>' +
-      '<button class="btn btn-secondary" style="width:100%" data-action="go-candidate">' + ic('doc', 15) + ' Take a test as a candidate</button>' +
+      '<button class="btn btn-secondary" style="width:100%" data-action="go-candidate">' + ic('layers', 15) + ' Take a test as a candidate</button>' +
     '</div>' +
   '</div>';
 }

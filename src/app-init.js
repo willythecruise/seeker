@@ -79,6 +79,14 @@ function postRender() {
     if (inp) { inp.focus(); const l = inp.value.length; inp.setSelectionRange(l, l); }
     S._focusSearch = null;
   }
+  if (S._focusInput) {
+    const key = S._focusInput;
+    S._focusInput = null;
+    const inp = key.indexOf('sm:') === 0
+      ? document.querySelector('[data-action="sm-search"][data-key="' + key.slice(3) + '"]')
+      : document.getElementById(key);
+    if (inp) { inp.focus(); const l = inp.value.length; inp.setSelectionRange(l, l); }
+  }
   if (S.modal && qDraft) {
     positionSeg('#qDiffSeg', '#qDiffThumb', Math.max(0, ['beginner', 'intermediate', 'advanced'].indexOf(qDraft.diff)));
     positionSeg('#qTypeSeg', '#qTypeThumb', { fill: 5, multi: 1, matching: 2, ordering: 3, mcq: 0, code: 4 }[qDraft.type] || 0);
@@ -543,7 +551,10 @@ function onInput(e) {
       if (!S._smSearch) S._smSearch = {};
       S._smSearch[key] = el.value.toLowerCase();
       const st = SM_STATE[key];
-      if (st && st.rerender) st.rerender();
+      if (st && st.rerender) {
+        S._focusInput = 'sm:' + key;
+        st.rerender();
+      }
     }
     return;
   }

@@ -1111,7 +1111,8 @@ const S = {
   modal: null,
   _pendingTestId: null,
   _focusSearch: null,
-  _smSearch: {}           // searchable multi-select: key -> lowercase query
+  _focusInput: null,        // id of an input to refocus after the next render ('sm:<key>' = sm-search input)
+  _smSearch: {}             // searchable multi-select: key -> lowercase query
 };
 
 /* draft objects for the editors (module-level so every module shares them) */
@@ -1835,7 +1836,7 @@ function vLogin() {
       '</form>' +
       '<div id="bootstrapSlot" class="auth-bootstrap"></div>' +
       '<div class="auth-divider"></div>' +
-      '<button class="btn btn-secondary" style="width:100%" data-action="go-candidate">' + ic('doc', 15) + ' Take a test as a candidate</button>' +
+      '<button class="btn btn-secondary" style="width:100%" data-action="go-candidate">' + ic('layers', 15) + ' Take a test as a candidate</button>' +
     '</div>' +
   '</div>';
 }
@@ -3492,8 +3493,9 @@ async function checkSignupUsername() {
   const u = $('#signupUser');
   if (!u) return;
   const val = u.value.trim().toLowerCase();
-  if (!val) { signupUsername = { checked: '', ok: null, input: val }; render(); return; }
-  if (!/^[a-z0-9._-]{3,24}$/.test(val)) { signupUsername = { checked: val, ok: null, input: val }; render(); return; }
+  const refocus = () => { S._focusInput = 'signupUser'; };
+  if (!val) { signupUsername = { checked: '', ok: null, input: val }; refocus(); render(); return; }
+  if (!/^[a-z0-9._-]{3,24}$/.test(val)) { signupUsername = { checked: val, ok: null, input: val }; refocus(); render(); return; }
   let ok = false;
   try {
     const r = await API.post('/api/signup/check-username', { username: val });
@@ -3502,6 +3504,7 @@ async function checkSignupUsername() {
     ok = null;
   }
   signupUsername = { checked: val, ok, input: val };
+  refocus();
   render();
 }
 
@@ -4832,6 +4835,14 @@ function postRender() {
     if (inp) { inp.focus(); const l = inp.value.length; inp.setSelectionRange(l, l); }
     S._focusSearch = null;
   }
+  if (S._focusInput) {
+    const key = S._focusInput;
+    S._focusInput = null;
+    const inp = key.indexOf('sm:') === 0
+      ? document.querySelector('[data-action="sm-search"][data-key="' + key.slice(3) + '"]')
+      : document.getElementById(key);
+    if (inp) { inp.focus(); const l = inp.value.length; inp.setSelectionRange(l, l); }
+  }
   if (S.modal && qDraft) {
     positionSeg('#qDiffSeg', '#qDiffThumb', Math.max(0, ['beginner', 'intermediate', 'advanced'].indexOf(qDraft.diff)));
     positionSeg('#qTypeSeg', '#qTypeThumb', { fill: 5, multi: 1, matching: 2, ordering: 3, mcq: 0, code: 4 }[qDraft.type] || 0);
@@ -5296,7 +5307,10 @@ function onInput(e) {
       if (!S._smSearch) S._smSearch = {};
       S._smSearch[key] = el.value.toLowerCase();
       const st = SM_STATE[key];
-      if (st && st.rerender) st.rerender();
+      if (st && st.rerender) {
+        S._focusInput = 'sm:' + key;
+        st.rerender();
+      }
     }
     return;
   }

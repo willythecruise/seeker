@@ -170,8 +170,9 @@ async function checkSignupUsername() {
   const u = $('#signupUser');
   if (!u) return;
   const val = u.value.trim().toLowerCase();
-  if (!val) { signupUsername = { checked: '', ok: null, input: val }; render(); return; }
-  if (!/^[a-z0-9._-]{3,24}$/.test(val)) { signupUsername = { checked: val, ok: null, input: val }; render(); return; }
+  const refocus = () => { S._focusInput = 'signupUser'; };
+  if (!val) { signupUsername = { checked: '', ok: null, input: val }; refocus(); render(); return; }
+  if (!/^[a-z0-9._-]{3,24}$/.test(val)) { signupUsername = { checked: val, ok: null, input: val }; refocus(); render(); return; }
   let ok = false;
   try {
     const r = await API.post('/api/signup/check-username', { username: val });
@@ -180,6 +181,7 @@ async function checkSignupUsername() {
     ok = null;
   }
   signupUsername = { checked: val, ok, input: val };
+  refocus();
   render();
 }
 
