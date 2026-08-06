@@ -908,6 +908,7 @@ kbd {
 /* Coding challenges */
 .code-box { border: 1px solid var(--hairline); border-radius: 10px; overflow: hidden; background: var(--surface-2); }
 .code-box-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; background: var(--gray-100); border-bottom: 1px solid var(--hairline-soft); }
+.code-lang-seg { margin-right: auto; }
 .code-editor {
   width: 100%; min-height: 200px; padding: 14px 16px;
   font-family: var(--mono); font-size: 13.5px; line-height: 1.6;

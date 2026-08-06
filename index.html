@@ -921,6 +921,7 @@ kbd {
 /* Coding challenges */
 .code-box { border: 1px solid var(--hairline); border-radius: 10px; overflow: hidden; background: var(--surface-2); }
 .code-box-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; background: var(--gray-100); border-bottom: 1px solid var(--hairline-soft); }
+.code-lang-seg { margin-right: auto; }
 .code-editor {
   width: 100%; min-height: 200px; padding: 14px 16px;
   font-family: var(--mono); font-size: 13.5px; line-height: 1.6;
@@ -1611,12 +1612,13 @@ function reviewBodyHTML(q, v, res) {
       '<div class="review-line" style="margin-top:8px"><span class="lbl">Correct</span><span class="val val-correct">' + esc(correctOrder.map(i => items[i]).join(' → ')) + '</span></div>';
   } else if (q.type === 'code') {
     const passed = res.passed, total = res.total;
+    const ans = v && typeof v === 'object' && !Array.isArray(v) ? v : { code: v || '', lang: (res.lang || q.codeLang || 'javascript') };
     content =
       '<div class="review-line"><span class="lbl">Status</span><span class="val ' + (res.correct === true ? 'val-correct' : res.correct === false ? 'val-wrong' : '') + '">' +
         (res.correct == null ? 'Not submitted' : (res.correct ? 'Passed all tests' : 'Tests failed')) +
         (passed != null && total != null ? ' — ' + passed + '/' + total + ' tests passed' : '') + '</span></div>' +
-      '<div class="review-line"><span class="lbl">Language</span><span class="val">' + esc(q.codeLang || 'javascript') + '</span></div>' +
-      '<pre class="q-code" style="margin-top:8px;white-space:pre-wrap">' + esc(v || '// no code submitted') + '</pre>' +
+      '<div class="review-line"><span class="lbl">Language</span><span class="val">' + esc(ans.lang === 'python' ? 'Python' : 'JavaScript') + '</span></div>' +
+      '<pre class="q-code" style="margin-top:8px;white-space:pre-wrap">' + esc(ans.code || '// no code submitted') + '</pre>' +
       (res.detail && res.detail !== 'All tests passed' && res.correct === false ? '<div class="review-explain">' + ic('info', 14) + ' <span style="vertical-align:1px">' + esc(res.detail) + '</span></div>' : '');
   } else {
     content =
@@ -2028,6 +2030,8 @@ function startTestEditor(id) {
     duration: src ? src.durationMin : 30,
     pass: src ? src.passPct : 70,
     cats: new Set(src ? (src.categories || []) : CATS.map(c => c.id)),
+    types: new Set(src && Array.isArray(src.types) ? src.types : []),
+    tags: new Set(src && Array.isArray(src.tags) ? src.tags : []),
     diffFocus: src ? (src.diffFocus || 'balanced') : 'balanced',
     count: src ? src.count : 20,
     shuffle: src ? src.shuffle !== false : true,
@@ -2041,7 +2045,11 @@ function startTestEditor(id) {
 
 function eligibleQuestions() {
   if (!tDraft || !tDraft.cats.size) return [];
-  return S.questions.filter(q => tDraft.cats.has(q.cat) && (DIFF_WEIGHTS[tDraft.diffFocus] || {})[q.diff]);
+  return S.questions.filter(q =>
+    tDraft.cats.has(q.cat) &&
+    (DIFF_WEIGHTS[tDraft.diffFocus] || {})[q.diff] &&
+    (!tDraft.types.size || tDraft.types.has(q.type))
+  );
 }
 
 function validDraft() {
@@ -2120,6 +2128,15 @@ function vEditor() {
       '</div>' +
       '<div class="field-hint">' + diffFocusLabel(d.diffFocus) + '</div>' +
     '</div>' +
+    '<div class="field">' +
+      '<div class="field-label">Question types <span class="field-help">' + (d.types.size ? d.types.size + ' selected' : 'All types') + '</span></div>' +
+      '<div class="chip-row">' +
+        [['mcq', 'Multiple choice'], ['multi', 'Multi-select'], ['fill', 'Fill in the blank'], ['matching', 'Matching'], ['ordering', 'Ordering'], ['code', 'Coding']].map(t =>
+          '<button class="chip ' + (d.types.has(t[0]) ? 'active' : '') + '" data-action="toggle-type" data-value="' + t[0] + '" aria-pressed="' + d.types.has(t[0]) + '">' +
+            t[1] + ic('check', 12) + '</button>').join('') +
+      '</div>' +
+      '<div class="field-hint">' + (d.types.size ? 'Only the selected question types are drawn.' : 'Every question type may be drawn (default).') + '</div>' +
+    '</div>' +
     '<div class="setting-row">' +
       '<div><div class="setting-label">Number of questions</div><div class="setting-sub">Drawn at random from the matching pool</div></div>' +
       '<div class="stepper"><button data-action="step" data-field="count" data-dir="-1" ' + (d.count <= 1 ? 'disabled' : '') + '>' + ic('minus', 15) + '</button>' +
@@ -2155,6 +2172,8 @@ async function saveTest(mode) {
     durationMin: Math.max(1, d.duration),
     passPct: Math.min(100, Math.max(0, d.pass)),
     categories: Array.from(d.cats),
+    types: Array.from(d.types),
+    tags: Array.from(d.tags),
     diffFocus: d.diffFocus,
     count: d.count,
     shuffle: d.shuffle !== false,
@@ -2265,8 +2284,12 @@ function openQuestionModal(id) {
     pairs: src && src.type === 'matching' ? (src.pairs || []).map(pr => ({ l: pr.l, r: pr.r })) : [{ l: '', r: '' }, { l: '', r: '' }],
     ordered: src && src.type === 'ordering' ? (src.ordered || []).slice() : ['', '', ''],
     codeLang: src && src.type === 'code' ? (src.codeLang || 'javascript') : 'javascript',
+    languages: new Set(src && src.type === 'code' ? (src.languages && src.languages.length ? src.languages : ['javascript', 'python']) : ['javascript', 'python']),
     codeStub: src && src.type === 'code' ? (src.codeStub || '') : '',
-    testCases: src && src.type === 'code' ? (src.testCases || []).map(tc => ({ args: JSON.stringify(tc.args), expected: JSON.stringify(tc.expected), hidden: !!tc.hidden })) : [{ args: '', expected: '', hidden: false }]
+    pyStub: src && src.type === 'code' ? (src.pyStub || '') : '',
+    testCases: src && src.type === 'code' ? (src.testCases || []).map(tc => tc.ops
+      ? { args: JSON.stringify({ ops: tc.ops, values: tc.values, expected: tc.expected }), expected: '', hidden: !!tc.hidden }
+      : { args: JSON.stringify(tc.args), expected: JSON.stringify(tc.expected), hidden: !!tc.hidden }) : [{ args: '', expected: '', hidden: false }]
   };
   openModal({
     title: src ? 'Edit question' : 'Add question',
@@ -2377,18 +2400,29 @@ function orderingOptionsHTML(d) {
 
 function codeOptionsHTML(d) {
   return '<div class="field">' +
-      '<div class="field-label">Language</div>' +
+      '<div class="field-label">Default language</div>' +
       '<select class="input" data-action="code-lang">' +
         '<option value="javascript" ' + (d.codeLang === 'javascript' ? 'selected' : '') + '>JavaScript</option>' +
         '<option value="python" ' + (d.codeLang === 'python' ? 'selected' : '') + '>Python</option>' +
       '</select>' +
     '</div>' +
     '<div class="field">' +
-      '<label class="field-label">Starter code <span class="field-help">Must define function solution(...)</span></label>' +
+      '<div class="field-label">Allowed languages <span class="field-help">Candidates can switch between these</span></div>' +
+      '<div class="chip-row">' +
+        [['javascript', 'JavaScript'], ['python', 'Python']].map(l =>
+          '<button class="chip ' + (d.languages.has(l[0]) ? 'active' : '') + '" data-action="toggle-code-lang" data-value="' + l[0] + '" aria-pressed="' + d.languages.has(l[0]) + '">' + l[1] + ic('check', 12) + '</button>').join('') +
+      '</div>' +
+    '</div>' +
+    '<div class="field">' +
+      '<label class="field-label">Starter code — JavaScript <span class="field-help">Must define function solution(...)</span></label>' +
       '<textarea class="input mono" data-action="code-stub" style="min-height:110px;font-family:var(--mono);font-size:13px">' + esc(d.codeStub) + '</textarea>' +
     '</div>' +
+    '<div class="field">' +
+      '<label class="field-label">Starter code — Python <span class="field-help">Optional; a sensible default is used if blank</span></label>' +
+      '<textarea class="input mono" data-action="py-stub" style="min-height:110px;font-family:var(--mono);font-size:13px">' + esc(d.pyStub) + '</textarea>' +
+    '</div>' +
     '<div class="field" style="margin-bottom:4px">' +
-      '<div class="field-label">Test cases <span class="field-help">args and expected as JSON; first visible case is the sample</span></div>' +
+      '<div class="field-label">Test cases <span class="field-help">args/expected JSON, or {"ops":[...],"values":[...],"expected":[...]} for design problems; use {"$list":[..]}/{"$tree":[..]} markers</span></div>' +
       d.testCases.map((tc, i) =>
         '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
           '<span class="badge b-mcq">#' + (i + 1) + '</span>' +
@@ -2425,7 +2459,14 @@ async function saveQuestion() {
     if (!d.codeStub.trim()) { toast('Provide starter code', 'error'); return; }
     if (!d.testCases.length) { toast('Add at least one test case', 'error'); return; }
     for (const tc of d.testCases) {
-      try { JSON.parse(tc.args || '[]'); JSON.parse(tc.expected); } catch (e) { toast('Test cases must be valid JSON', 'error'); return; }
+      try {
+        const a = JSON.parse(tc.args || '[]');
+        if (a && a.ops) {
+          if (!Array.isArray(a.values) || !Array.isArray(a.expected)) { toast('Design test cases need values and expected arrays', 'error'); return; }
+        } else {
+          JSON.parse(tc.expected);
+        }
+      } catch (e) { toast('Test cases must be valid JSON', 'error'); return; }
     }
   } else {
     if (!d.fillans.split(',').map(s => s.trim()).filter(Boolean).length) { toast('Provide a correct answer', 'error'); return; }
@@ -2442,8 +2483,14 @@ async function saveQuestion() {
     pairs: d.type === 'matching' ? d.pairs.map(pr => ({ l: pr.l.trim(), r: pr.r.trim() })) : undefined,
     ordered: d.type === 'ordering' ? d.ordered.map(x => x.trim()) : undefined,
     codeLang: d.type === 'code' ? d.codeLang : undefined,
+    languages: d.type === 'code' ? Array.from(d.languages) : undefined,
     codeStub: d.type === 'code' ? d.codeStub : undefined,
-    testCases: d.type === 'code' ? d.testCases.map(tc => ({ args: JSON.parse(tc.args || '[]'), expected: JSON.parse(tc.expected), hidden: !!tc.hidden })) : undefined,
+    pyStub: d.type === 'code' ? d.pyStub : undefined,
+    testCases: d.type === 'code' ? d.testCases.map(tc => {
+      const a = JSON.parse(tc.args || '[]');
+      if (a && a.ops) return { ops: a.ops, values: a.values, expected: a.expected, hidden: !!tc.hidden };
+      return { args: a, expected: JSON.parse(tc.expected), hidden: !!tc.hidden };
+    }) : undefined,
     answer: d.type === 'mcq' ? d.answer : d.type === 'multi' ? Array.from(d.multiSel).sort((a, b) => a - b) : d.type === 'code' ? [] : d.fillans.split(',').map(s => s.trim()).filter(Boolean)
   };
   try {
@@ -3542,12 +3589,23 @@ function runnerOrderingHTML(q, val) {
   '</div>';
 }
 
+function codeDefaultStub(q, lang) {
+  if (lang === 'python') return q.pyStub || 'def solution(*args):\n    pass  # write your code here';
+  return q.codeStub || 'function solution() {\n  // write your code here\n}';
+}
+
 function runnerCodeHTML(q, val) {
-  const code = val || q.codeStub || '';
+  const ans = val && typeof val === 'object' && !Array.isArray(val) ? val : { code: val || '', lang: q.codeLang || 'javascript' };
+  const langs = (q.languages && q.languages.length) ? q.languages : [q.codeLang || 'javascript'];
+  const code = ans.code || codeDefaultStub(q, ans.lang);
+  const langSel = langs.length > 1
+    ? '<div class="seg code-lang-seg" id="codeLangSeg">' +
+      langs.map(l => '<button class="seg-item ' + (ans.lang === l ? 'active' : '') + '" data-action="code-lang-pick" data-value="' + l + '">' + (l === 'python' ? 'Python' : 'JavaScript') + '</button>').join('') +
+      '<span class="seg-thumb" id="codeLangThumb"></span></div>'
+    : '<span class="badge b-mcq">' + ic('terminal2', 11) + ' ' + esc(ans.lang === 'python' ? 'Python' : 'JavaScript') + '</span>';
   return '<div class="code-box">' +
-    '<div class="code-box-head">' +
-      '<span class="badge b-mcq">' + ic('terminal2', 11) + ' ' + esc(q.codeLang === 'python' ? 'Python' : 'JavaScript') + '</span>' +
-      '<span style="font-size:12px;color:var(--text-3)">Define <b>solution</b>. Press Run to test against the sample</span>' +
+    '<div class="code-box-head">' + langSel +
+      '<span style="font-size:12px;color:var(--text-3)">Define <b>solution</b> then press Run</span>' +
     '</div>' +
     '<textarea class="code-editor" id="codeEditor" data-action="code" spellcheck="false" autocapitalize="off" autocomplete="off">' + esc(code) + '</textarea>' +
     '<div class="code-box-foot">' +
@@ -3647,15 +3705,37 @@ function moveOrderItem(pos, dir) {
   if (wrap) wrap.outerHTML = runnerOrderingHTML(q, cur);
 }
 
+function currentCodeAnswer(q) {
+  const v = S.live.answers[q.id];
+  return v && typeof v === 'object' && !Array.isArray(v) ? v : { code: v || '', lang: q.codeLang || 'javascript' };
+}
+
 function handleCodeInput(el) {
   if (!S.live) return;
   const q = qOf(S.live.order[S.qIdx]);
   if (!q || q.type !== 'code') return;
-  S.live.answers[q.id] = el.value;
+  const ans = currentCodeAnswer(q);
+  ans.code = el.value;
+  S.live.answers[q.id] = ans;
   $$('#palette .palette-item').forEach(b => { if (+b.dataset.idx === S.qIdx) b.classList.toggle('answered', el.value.trim() !== ''); });
   updateRunnerCounters();
   clearTimeout(_fillTimer);
-  _fillTimer = setTimeout(() => saveAnswerToServer(q.id, el.value), 400);
+  _fillTimer = setTimeout(() => saveAnswerToServer(q.id, ans), 400);
+}
+
+function pickCodeLang(lang) {
+  if (!S.live) return;
+  const q = qOf(S.live.order[S.qIdx]);
+  if (!q || q.type !== 'code') return;
+  const ans = currentCodeAnswer(q);
+  if (ans.lang === lang) return;
+  const prevStub = codeDefaultStub(q, ans.lang);
+  const newStub = codeDefaultStub(q, lang);
+  let code = ans.code;
+  if (!code.trim() || code.trim() === prevStub.trim()) code = newStub;
+  S.live.answers[q.id] = { code: code, lang: lang };
+  render();
+  saveAnswerToServer(q.id, S.live.answers[q.id]);
 }
 
 async function runCode() {
@@ -3664,11 +3744,12 @@ async function runCode() {
   if (!q || q.type !== 'code') return;
   const code = ($('#codeEditor') || {}).value || '';
   if (!code.trim()) { toast('Write code first', 'error'); return; }
+  const ans = currentCodeAnswer(q);
   const out = $('#codeOut');
   if (out) out.textContent = 'Running…';
   try {
     const r = await API.post('/api/candidate/attempts/' + S.live.id + '/run-code', {
-      qid: q.id, code: code, args: q.sample ? q.sample.args : [], expected: q.sample ? q.sample.expected : null
+      qid: q.id, code: code, lang: ans.lang, args: q.sample ? q.sample.args : [], expected: q.sample ? q.sample.expected : null
     });
     if (out) {
       if (r.pass) out.textContent = '✓ Passed — got ' + (r.got !== undefined ? r.got : 'expected');
@@ -3922,7 +4003,16 @@ function postRender() {
     positionSeg('#qTypeSeg', '#qTypeThumb', { fill: 5, multi: 1, matching: 2, ordering: 3, mcq: 0, code: 4 }[qDraft.type] || 0);
   }
   if (S.mode === 'candidate' && S.candView === 'result') animateScore();
-  if (S.mode === 'candidate' && S.candView === 'runner' && S.live) updateTimerUI();
+  if (S.mode === 'candidate' && S.candView === 'runner' && S.live) {
+    const cq = qOf(S.live.order[S.qIdx]);
+    if (cq && cq.type === 'code' && $('#codeLangSeg')) {
+      const langs = (cq.languages && cq.languages.length) ? cq.languages : [cq.codeLang || 'javascript'];
+      const ans = S.live.answers[cq.id];
+      const lang = ans && typeof ans === 'object' ? ans.lang : (cq.codeLang || 'javascript');
+      positionSeg('#codeLangSeg', '#codeLangThumb', Math.max(0, langs.indexOf(lang)));
+    }
+    updateTimerUI();
+  }
 }
 
 /* ── Navigation ────────────────────────────────────────────── */
@@ -3974,6 +4064,13 @@ function toggleCat(cid) {
 }
 
 function setDiffFocus(v) { if (tDraft) { tDraft.diffFocus = v; clampCount(); render(); } }
+
+function toggleType(t) {
+  if (!tDraft) return;
+  if (tDraft.types.has(t)) tDraft.types.delete(t); else tDraft.types.add(t);
+  clampCount();
+  render();
+}
 
 function stepField(field, dir) {
   if (!tDraft) return;
@@ -4153,6 +4250,7 @@ function onClick(e) {
     case 'step': stepField(el.dataset.field, +el.dataset.dir); break;
     case 'toggle-cat': toggleCat(val); break;
     case 'set-diff': setDiffFocus(val); break;
+    case 'toggle-type': toggleType(val); break;
     case 'save-test': saveTest(el.dataset.mode); break;
 
     /* console: questions */
@@ -4205,6 +4303,16 @@ function onClick(e) {
       break;
     case 'code-stub':
       if (qDraft) { qDraft.codeStub = el.value; }
+      break;
+    case 'py-stub':
+      if (qDraft) { qDraft.pyStub = el.value; }
+      break;
+    case 'toggle-code-lang':
+      if (qDraft) {
+        if (qDraft.languages.has(val)) qDraft.languages.delete(val); else qDraft.languages.add(val);
+        if (!qDraft.languages.size) qDraft.languages.add(qDraft.codeLang || 'javascript');
+        rerenderQuestionModal();
+      }
       break;
     case 'tc-args':
       if (qDraft) { qDraft.testCases[+el.dataset.i].args = el.value; }
@@ -4260,6 +4368,7 @@ function onClick(e) {
     case 'match': handleMatchSelect(+el.dataset.i, el.value); break;
     case 'order-move': moveOrderItem(+el.dataset.pos, +el.dataset.dir); break;
     case 'run-code': runCode(); break;
+    case 'code-lang-pick': pickCodeLang(val); break;
     case 'flag': toggleFlag(); break;
     case 'prev-q': navQ(-1); break;
     case 'next-q': navQ(1); break;
@@ -4303,12 +4412,13 @@ function onInput(e) {
     render();
     return;
   }
-  if (el.dataset && (el.dataset.action === 'pair-l' || el.dataset.action === 'pair-r' || el.dataset.action === 'order-item' || el.dataset.action === 'code-stub' || el.dataset.action === 'tc-args' || el.dataset.action === 'tc-expected')) {
+  if (el.dataset && (el.dataset.action === 'pair-l' || el.dataset.action === 'pair-r' || el.dataset.action === 'order-item' || el.dataset.action === 'code-stub' || el.dataset.action === 'py-stub' || el.dataset.action === 'tc-args' || el.dataset.action === 'tc-expected')) {
     if (!qDraft) return;
     if (el.dataset.action === 'pair-l') qDraft.pairs[+el.dataset.i].l = el.value;
     else if (el.dataset.action === 'pair-r') qDraft.pairs[+el.dataset.i].r = el.value;
     else if (el.dataset.action === 'order-item') qDraft.ordered[+el.dataset.i] = el.value;
     else if (el.dataset.action === 'code-stub') qDraft.codeStub = el.value;
+    else if (el.dataset.action === 'py-stub') qDraft.pyStub = el.value;
     else if (el.dataset.action === 'tc-args') qDraft.testCases[+el.dataset.i].args = el.value;
     else qDraft.testCases[+el.dataset.i].expected = el.value;
     return;

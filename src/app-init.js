@@ -82,7 +82,16 @@ function postRender() {
     positionSeg('#qTypeSeg', '#qTypeThumb', { fill: 5, multi: 1, matching: 2, ordering: 3, mcq: 0, code: 4 }[qDraft.type] || 0);
   }
   if (S.mode === 'candidate' && S.candView === 'result') animateScore();
-  if (S.mode === 'candidate' && S.candView === 'runner' && S.live) updateTimerUI();
+  if (S.mode === 'candidate' && S.candView === 'runner' && S.live) {
+    const cq = qOf(S.live.order[S.qIdx]);
+    if (cq && cq.type === 'code' && $('#codeLangSeg')) {
+      const langs = (cq.languages && cq.languages.length) ? cq.languages : [cq.codeLang || 'javascript'];
+      const ans = S.live.answers[cq.id];
+      const lang = ans && typeof ans === 'object' ? ans.lang : (cq.codeLang || 'javascript');
+      positionSeg('#codeLangSeg', '#codeLangThumb', Math.max(0, langs.indexOf(lang)));
+    }
+    updateTimerUI();
+  }
 }
 
 /* ── Navigation ────────────────────────────────────────────── */
@@ -134,6 +143,13 @@ function toggleCat(cid) {
 }
 
 function setDiffFocus(v) { if (tDraft) { tDraft.diffFocus = v; clampCount(); render(); } }
+
+function toggleType(t) {
+  if (!tDraft) return;
+  if (tDraft.types.has(t)) tDraft.types.delete(t); else tDraft.types.add(t);
+  clampCount();
+  render();
+}
 
 function stepField(field, dir) {
   if (!tDraft) return;
@@ -313,6 +329,7 @@ function onClick(e) {
     case 'step': stepField(el.dataset.field, +el.dataset.dir); break;
     case 'toggle-cat': toggleCat(val); break;
     case 'set-diff': setDiffFocus(val); break;
+    case 'toggle-type': toggleType(val); break;
     case 'save-test': saveTest(el.dataset.mode); break;
 
     /* console: questions */
@@ -365,6 +382,16 @@ function onClick(e) {
       break;
     case 'code-stub':
       if (qDraft) { qDraft.codeStub = el.value; }
+      break;
+    case 'py-stub':
+      if (qDraft) { qDraft.pyStub = el.value; }
+      break;
+    case 'toggle-code-lang':
+      if (qDraft) {
+        if (qDraft.languages.has(val)) qDraft.languages.delete(val); else qDraft.languages.add(val);
+        if (!qDraft.languages.size) qDraft.languages.add(qDraft.codeLang || 'javascript');
+        rerenderQuestionModal();
+      }
       break;
     case 'tc-args':
       if (qDraft) { qDraft.testCases[+el.dataset.i].args = el.value; }
@@ -420,6 +447,7 @@ function onClick(e) {
     case 'match': handleMatchSelect(+el.dataset.i, el.value); break;
     case 'order-move': moveOrderItem(+el.dataset.pos, +el.dataset.dir); break;
     case 'run-code': runCode(); break;
+    case 'code-lang-pick': pickCodeLang(val); break;
     case 'flag': toggleFlag(); break;
     case 'prev-q': navQ(-1); break;
     case 'next-q': navQ(1); break;
@@ -463,12 +491,13 @@ function onInput(e) {
     render();
     return;
   }
-  if (el.dataset && (el.dataset.action === 'pair-l' || el.dataset.action === 'pair-r' || el.dataset.action === 'order-item' || el.dataset.action === 'code-stub' || el.dataset.action === 'tc-args' || el.dataset.action === 'tc-expected')) {
+  if (el.dataset && (el.dataset.action === 'pair-l' || el.dataset.action === 'pair-r' || el.dataset.action === 'order-item' || el.dataset.action === 'code-stub' || el.dataset.action === 'py-stub' || el.dataset.action === 'tc-args' || el.dataset.action === 'tc-expected')) {
     if (!qDraft) return;
     if (el.dataset.action === 'pair-l') qDraft.pairs[+el.dataset.i].l = el.value;
     else if (el.dataset.action === 'pair-r') qDraft.pairs[+el.dataset.i].r = el.value;
     else if (el.dataset.action === 'order-item') qDraft.ordered[+el.dataset.i] = el.value;
     else if (el.dataset.action === 'code-stub') qDraft.codeStub = el.value;
+    else if (el.dataset.action === 'py-stub') qDraft.pyStub = el.value;
     else if (el.dataset.action === 'tc-args') qDraft.testCases[+el.dataset.i].args = el.value;
     else qDraft.testCases[+el.dataset.i].expected = el.value;
     return;

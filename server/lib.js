@@ -65,7 +65,10 @@ function newToken() { return crypto.randomBytes(32).toString('hex'); }
 async function sampleAttempt(test, Question) {
   const w = DIFF_WEIGHTS[test.diffFocus] || DIFF_WEIGHTS.balanced;
   const diffs = Object.keys(w).filter(k => w[k] > 0);
-  const pool = await Question.find({ cat: { $in: test.categories }, diff: { $in: diffs } });
+  const qf = { cat: { $in: test.categories }, diff: { $in: diffs } };
+  if (Array.isArray(test.types) && test.types.length) qf.type = { $in: test.types };
+  if (Array.isArray(test.tags) && test.tags.length) qf.tags = { $in: test.tags };
+  const pool = await Question.find(qf);
   const picked = shuffle(pool).slice(0, Math.min(test.count, pool.length));
   const order = picked.map(q => q.qid);
   const optionOrder = {};
@@ -98,7 +101,9 @@ function sanitizeQuestion(q, permutation, includeAnswer) {
   }
   if (q.type === 'code') {
     out.codeLang = q.codeLang || 'javascript';
+    out.languages = (q.languages && q.languages.length) ? q.languages : [q.codeLang || 'javascript'];
     out.codeStub = q.codeStub || '';
+    if (q.pyStub) out.pyStub = q.pyStub;
     // expose only the first visible case as a sample for self-testing
     const cases = Array.isArray(q.testCases) ? q.testCases : [];
     const sample = cases.find(tc => !tc.hidden) || cases[0];
@@ -135,9 +140,12 @@ function gradeAttempt(attempt, questionsById) {
     let isCorrect = null;
     let detail = null;
     if (q && q.type === 'code') {
-      const g = gradeCode(raw, q.testCases, q.codeLang || 'javascript');
+      // answers may be a plain string (legacy) or { code, lang }
+      let code = raw, lang = q.codeLang || 'javascript';
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) { code = raw.code; lang = raw.lang || q.codeLang || 'javascript'; }
+      const g = gradeCode(code, q.testCases, lang);
       isCorrect = g.correct;
-      detail = { passed: g.passed, total: g.total, info: g.detail };
+      detail = { passed: g.passed, total: g.total, info: g.detail, lang };
     } else {
       isCorrect = q ? gradeAnswer(q, value) : null;
     }

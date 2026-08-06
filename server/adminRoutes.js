@@ -70,9 +70,12 @@ router.post('/questions', async (req, res) => {
     qid, cat: b.cat, diff: b.diff, type: b.type, q: b.q, code: b.code || '',
     options: (b.type === 'mcq' || b.type === 'multi') ? b.options : b.type === 'matching' ? (b.options && b.options.length ? b.options : b.pairs.map(pr => pr.r)) : undefined,
     pairs: b.type === 'matching' ? b.pairs : undefined,
+    tags: Array.isArray(b.tags) && b.tags.length ? b.tags : undefined,
     ordered: b.type === 'ordering' ? b.ordered : undefined,
     codeLang: b.type === 'code' ? (b.codeLang || 'javascript') : undefined,
+    languages: b.type === 'code' ? (Array.isArray(b.languages) && b.languages.length ? b.languages : undefined) : undefined,
     codeStub: b.type === 'code' ? (b.codeStub || '') : undefined,
+    pyStub: b.type === 'code' ? (b.pyStub || '') : undefined,
     testCases: b.type === 'code' ? b.testCases : undefined,
     answer: b.type === 'matching' ? b.pairs.map((pr, i) => i) : b.type === 'code' ? [] : b.answer,
     explain: b.explain || '', source: 'custom'
@@ -89,7 +92,14 @@ router.put('/questions/:id', async (req, res) => {
   if (b.type === 'mcq' || b.type === 'multi') { q.options = b.options; q.answer = b.answer; }
   else if (b.type === 'matching') { q.options = b.options && b.options.length ? b.options : b.pairs.map(pr => pr.r); q.pairs = b.pairs; q.answer = b.pairs.map((pr, i) => i); }
   else if (b.type === 'ordering') { q.ordered = b.ordered; q.answer = b.ordered.map((_, i) => i); }
-  else if (b.type === 'code') { q.codeLang = b.codeLang || 'javascript'; q.codeStub = b.codeStub || ''; q.testCases = b.testCases; q.answer = []; }
+  else if (b.type === 'code') {
+    q.codeLang = b.codeLang || 'javascript';
+    q.languages = (Array.isArray(b.languages) && b.languages.length) ? b.languages : undefined;
+    q.codeStub = b.codeStub || '';
+    q.pyStub = b.pyStub || '';
+    q.testCases = b.testCases;
+    q.answer = [];
+  }
   else { q.options = undefined; q.answer = Array.isArray(b.answer) ? b.answer : [String(b.answer)]; }
   await q.save();
   res.json(q);
@@ -120,6 +130,8 @@ router.post('/tests', async (req, res) => {
     durationMin: Math.min(240, Math.max(1, Number(b.durationMin) || 30)),
     passPct: Math.min(100, Math.max(0, Number(b.passPct) || 70)),
     categories: b.categories,
+    types: Array.isArray(b.types) && b.types.length ? b.types : undefined,
+    tags: Array.isArray(b.tags) && b.tags.length ? b.tags : undefined,
     diffFocus: b.diffFocus || 'balanced',
     count: Math.max(1, Number(b.count) || 20),
     shuffle: b.shuffle !== false,
@@ -141,6 +153,8 @@ router.put('/tests/:id', async (req, res) => {
   t.durationMin = Math.min(240, Math.max(1, Number(b.durationMin) || 30));
   t.passPct = Math.min(100, Math.max(0, Number(b.passPct) || 70));
   t.categories = b.categories;
+  t.types = Array.isArray(b.types) && b.types.length ? b.types : undefined;
+  t.tags = Array.isArray(b.tags) && b.tags.length ? b.tags : undefined;
   t.diffFocus = b.diffFocus || 'balanced';
   t.count = Math.max(1, Number(b.count) || 20);
   t.shuffle = b.shuffle !== false;

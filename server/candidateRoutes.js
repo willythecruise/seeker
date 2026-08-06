@@ -146,12 +146,14 @@ router.post('/attempts/:id/answer', async (req, res) => {
 router.post('/attempts/:id/run-code', async (req, res) => {
   const att = await Attempt.findById(req.params.id);
   if (!owns(att, req.candidate)) return res.status(404).json({ error: 'Attempt not found' });
-  const { qid, code, args, expected } = req.body || {};
+  const { qid, code, lang, args, expected } = req.body || {};
   if (!att.order.includes(qid)) return res.status(400).json({ error: 'Unknown question' });
   const q = await Question.findOne({ qid });
   if (!q || q.type !== 'code') return res.status(400).json({ error: 'Not a coding question' });
   if (code === undefined || code === null || !String(code).trim()) return res.status(400).json({ error: 'No code to run' });
-  const r = runCase(q.codeLang || 'javascript', code, args !== undefined ? args : [], expected !== undefined ? expected : null);
+  const allowed = (q.languages && q.languages.length) ? q.languages : [q.codeLang || 'javascript'];
+  const language = allowed.includes(lang) ? lang : (q.codeLang || 'javascript');
+  const r = runCase(language, code, args !== undefined ? args : [], expected !== undefined ? expected : null);
   res.json(r);
 });
 

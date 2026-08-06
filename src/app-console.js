@@ -340,6 +340,8 @@ function startTestEditor(id) {
     duration: src ? src.durationMin : 30,
     pass: src ? src.passPct : 70,
     cats: new Set(src ? (src.categories || []) : CATS.map(c => c.id)),
+    types: new Set(src && Array.isArray(src.types) ? src.types : []),
+    tags: new Set(src && Array.isArray(src.tags) ? src.tags : []),
     diffFocus: src ? (src.diffFocus || 'balanced') : 'balanced',
     count: src ? src.count : 20,
     shuffle: src ? src.shuffle !== false : true,
@@ -353,7 +355,11 @@ function startTestEditor(id) {
 
 function eligibleQuestions() {
   if (!tDraft || !tDraft.cats.size) return [];
-  return S.questions.filter(q => tDraft.cats.has(q.cat) && (DIFF_WEIGHTS[tDraft.diffFocus] || {})[q.diff]);
+  return S.questions.filter(q =>
+    tDraft.cats.has(q.cat) &&
+    (DIFF_WEIGHTS[tDraft.diffFocus] || {})[q.diff] &&
+    (!tDraft.types.size || tDraft.types.has(q.type))
+  );
 }
 
 function validDraft() {
@@ -432,6 +438,15 @@ function vEditor() {
       '</div>' +
       '<div class="field-hint">' + diffFocusLabel(d.diffFocus) + '</div>' +
     '</div>' +
+    '<div class="field">' +
+      '<div class="field-label">Question types <span class="field-help">' + (d.types.size ? d.types.size + ' selected' : 'All types') + '</span></div>' +
+      '<div class="chip-row">' +
+        [['mcq', 'Multiple choice'], ['multi', 'Multi-select'], ['fill', 'Fill in the blank'], ['matching', 'Matching'], ['ordering', 'Ordering'], ['code', 'Coding']].map(t =>
+          '<button class="chip ' + (d.types.has(t[0]) ? 'active' : '') + '" data-action="toggle-type" data-value="' + t[0] + '" aria-pressed="' + d.types.has(t[0]) + '">' +
+            t[1] + ic('check', 12) + '</button>').join('') +
+      '</div>' +
+      '<div class="field-hint">' + (d.types.size ? 'Only the selected question types are drawn.' : 'Every question type may be drawn (default).') + '</div>' +
+    '</div>' +
     '<div class="setting-row">' +
       '<div><div class="setting-label">Number of questions</div><div class="setting-sub">Drawn at random from the matching pool</div></div>' +
       '<div class="stepper"><button data-action="step" data-field="count" data-dir="-1" ' + (d.count <= 1 ? 'disabled' : '') + '>' + ic('minus', 15) + '</button>' +
@@ -467,6 +482,8 @@ async function saveTest(mode) {
     durationMin: Math.max(1, d.duration),
     passPct: Math.min(100, Math.max(0, d.pass)),
     categories: Array.from(d.cats),
+    types: Array.from(d.types),
+    tags: Array.from(d.tags),
     diffFocus: d.diffFocus,
     count: d.count,
     shuffle: d.shuffle !== false,
@@ -577,8 +594,12 @@ function openQuestionModal(id) {
     pairs: src && src.type === 'matching' ? (src.pairs || []).map(pr => ({ l: pr.l, r: pr.r })) : [{ l: '', r: '' }, { l: '', r: '' }],
     ordered: src && src.type === 'ordering' ? (src.ordered || []).slice() : ['', '', ''],
     codeLang: src && src.type === 'code' ? (src.codeLang || 'javascript') : 'javascript',
+    languages: new Set(src && src.type === 'code' ? (src.languages && src.languages.length ? src.languages : ['javascript', 'python']) : ['javascript', 'python']),
     codeStub: src && src.type === 'code' ? (src.codeStub || '') : '',
-    testCases: src && src.type === 'code' ? (src.testCases || []).map(tc => ({ args: JSON.stringify(tc.args), expected: JSON.stringify(tc.expected), hidden: !!tc.hidden })) : [{ args: '', expected: '', hidden: false }]
+    pyStub: src && src.type === 'code' ? (src.pyStub || '') : '',
+    testCases: src && src.type === 'code' ? (src.testCases || []).map(tc => tc.ops
+      ? { args: JSON.stringify({ ops: tc.ops, values: tc.values, expected: tc.expected }), expected: '', hidden: !!tc.hidden }
+      : { args: JSON.stringify(tc.args), expected: JSON.stringify(tc.expected), hidden: !!tc.hidden }) : [{ args: '', expected: '', hidden: false }]
   };
   openModal({
     title: src ? 'Edit question' : 'Add question',
@@ -689,18 +710,29 @@ function orderingOptionsHTML(d) {
 
 function codeOptionsHTML(d) {
   return '<div class="field">' +
-      '<div class="field-label">Language</div>' +
+      '<div class="field-label">Default language</div>' +
       '<select class="input" data-action="code-lang">' +
         '<option value="javascript" ' + (d.codeLang === 'javascript' ? 'selected' : '') + '>JavaScript</option>' +
         '<option value="python" ' + (d.codeLang === 'python' ? 'selected' : '') + '>Python</option>' +
       '</select>' +
     '</div>' +
     '<div class="field">' +
-      '<label class="field-label">Starter code <span class="field-help">Must define function solution(...)</span></label>' +
+      '<div class="field-label">Allowed languages <span class="field-help">Candidates can switch between these</span></div>' +
+      '<div class="chip-row">' +
+        [['javascript', 'JavaScript'], ['python', 'Python']].map(l =>
+          '<button class="chip ' + (d.languages.has(l[0]) ? 'active' : '') + '" data-action="toggle-code-lang" data-value="' + l[0] + '" aria-pressed="' + d.languages.has(l[0]) + '">' + l[1] + ic('check', 12) + '</button>').join('') +
+      '</div>' +
+    '</div>' +
+    '<div class="field">' +
+      '<label class="field-label">Starter code — JavaScript <span class="field-help">Must define function solution(...)</span></label>' +
       '<textarea class="input mono" data-action="code-stub" style="min-height:110px;font-family:var(--mono);font-size:13px">' + esc(d.codeStub) + '</textarea>' +
     '</div>' +
+    '<div class="field">' +
+      '<label class="field-label">Starter code — Python <span class="field-help">Optional; a sensible default is used if blank</span></label>' +
+      '<textarea class="input mono" data-action="py-stub" style="min-height:110px;font-family:var(--mono);font-size:13px">' + esc(d.pyStub) + '</textarea>' +
+    '</div>' +
     '<div class="field" style="margin-bottom:4px">' +
-      '<div class="field-label">Test cases <span class="field-help">args and expected as JSON; first visible case is the sample</span></div>' +
+      '<div class="field-label">Test cases <span class="field-help">args/expected JSON, or {"ops":[...],"values":[...],"expected":[...]} for design problems; use {"$list":[..]}/{"$tree":[..]} markers</span></div>' +
       d.testCases.map((tc, i) =>
         '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
           '<span class="badge b-mcq">#' + (i + 1) + '</span>' +
@@ -737,7 +769,14 @@ async function saveQuestion() {
     if (!d.codeStub.trim()) { toast('Provide starter code', 'error'); return; }
     if (!d.testCases.length) { toast('Add at least one test case', 'error'); return; }
     for (const tc of d.testCases) {
-      try { JSON.parse(tc.args || '[]'); JSON.parse(tc.expected); } catch (e) { toast('Test cases must be valid JSON', 'error'); return; }
+      try {
+        const a = JSON.parse(tc.args || '[]');
+        if (a && a.ops) {
+          if (!Array.isArray(a.values) || !Array.isArray(a.expected)) { toast('Design test cases need values and expected arrays', 'error'); return; }
+        } else {
+          JSON.parse(tc.expected);
+        }
+      } catch (e) { toast('Test cases must be valid JSON', 'error'); return; }
     }
   } else {
     if (!d.fillans.split(',').map(s => s.trim()).filter(Boolean).length) { toast('Provide a correct answer', 'error'); return; }
@@ -754,8 +793,14 @@ async function saveQuestion() {
     pairs: d.type === 'matching' ? d.pairs.map(pr => ({ l: pr.l.trim(), r: pr.r.trim() })) : undefined,
     ordered: d.type === 'ordering' ? d.ordered.map(x => x.trim()) : undefined,
     codeLang: d.type === 'code' ? d.codeLang : undefined,
+    languages: d.type === 'code' ? Array.from(d.languages) : undefined,
     codeStub: d.type === 'code' ? d.codeStub : undefined,
-    testCases: d.type === 'code' ? d.testCases.map(tc => ({ args: JSON.parse(tc.args || '[]'), expected: JSON.parse(tc.expected), hidden: !!tc.hidden })) : undefined,
+    pyStub: d.type === 'code' ? d.pyStub : undefined,
+    testCases: d.type === 'code' ? d.testCases.map(tc => {
+      const a = JSON.parse(tc.args || '[]');
+      if (a && a.ops) return { ops: a.ops, values: a.values, expected: a.expected, hidden: !!tc.hidden };
+      return { args: a, expected: JSON.parse(tc.expected), hidden: !!tc.hidden };
+    }) : undefined,
     answer: d.type === 'mcq' ? d.answer : d.type === 'multi' ? Array.from(d.multiSel).sort((a, b) => a - b) : d.type === 'code' ? [] : d.fillans.split(',').map(s => s.trim()).filter(Boolean)
   };
   try {

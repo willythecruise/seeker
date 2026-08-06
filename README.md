@@ -25,7 +25,7 @@ you can try the candidate flow immediately.
   - **Difficulty focus**: Beginner / Balanced / Advanced weighting
   - **Question count** (clamped to the matching pool), pass mark, auto-submit at zero,
     reveal-answers toggle, question shuffle
-- **Question bank** — 60 built-in questions; search, filter by category/difficulty/type;
+- **Question bank** — 1028 built-in questions; search, filter by category/difficulty/type;
   add, edit, delete questions; reset to defaults.
 - **Results** — every attempt with score, pass/fail, time used, per-category breakdown,
   and a full answer review with explanations.
@@ -40,26 +40,26 @@ you can try the candidate flow immediately.
 - Instant results: score ring, verdict, time used, per-category breakdown, and a
   per-question review with correct answers and explanations.
 
-## Question bank (802 questions)
+## Question bank (1028 questions)
 
 | Category                     | Count | Category                     | Count |
 |------------------------------|-------|------------------------------|-------|
-| System Design                | 30    | C#                           | 28    |
-| Frontend (React / Next.js)   | 64    | Java                         | 28    |
-| Backend (Node.js)            | 29    | Python                       | 28    |
-| Database — MongoDB           | 14    | .NET / ASP.NET Core          | 75    |
-| Database — PostgreSQL        | 29    | Spring Boot                  | 75    |
-| General Coding Practice      | 23    | Django                       | 62    |
-| DevOps                       | 76    | TypeScript                   | 57    |
-| Solutions Architecture       | 11    | Go                           | 59    |
-|                              |       | Rust                         | 43    |
-|                              |       | **Data Structures & Algorithms** | **36** |
+| System Design                | 32    | C#                           | 28    |
+| Frontend (React / Next.js)   | 66    | Java                         | 29    |
+| Backend (Node.js)            | 31    | Python                       | 29    |
+| Database — MongoDB           | 16    | .NET / ASP.NET Core          | 75    |
+| Database — PostgreSQL        | 30    | Spring Boot                  | 75    |
+| General Coding Practice      | 24    | Django                       | 62    |
+| DevOps                       | 81    | TypeScript                   | 58    |
+| Solutions Architecture       | 13    | Go                           | 60    |
+| Computer Science             | 29    | Rust                         | 44    |
+| Backend Engineering          | 12    | **Data Structures & Algorithms** | **262** |
 
 **Six question types** (TestGorilla-style):
-- **Multiple choice** (616) · **Fill in the blank** (105) · **Multi-select / choose-all-that-apply** (16) · **Matching pairs** (26) · **Ordering / ranking** (17) · **Write-code challenges** (22)
+- **Multiple choice** (663) · **Fill in the blank** (112) · **Multi-select / choose-all-that-apply** (16) · **Matching pairs** (38) · **Ordering / ranking** (30) · **Write-code challenges** (169)
 
 Every question has an explanation shown in the answer review; 14 include code snippets.
-Difficulty: 103 beginner / 279 intermediate / 420 advanced.
+Difficulty: 151 beginner / 409 intermediate / 468 advanced.
 
 The bank covers classic interview topics plus deep senior-level material drawn from real
 engineering conversations across **19 categories** — including full-depth banks for C#, Java,
@@ -68,17 +68,59 @@ language fundamentals through advanced framework and concurrency internals.
 
 ### Write-code challenges
 Coding questions present a prompt + starter code (defining `solution(...)`) in **JavaScript
-or Python**. Candidates edit the code, press **Run** to self-test against a sample, and
-submit — the server executes the code in a sandboxed VM (JS) or subprocess (Python) against
-**hidden test cases**, and grading reports `passed/total` per question in the review.
+or Python**. **Every coding question accepts both languages** — candidates pick their
+language with a toggle in the editor and get a per-language starter stub. Press **Run** to
+self-test against a sample, then submit — the server executes the code in a sandboxed VM
+(JS) or subprocess (Python) against **hidden test cases**, and grading reports
+`passed/total` per question in the review.
 
-### DSA suite
-A dedicated `Data Structures & Algorithms` category with **22 write-code challenges**
-(two-sum, valid parentheses, Kadane, binary search, sliding window, missing number, XOR
-single-number, majority voting, Fibonacci, plus-one, max-profit, move-zeroes, and more),
-**10 theory questions** (stacks, queues, hash maps, heaps, Dijkstra, traversal order,
-complexities), and **4 matching/ordering** items (structure→use-case, algorithm→complexity,
-binary-search steps, quicksort steps).
+### Per-test question-type filter
+Tests can now restrict **which question types** they draw from (MCQ, multi-select, fill,
+matching, ordering, code) — e.g., a coding test samples only `code` questions, a theory
+sprint only `mcq/multi/fill`. Set it in the test editor ("Question types" chips).
+
+### DSA suite (262 questions)
+- **169 write-code challenges** in JavaScript + Python — **LeetCode-style**: real `ListNode`/`TreeNode`
+  classes (via `$list`/`$tree` input markers), classic `solution(...)` functions, and **design
+  problems** (LRU Cache, Min Stack, Queue using Stacks, TimeMap, MedianFinder) graded through
+  method-call sequences. Includes genuinely hard problems (median of two sorted arrays, Dijkstra,
+  binary-tree max path sum, alien dictionary, trapping rain water, merge k sorted lists, reverse
+  nodes in k-group, largest rectangle in histogram, candy, word ladder, pacific-atlantic, and more)
+  alongside the medium classics — arrays & strings (two-sum, anagram,
+  longest substring, product-except-self, group anagrams, spiral matrix, rotate array,
+  jump game, valid palindrome, subsequence, longest consecutive, missing positive, 3sum,
+  min window substring, longest repeating replacement, RPN, add binary, excel column),
+  graphs (number of islands, max area island, provinces, course schedule I & II, rotting
+  oranges, flood fill, word search, network delay time — Dijkstra, shortest path binary
+  matrix), trees (max depth, invert, validate BST, level order, zigzag, diameter,
+  symmetric, LCA in BST, path sum, right side view, balanced, binary tree paths, min
+  depth, kth smallest — encoded as `[value, left, right]`), linked lists (reverse, merge,
+  middle, remove duplicates — encoded as `[value, next]`), DP (LCS, edit distance, LPS,
+  house robber I & II & III, coin change I & II, unique paths I & II, decode ways,
+  min-cost stairs, LIS, partition equal subset, min path sum, word break, target sum,
+  palindromic substrings, longest valid parentheses, unique BSTs, longest increasing path,
+  maximal square), stacks (daily temperatures, next greater, valid parentheses), heaps
+  (kth largest, top-k frequent), intervals (merge), greedy (container with most water,
+  gas station, task scheduler, jump game II), two pointers (sort colors, max product
+  subarray, trap rain water), bit manipulation (counting bits, popcount, power of two,
+  reverse bits, sum without +/-, find duplicates, single number III), matrices (set
+  zeroes, rotate image, sliding window max), math (sqrt, happy number), binary search
+  (insert position, peak index, rotated search)
+- **52 theory questions** — BFS/DFS, Bellman-Ford, Kruskal/Prim, master theorem,
+  Floyd-Warshall, DP paradigms, min stack, union-find, LRU cache, tries, counting/radix
+  sort, heap property, complete trees, in-place, adjacency lists, backtracking, stability,
+  amortized analysis, recursion, complexity, **NP-completeness** (P vs NP, SAT, reduction),
+  **union-find inverse-Ackermann**, **LCS complexity**, **trapping-rain-water O(1) space**
+- **20 matching/ordering** — algorithm→paradigm, structure→property, problem→technique,
+  operation→complexity, DP state dimensions, sort→complexity, traversal→order, **optimal
+  complexity per problem**, **complexity classes (P/NP/NP-hard/NP-complete)**; Kahn's,
+  Dijkstra, BFS, merge sort, in-order, DP phases, backtracking, heapify, sliding-window,
+  two-pointer-merge, **LRU get**, and **median-of-two-arrays** as ordering steps
+
+### DSA tags & targeted tests
+Code questions can be tagged (`hard`, `design`) and tests can filter by tag — so the hard
+tests draw **only** genuinely hard problems, and the design test draws **only** the five
+data-structure implementation problems.
 
 The bank covers classic interview topics plus deep senior-level material drawn from real
 engineering conversations:
@@ -131,7 +173,7 @@ engineering conversations:
   Concurrency, MSK, Cluster Autoscaler, StackSets, CDK, SSE-KMS, NAT Gateway, VPC,
   Logs Insights, Beanstalk, lifecycle policies, X-Ray, ElastiCache, least privilege
 
-## Seeded demo tests (24)
+## Seeded demo tests (52)
 
 On first run (or via `node tools/seed-demo-tests.js`) the app seeds a ready-made test catalog:
 
@@ -143,11 +185,15 @@ On first run (or via `node tools/seed-demo-tests.js`) the app seeds a ready-made
 
 **Skills sampler (published)** — Skills Sampler — All Question Types (one of each: MCQ, multi-select, fill, matching, ordering)
 
-**Data structures & algorithms (published)** — Data Structures & Algorithms — Fundamentals · DSA Coding Challenge (graded by hidden test cases)
+**Data structures & algorithms (published)** — Data Structures & Algorithms — Fundamentals · DSA Coding Challenge (code-only) · DSA — Advanced Coding Challenge (code-only) · **DSA — Hard Problems** (hard-only) · **DSA — LeetCode Hard** (hard-only) · **DSA — Design & Data Structures** (design-only) · DSA — Coding Sprint (code-only) · DSA — Theory Sprint (mcq/multi/fill only) · DSA — Mixed Formats · DSA — Trees, Graphs & DP Focus
 
-**Drafts (11)** — Frontend Performance & Internals · Database Design & Query Optimization · AWS Services & Architecture Quiz · React State Management Special · Polyglot Backend Gauntlet · Advanced .NET & C# · Advanced Spring Boot & Java · Advanced TypeScript Patterns · Advanced Go & Concurrency · Matching & Ordering Challenge · DSA Marathon
+**Drafts (13)** — Frontend Performance & Internals · Database Design & Query Optimization · AWS Services & Architecture Quiz · React State Management Special · Polyglot Backend Gauntlet · Advanced .NET & C# · Advanced Spring Boot & Java · Advanced TypeScript Patterns · Advanced Go & Concurrency · Matching & Ordering Challenge · DSA Marathon · DSA Marathon II · DSA — LeetCode Hard (Draft)
 
 Each defines its own duration, pass mark, difficulty focus, question count, and category set — edit or unpublish any of them from the admin console.
+
+**Note:** the general (non-DSA) tests were hardened — shorter durations, higher difficulty
+focus (advanced-weighted pools), and slightly higher pass marks — so every test is now a
+challenge regardless of level.
 
 ## Project structure
 
@@ -162,7 +208,7 @@ orion/
 │   ├── shell.html
 │   ├── styles.css      ← design system
 │   ├── questions.js    ← built-in question bank (assembled from part-questions-*.js)
-│   ├── part-questions-1..23.js
+│   ├── part-questions-1..27.js
 │   └── app-core.js / app-api.js / app-console.js / app-candidate.js / app-init.js
 ├── server/             ← backend source
 │   ├── models.js       ← Mongoose schemas (Admin, Session, Question, Test, Attempt)
@@ -175,7 +221,7 @@ orion/
 └── tools/
     ├── build.py        ← python3 tools/build.py → regenerates index.html + seed data
     ├── test-e2e.js     ← end-to-end suite (drives the UI against the live server + MongoDB)
-    ├── seed-demo-tests.js ← idempotently seed the 15 demo tests
+    ├── seed-demo-tests.js ← idempotently seed the 52 demo tests
     ├── capture.js      ← headless-Chrome screenshot walkthrough
     └── shots/          ← the generated screenshots
 ```
@@ -183,7 +229,7 @@ orion/
 ## Run it
 
 1. `npm install`
-2. `npm start` — connects to MongoDB (URI in `.env`), seeds 146 built-in questions,
+2. `npm start` — connects to MongoDB (URI in `.env`), seeds 1028 built-in questions,
    creates the first admin (`admin` / `admin1234` by default), and serves the app on
    <http://localhost:3000>.
 3. Open <http://localhost:3000> — sign in with the admin account.

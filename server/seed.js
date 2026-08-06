@@ -18,9 +18,12 @@ async function seedQuestions() {
       options: q.options,
       pairs: q.pairs,
       ordered: q.ordered,
-      codeLang: q.codeLang,
+      codeLang: q.codeLang || 'javascript',
+      languages: q.type === 'code' ? (q.languages && q.languages.length ? q.languages : ['javascript', 'python']) : undefined,
       codeStub: q.codeStub,
+      pyStub: q.pyStub || '',
       testCases: q.testCases,
+      tags: q.tags,
       answer: q.answer,
       explain: q.explain,
       source: 'builtin'

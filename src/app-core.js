@@ -618,12 +618,13 @@ function reviewBodyHTML(q, v, res) {
       '<div class="review-line" style="margin-top:8px"><span class="lbl">Correct</span><span class="val val-correct">' + esc(correctOrder.map(i => items[i]).join(' → ')) + '</span></div>';
   } else if (q.type === 'code') {
     const passed = res.passed, total = res.total;
+    const ans = v && typeof v === 'object' && !Array.isArray(v) ? v : { code: v || '', lang: (res.lang || q.codeLang || 'javascript') };
     content =
       '<div class="review-line"><span class="lbl">Status</span><span class="val ' + (res.correct === true ? 'val-correct' : res.correct === false ? 'val-wrong' : '') + '">' +
         (res.correct == null ? 'Not submitted' : (res.correct ? 'Passed all tests' : 'Tests failed')) +
         (passed != null && total != null ? ' — ' + passed + '/' + total + ' tests passed' : '') + '</span></div>' +
-      '<div class="review-line"><span class="lbl">Language</span><span class="val">' + esc(q.codeLang || 'javascript') + '</span></div>' +
-      '<pre class="q-code" style="margin-top:8px;white-space:pre-wrap">' + esc(v || '// no code submitted') + '</pre>' +
+      '<div class="review-line"><span class="lbl">Language</span><span class="val">' + esc(ans.lang === 'python' ? 'Python' : 'JavaScript') + '</span></div>' +
+      '<pre class="q-code" style="margin-top:8px;white-space:pre-wrap">' + esc(ans.code || '// no code submitted') + '</pre>' +
       (res.detail && res.detail !== 'All tests passed' && res.correct === false ? '<div class="review-explain">' + ic('info', 14) + ' <span style="vertical-align:1px">' + esc(res.detail) + '</span></div>' : '');
   } else {
     content =

@@ -59,8 +59,11 @@ const QuestionSchema = new Schema({
   options: { type: [String], default: undefined },        // mcq / multi / matching right-values
   pairs: { type: Schema.Types.Mixed, default: undefined },  // matching: [{ l, r }]
   ordered: { type: [String], default: undefined },          // ordering: items in correct order
-  codeLang: { type: String, enum: ['javascript', 'python'], default: 'javascript' }, // code challenges
-  codeStub: { type: String, default: '' },                 // starter code defining solution()
+  tags: { type: [String], default: undefined },                // e.g. ['hard'], ['design']
+  codeLang: { type: String, enum: ['javascript', 'python'], default: 'javascript' }, // default language
+  languages: { type: [String], default: undefined },        // allowed languages for candidates ([] = codeLang only)
+  codeStub: { type: String, default: '' },                 // JS starter code defining solution()
+  pyStub: { type: String, default: '' },                   // Python starter code defining solution()
   testCases: { type: Schema.Types.Mixed, default: undefined }, // [{ args, expected, lang? }]
   answer: { type: Schema.Types.Mixed, required: true },   // index (mcq) | [accepted] (fill) | [] (code)
   explain: { type: String, default: '' },
@@ -78,6 +81,8 @@ const TestSchema = new Schema({
   durationMin: { type: Number, min: 1, max: 240, default: 30 },
   passPct: { type: Number, min: 0, max: 100, default: 70 },
   categories: { type: [String], default: [] },
+  types: { type: [String], default: undefined },           // optional per-test question-type filter ([]/absent = all)
+  tags: { type: [String], default: undefined },            // optional per-test question-tag filter ([]/absent = all)
   diffFocus: { type: String, enum: ['beginner', 'balanced', 'advanced'], default: 'balanced' },
   count: { type: Number, min: 1, default: 20 },
   shuffle: { type: Boolean, default: true },

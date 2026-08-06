@@ -612,12 +612,23 @@ function runnerOrderingHTML(q, val) {
   '</div>';
 }
 
+function codeDefaultStub(q, lang) {
+  if (lang === 'python') return q.pyStub || 'def solution(*args):\n    pass  # write your code here';
+  return q.codeStub || 'function solution() {\n  // write your code here\n}';
+}
+
 function runnerCodeHTML(q, val) {
-  const code = val || q.codeStub || '';
+  const ans = val && typeof val === 'object' && !Array.isArray(val) ? val : { code: val || '', lang: q.codeLang || 'javascript' };
+  const langs = (q.languages && q.languages.length) ? q.languages : [q.codeLang || 'javascript'];
+  const code = ans.code || codeDefaultStub(q, ans.lang);
+  const langSel = langs.length > 1
+    ? '<div class="seg code-lang-seg" id="codeLangSeg">' +
+      langs.map(l => '<button class="seg-item ' + (ans.lang === l ? 'active' : '') + '" data-action="code-lang-pick" data-value="' + l + '">' + (l === 'python' ? 'Python' : 'JavaScript') + '</button>').join('') +
+      '<span class="seg-thumb" id="codeLangThumb"></span></div>'
+    : '<span class="badge b-mcq">' + ic('terminal2', 11) + ' ' + esc(ans.lang === 'python' ? 'Python' : 'JavaScript') + '</span>';
   return '<div class="code-box">' +
-    '<div class="code-box-head">' +
-      '<span class="badge b-mcq">' + ic('terminal2', 11) + ' ' + esc(q.codeLang === 'python' ? 'Python' : 'JavaScript') + '</span>' +
-      '<span style="font-size:12px;color:var(--text-3)">Define <b>solution</b>. Press Run to test against the sample</span>' +
+    '<div class="code-box-head">' + langSel +
+      '<span style="font-size:12px;color:var(--text-3)">Define <b>solution</b> then press Run</span>' +
     '</div>' +
     '<textarea class="code-editor" id="codeEditor" data-action="code" spellcheck="false" autocapitalize="off" autocomplete="off">' + esc(code) + '</textarea>' +
     '<div class="code-box-foot">' +
@@ -717,15 +728,37 @@ function moveOrderItem(pos, dir) {
   if (wrap) wrap.outerHTML = runnerOrderingHTML(q, cur);
 }
 
+function currentCodeAnswer(q) {
+  const v = S.live.answers[q.id];
+  return v && typeof v === 'object' && !Array.isArray(v) ? v : { code: v || '', lang: q.codeLang || 'javascript' };
+}
+
 function handleCodeInput(el) {
   if (!S.live) return;
   const q = qOf(S.live.order[S.qIdx]);
   if (!q || q.type !== 'code') return;
-  S.live.answers[q.id] = el.value;
+  const ans = currentCodeAnswer(q);
+  ans.code = el.value;
+  S.live.answers[q.id] = ans;
   $$('#palette .palette-item').forEach(b => { if (+b.dataset.idx === S.qIdx) b.classList.toggle('answered', el.value.trim() !== ''); });
   updateRunnerCounters();
   clearTimeout(_fillTimer);
-  _fillTimer = setTimeout(() => saveAnswerToServer(q.id, el.value), 400);
+  _fillTimer = setTimeout(() => saveAnswerToServer(q.id, ans), 400);
+}
+
+function pickCodeLang(lang) {
+  if (!S.live) return;
+  const q = qOf(S.live.order[S.qIdx]);
+  if (!q || q.type !== 'code') return;
+  const ans = currentCodeAnswer(q);
+  if (ans.lang === lang) return;
+  const prevStub = codeDefaultStub(q, ans.lang);
+  const newStub = codeDefaultStub(q, lang);
+  let code = ans.code;
+  if (!code.trim() || code.trim() === prevStub.trim()) code = newStub;
+  S.live.answers[q.id] = { code: code, lang: lang };
+  render();
+  saveAnswerToServer(q.id, S.live.answers[q.id]);
 }
 
 async function runCode() {
@@ -734,11 +767,12 @@ async function runCode() {
   if (!q || q.type !== 'code') return;
   const code = ($('#codeEditor') || {}).value || '';
   if (!code.trim()) { toast('Write code first', 'error'); return; }
+  const ans = currentCodeAnswer(q);
   const out = $('#codeOut');
   if (out) out.textContent = 'Running…';
   try {
     const r = await API.post('/api/candidate/attempts/' + S.live.id + '/run-code', {
-      qid: q.id, code: code, args: q.sample ? q.sample.args : [], expected: q.sample ? q.sample.expected : null
+      qid: q.id, code: code, lang: ans.lang, args: q.sample ? q.sample.args : [], expected: q.sample ? q.sample.expected : null
     });
     if (out) {
       if (r.pass) out.textContent = '✓ Passed — got ' + (r.got !== undefined ? r.got : 'expected');
